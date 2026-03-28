@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CRT终端·复古操作系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #000000;
+            overflow-x: hidden;
+        }
+
+        /* ========== CRT 屏幕效果容器 ========== */
+        .crt-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            background: #000000;
+            overflow: hidden;
+        }
+
+        /* CRT 屏幕拉伸和扭曲效果 */
+        .crt-screen {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            transform: scaleX(1.02) scaleY(1.01);
+            transform-origin: center center;
+            animation: crt-shake 8s infinite ease-in-out;
+        }
+
+        @keyframes crt-shake {
+            0%, 100% { transform: scaleX(1.02) scaleY(1.01) translate(0, 0); }
+            25% { transform: scaleX(1.021) scaleY(1.011) translate(0.5px, 0.2px); }
+            75% { transform: scaleX(1.019) scaleY(1.009) translate(-0.3px, -0.1px); }
+        }
+
+        /* 主内容区域 - 应用 CRT 模糊和辉光 */
+        .crt-content {
+            position: relative;
+            z-index: 2;
+            filter: blur(0.3px) brightness(1.05) contrast(1.2);
+            text-shadow: 0 0 3px #00ff00, 0 0 1px #00ff00;
+        }
+
+        /* 加强版 CRT 扫描线 - 更明显 */
+        .crt-scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 998;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 0, 0.15) 0px,
+                rgba(0, 255, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            opacity: 0.9;
+            animation: scanline-move 0.5s linear infinite;
+        }
+
+        @keyframes scanline-move {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(2px); }
+        }
+
+        /* CRT 荧光溢出效果 */
+        .crt-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 997;
+            background: radial-gradient(circle at center, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+            mix-blend-mode: overlay;
+        }
+
+        /* 胶片颗粒 + 色差 */
+        .crt-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 996;
+            background-image: repeating-radial-gradient(circle at 20% 30%, rgba(0, 255, 0, 0.2) 0px, rgba(0, 255, 0, 0.2) 1px, transparent 1px, transparent 2px);
+            opacity: 0.4;
+            animation: grain-flicker 0.2s steps(2) infinite;
+        }
+
+        @keyframes grain-flicker {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 色彩溢出效果 - 模拟 CRT 的红色/绿色溢出 */
+        .crt-chroma {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 995;
+            mix-blend-mode: screen;
+        }
+        .crt-chroma::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -2px;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.08);
+            filter: blur(2px);
+        }
+        .crt-chroma::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 2px;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 255, 0, 0.08);
+            filter: blur(2px);
+        }
+
+        /* 屏幕曲率效果 - CRT 球面 */
+        .crt-curve {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 994;
+            background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
+        }
+
+        /* 闪烁效果 - 模拟 CRT 刷新 */
+        .crt-flicker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 993;
+            background: rgba(0, 255, 0, 0.02);
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 0.3; }
+            25% { opacity: 0.5; }
+            50% { opacity: 0.2; }
+            75% { opacity: 0.4; }
+        }
+
+        /* 字体 - 使用本地字体 */
+        @font-face {
+            font-family: 'PixelLocal';
+            src: url('fonts/PixelMplus10-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'PixelFallback';
+            src: url('fonts/04B03.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* 切换按钮 */
+        .toggle-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .toggle-btn {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'PixelLocal', 'Courier New', monospace;
+            font-size: 11px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.1s steps(2);
+            backdrop-filter: blur(2px);
+        }
+
+        .toggle-btn:hover, .toggle-btn.active {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        /* ========== PC: 复古终端风格 ========== */
+        .pc-layout {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: transparent;
+            padding: 40px;
+        }
+        .terminal-window {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #00ff00;
+            font-family: 'PixelLocal', 'Courier New', monospace;
+            backdrop-filter: blur(1px);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+        .title-bar {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #00ff00;
+            letter-spacing: 2px;
+        }
+        .title-bar-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        .title-btn {
+            background: transparent;
+            width: 24px;
+            height: 22px;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+            border: 1px solid #00ff00;
+            font-size: 14px;
+            cursor: pointer;
+            color: #00ff00;
+        }
+        .title-btn:hover {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        .menu-bar {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 6px 14px;
+            display: flex;
+            gap: 24px;
+            border-bottom: 1px solid #00ff00;
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+        .menu-item {
+            cursor: pointer;
+            padding: 2px 8px;
+            color: #00ff00;
+        }
+        .menu-item:hover {
+            background: #00ff00;
+            color: #000000;
+            text-shadow: none;
+        }
+        .window-content {
+            padding: 24px;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* Linux 终端模拟器 - 增强 CRT 风格 */
+        .linux-terminal {
+            background: rgba(0, 0, 0, 0.95);
+            color: #00ff00;
+            padding: 16px;
+            font-family: 'PixelLocal', monospace;
+            font-size: 13px;
+            border: 1px solid #00ff00;
+            margin-bottom: 24px;
+            height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.1);
+        }
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            font-family: 'PixelLocal', monospace;
+        }
+        .terminal-line {
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            letter-spacing: 0.5px;
+        }
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-top: 1px solid #00ff00;
+            padding-top: 10px;
+        }
+        .terminal-prompt {
+            color: #00ff00;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'PixelLocal', monospace;
+            font-size: 13px;
+            flex: 1;
+            outline: none;
+        }
+        .cursor-block {
+            display: inline-block;
+            width: 10px;
+            height: 16px;
+            background-color: #00ff00;
+            animation: crt-blink 0.8s step-end infinite;
+            margin-left: 4px;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        @keyframes crt-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .link-grid-pc {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .terminal-card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff00;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #00ff00;
+            transition: all 0.1s steps(2);
+        }
+        .terminal-card:hover {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 8px #00ff00;
+            transform: scale(1.01);
+        }
+
+        /* ========== 手机：CRT 功能机风格 ========== */
+        .mobile-layout {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: transparent;
+            padding: 16px;
+        }
+        .crt-phone {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+        .phone-screen {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 16px;
+            min-height: 520px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #00ff00;
+            font-family: 'PixelLocal', monospace;
+        }
+        .signal-battery {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .phone-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #00ff00;
+            letter-spacing: 2px;
+        }
+        .mobile-terminal {
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            padding: 10px;
+            font-family: 'PixelLocal', monospace;
+            font-size: 10px;
+            border: 1px solid #00ff00;
+            margin: 12px 0;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .dpad-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .funclink {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
+            padding: 10px;
+            text-decoration: none;
+            color: #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            transition: all 0.05s linear;
+        }
+        .funclink:active {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        .phone-keys {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .phone-key {
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            text-align: center;
+            padding: 8px 4px;
+            border: 1px solid #00ff00;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        .phone-key:active {
+            background: #00ff00;
+            color: #000000;
+        }
+        .nav-dpad {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .dpad-btn {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
+            padding: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #00ff00;
+            text-align: center;
+        }
+        .dpad-btn:active {
+            background: #00ff00;
+            color: #000000;
+        }
+        .clock-ticker {
+            font-size: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            margin-top: 12px;
+            padding: 8px;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<div class="crt-container">
+    <div class="crt-screen">
+        <div class="crt-content">
+            <!-- CRT 效果层 -->
+            <div class="crt-scanlines"></div>
+            <div class="crt-glow"></div>
+            <div class="crt-grain"></div>
+            <div class="crt-chroma"></div>
+            <div class="crt-curve"></div>
+            <div class="crt-flicker"></div>
+
+            <div class="toggle-container">
+                <button class="toggle-btn" id="autoToggleBtn">🔄 AUTO</button>
+                <button class="toggle-btn" id="pcToggleBtn">💻 TERMINAL</button>
+                <button class="toggle-btn" id="mobileToggleBtn">📱 CRT-PHONE</button>
+            </div>
+
+            <!-- PC 布局 -->
+            <div id="pcContainer" class="pc-layout">
+                <div class="terminal-window">
+                    <div class="title-bar">
+                        <span>CRT_TERMINAL v2.0 - [LINUX MODE]</span>
+                        <div class="title-bar-buttons">
+                            <div class="title-btn">—</div>
+                            <div class="title-btn">□</div>
+                            <div class="title-btn">✕</div>
+                        </div>
+                    </div>
+                    <div class="menu-bar">
+                        <div class="menu-item">FILE</div>
+                        <div class="menu-item">EDIT</div>
+                        <div class="menu-item">VIEW</div>
+                        <div class="menu-item">TERMINAL</div>
+                        <div class="menu-item">HELP</div>
+                    </div>
+                    <div class="window-content">
+                        <div class="linux-terminal">
+                            <div class="terminal-output" id="terminalOutput">
+                                <div class="terminal-line">[CRT] Linux pixel-os 5.10.0-crt #1 SMP PREEMPT</div>
+                                <div class="terminal-line">[SYSTEM] CRT 终端模拟器 v2.0 已启动</div>
+                                <div class="terminal-line">[SCAN] 扫描线频率: 60Hz | 荧光效果: 启用</div>
+                                <div class="terminal-line">[READY] 输入 'help' 查看命令列表</div>
+                                <div class="terminal-line">---</div>
+                            </div>
+                            <div class="terminal-input-line">
+                                <span class="terminal-prompt">crt@pixel:~$</span>
+                                <input type="text" class="terminal-input" id="terminalInput" autocomplete="off">
+                                <span class="cursor-block"></span>
+                            </div>
+                        </div>
+                        <div class="link-grid-pc" id="pcLinks"></div>
+                        <div style="font-size:9px; margin-top:12px; border-top:1px solid #00ff00; padding-top:8px; color:#00ff00; opacity:0.7;">
+                            ⚡ CRT MODE | help | ls | echo | date | clear | neofetch | whoami | pwd | uname
+                        </div>
+                    </div>
+                    <div class="title-bar" style="border-top:1px solid #00ff00; border-bottom:none;">
+                        <span>READY</span>
+                        <span id="win95Time">00:00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手机布局 -->
+            <div id="mobileContainer" class="mobile-layout hidden">
+                <div class="crt-phone">
+                    <div class="phone-screen">
+                        <div class="signal-battery">
+                            <span>📡 CRT SIGNAL</span>
+                            <span>🔋 100%</span>
+                        </div>
+                        <div class="phone-title">
+                            █ CRT TERMINAL █
+                        </div>
+                        <div class="mobile-terminal" id="mobileTerminalOutput">
+                            <div>> crt@pixel:~$</div>
+                            <div>> CRT MODE ACTIVE</div>
+                            <div>> scanlines: 60Hz</div>
+                        </div>
+                        <div class="dpad-menu" id="mobileLinks"></div>
+                        <div class="phone-keys" id="phoneKeys"></div>
+                        <div class="nav-dpad" id="navDpad"></div>
+                        <div class="clock-ticker" id="mobileClock">00:00:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== Linux 终端模拟器 ====================
+    class CRTTerminal {
+        constructor(outputElement, inputElement = null) {
+            this.output = outputElement;
+            this.input = inputElement;
+            this.history = [];
+            this.historyIndex = -1;
+            
+            if (this.input) {
+                this.input.addEventListener('keydown', (e) => this.handleKey(e));
+            }
+        }
+        
+        getPrompt() {
+            return 'crt@pixel:~$ ';
+        }
+        
+        printLine(text) {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.textContent = text;
+            this.output.appendChild(line);
+            this.output.scrollTop = this.output.scrollHeight;
+        }
+        
+        printCommand(cmd) {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.innerHTML = `<span style="color:#00ff00; font-weight:bold;">${this.getPrompt()}</span>${cmd}`;
+            this.output.appendChild(line);
+            this.output.scrollTop = this.output.scrollHeight;
+        }
+        
+        execute(command) {
+            const cmd = command.trim().toLowerCase();
+            if (!cmd) return;
+            
+            this.printCommand(command);
+            
+            const parts = cmd.split(/\s+/);
+            const mainCmd = parts[0];
+            const args = parts.slice(1);
+            
+            switch(mainCmd) {
+                case 'help':
+                    this.printLine('[可用命令]');
+                    this.printLine('  help      - 显示此帮助');
+                    this.printLine('  ls        - 列出目录');
+                    this.printLine('  echo      - 输出文本');
+                    this.printLine('  date      - 显示日期时间');
+                    this.printLine('  clear     - 清屏');
+                    this.printLine('  neofetch  - 系统信息');
+                    this.printLine('  whoami    - 当前用户');
+                    this.printLine('  pwd       - 当前路径');
+                    this.printLine('  uname     - 内核信息');
+                    this.printLine('  crtinfo   - CRT 状态');
+                    break;
+                case 'ls':
+                    this.printLine('boot/  dev/  etc/  home/  lib/  proc/  root/  tmp/  usr/  var/');
+                    this.printLine('crt_config.cfg  terminal.log  pixel_os.img  scanlines.dat');
+                    break;
+                case 'echo':
+                    this.printLine(args.join(' ') || '');
+                    break;
+                case 'date':
+                    this.printLine(new Date().toString());
+                    break;
+                case 'clear':
+                    this.output.innerHTML = '';
+                    break;
+                case 'neofetch':
+                    this.printLine('      .-.-.   crt@pixel-os');
+                    this.printLine('     (^._.^)  -----------------');
+                    this.printLine('      /\\___/\\  OS: CRT Linux v2.0');
+                    this.printLine('     /       \\ Kernel: 5.10.0-crt');
+                    this.printLine('    / /     \\ \\ Shell: crt-term 1.0');
+                    this.printLine('   / /       \\ \\ CRT: 60Hz | Scanlines ON');
+                    this.printLine('  /_/         \\_\\ RAM: 64MB/128MB');
+                    break;
+                case 'whoami':
+                    this.printLine('crt_user');
+                    break;
+                case 'pwd':
+                    this.printLine('/home/crt_user/');
+                    break;
+                case 'uname':
+                    if (args[0] === '-a') {
+                        this.printLine('Linux crt-pixel 5.10.0-crt #1 SMP PREEMPT x86_64 CRT/GNU Linux');
+                    } else {
+                        this.printLine('CRT Linux');
+                    }
+                    break;
+                case 'crtinfo':
+                    this.printLine('[CRT 终端信息]');
+                    this.printLine('  扫描线: 启用 (60Hz)');
+                    this.printLine('  荧光效果: 启用');
+                    this.printLine('  色彩溢出: 模拟中');
+                    this.printLine('  屏幕曲率: 球面模拟');
+                    this.printLine('  闪烁模拟: 15Hz 脉冲');
+                    break;
+                default:
+                    this.printLine(`bash: ${cmd}: 命令未找到 (输入 'help' 查看可用命令)`);
+            }
+            
+            if (command.trim()) {
+                this.history.push(command);
+                this.historyIndex = this.history.length;
+            }
+        }
+        
+        handleKey(e) {
+            if (e.key === 'Enter') {
+                const cmd = this.input.value;
+                this.execute(cmd);
+                this.input.value = '';
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.input.value = this.history[this.historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.input.value = this.history[this.historyIndex];
+                } else {
+                    this.historyIndex = this.history.length;
+                    this.input.value = '';
+                }
+            }
+        }
+        
+        mobileExecute(cmd) {
+            const command = cmd.trim().toLowerCase();
+            if (!command) return;
+            
+            const outputDiv = this.output;
+            outputDiv.innerHTML = outputDiv.innerHTML + `<div>> crt@pixel:~$ ${cmd}</div>`;
+            
+            let response = '';
+            switch(command) {
+                case 'help': response = 'help, ls, echo, date, clear, neofetch, crtinfo'; break;
+                case 'ls': response = 'boot/ home/ etc/ usr/ crt_config.cfg'; break;
+                case 'date': response = new Date().toString(); break;
+                case 'clear': outputDiv.innerHTML = '<div>> CRT 终端已清空</div>'; response = ''; break;
+                case 'neofetch': response = 'CRT Linux v2.0 | Kernel 5.10.0-crt | 60Hz Scanlines'; break;
+                case 'crtinfo': response = '扫描线: 60Hz | 荧光: ON | 曲率: 球面'; break;
+                default: response = `命令未找到: ${command}`;
+            }
+            if (response) outputDiv.innerHTML = outputDiv.innerHTML + '<div>> ' + response + '</div>';
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+    }
+    
+    // ==================== 链接配置 ====================
+    const LINKS = {
+        pc: [
+            { icon: '📂', name: 'GitHub 主页', url: 'https://github.com/你的用户名', desc: 'github.com/你的用户名' },
+            { icon: '🕹️', name: '像素实验室', url: 'https://github.com/你的用户名/像素项目', desc: 'pixel-lab' },
+            { icon: '⚙️', name: '系统内核', url: 'https://github.com/你的用户名/vivid-stasis', desc: 'vivid-stasis' },
+            { icon: '📜', name: '终端日志', url: 'https://你的博客地址', desc: 'blog' },
+            { icon: '🎮', name: '游戏项目', url: 'https://github.com/你的用户名/game', desc: 'retro-game' },
+            { icon: '📚', name: '学习笔记', url: 'https://你的笔记地址', desc: 'notes' }
+        ],
+        mobile: [
+            { icon: '🗂️', name: 'GitHub', url: 'https://github.com/你的用户名' },
+            { icon: '🎮', name: '像素实验室', url: 'https://github.com/你的用户名/像素项目' },
+            { icon: '💾', name: '系统内核', url: 'https://github.com/你的用户名/vivid-stasis' },
+            { icon: '📟', name: 'CRT终端', url: 'https://你的项目地址' }
+        ]
+    };
+    
+    function renderLinks() {
+        const pcContainer = document.getElementById('pcLinks');
+        const mobileContainer = document.getElementById('mobileLinks');
+        
+        if (pcContainer) {
+            pcContainer.innerHTML = LINKS.pc.map(link => `
+                <a href="${link.url}" class="terminal-card" target="_blank" rel="noopener noreferrer">
+                    <span style="font-size:24px;">${link.icon}</span>
+                    <div>
+                        <strong>${link.name}</strong><br>
+                        <span style="font-size:9px; opacity:0.8;">${link.desc || link.url.replace('https://', '')}</span>
+                    </div>
+                </a>
+            `).join('');
+        }
+        
+        if (mobileContainer) {
+            mobileContainer.innerHTML = LINKS.mobile.map(link => `
+                <a href="${link.url}" class="funclink" target="_blank" rel="noopener noreferrer">
+                    <span>${link.icon}</span> ${link.name}
+                </a>
+            `).join('');
+        }
+    }
+    
+    function renderPhoneKeys() {
+        const keysContainer = document.getElementById('phoneKeys');
+        if (!keysContainer) return;
+        const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
+        keysContainer.innerHTML = keys.map(key => `<div class="phone-key" data-key="${key}">${key}</div>`).join('');
+    }
+    
+    function renderNavDpad() {
+        const dpadContainer = document.getElementById('navDpad');
+        if (!dpadContainer) return;
+        dpadContainer.innerHTML = `
+            <div class="dpad-btn">▲</div><div class="dpad-btn">●</div><div class="dpad-btn">■</div>
+            <div class="dpad-btn">◀</div><div class="dpad-btn">OK</div><div class="dpad-btn">▶</div>
+            <div class="dpad-btn">▼</div><div class="dpad-btn">MENU</div><div class="dpad-btn">BACK</div>
+        `;
+    }
+    
+    // ==================== 模式切换 ====================
+    let currentMode = 'auto';
+    
+    function detectMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    }
+    
+    const pcDiv = document.getElementById('pcContainer');
+    const mobileDiv = document.getElementById('mobileContainer');
+    const autoBtn = document.getElementById('autoToggleBtn');
+    const pcBtn = document.getElementById('pcToggleBtn');
+    const mobileBtn = document.getElementById('mobileToggleBtn');
+    
+    let pcTerminal, mobileTerminal;
+    
+    function updateLayout() {
+        let showPC = false;
+        if (currentMode === 'auto') showPC = !detectMobile();
+        else if (currentMode === 'pc') showPC = true;
+        else showPC = false;
+        
+        if (showPC) {
+            pcDiv.classList.remove('hidden');
+            mobileDiv.classList.add('hidden');
+            autoBtn.classList.remove('active');
+            pcBtn.classList.add('active');
+            mobileBtn.classList.remove('active');
+            if (!pcTerminal) {
+                const output = document.getElementById('terminalOutput');
+                const input = document.getElementById('terminalInput');
+                pcTerminal = new CRTTerminal(output, input);
+            }
+        } else {
+            pcDiv.classList.add('hidden');
+            mobileDiv.classList.remove('hidden');
+            autoBtn.classList.remove('active');
+            pcBtn.classList.remove('active');
+            mobileBtn.classList.add('active');
+            if (!mobileTerminal) {
+                const mobileOutput = document.getElementById('mobileTerminalOutput');
+                mobileTerminal = new CRTTerminal(mobileOutput, null);
+                mobileTerminal.mobileExecute = function(cmd) {
+                    const command = cmd.trim().toLowerCase();
+                    if (!command) return;
+                    const outputDiv = this.output;
+                    outputDiv.innerHTML = outputDiv.innerHTML + `<div>> crt@pixel:~$ ${cmd}</div>`;
+                    let response = '';
+                    switch(command) {
+                        case 'help': response = 'help, ls, echo, date, clear, neofetch, crtinfo'; break;
+                        case 'ls': response = 'boot/ home/ etc/ usr/'; break;
+                        case 'date': response = new Date().toString(); break;
+                        case 'clear': outputDiv.innerHTML = '<div>> CRT 终端就绪</div>'; response = ''; break;
+                        case 'neofetch': response = 'CRT Linux v2.0 | 60Hz Scanlines'; break;
+                        case 'crtinfo': response = '扫描线:60Hz 荧光:ON 曲率:球面'; break;
+                        default: response = `命令未找到: ${command}`;
+                    }
+                    if (response) outputDiv.innerHTML = outputDiv.innerHTML + '<div>> ' + response + '</div>';
+                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                };
+            }
+        }
+    }
+    
+    function setMode(mode) {
+        currentMode = mode;
+        localStorage.setItem('displayMode', mode);
+        updateLayout();
+    }
+    
+    autoBtn.addEventListener('click', () => setMode('auto'));
+    pcBtn.addEventListener('click', () => setMode('pc'));
+    mobileBtn.addEventListener('click', () => setMode('mobile'));
+    
+    function updateClocks() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}:${seconds}`;
+        const win95Time = document.getElementById('win95Time');
+        if (win95Time) win95Time.innerText = timeStr;
+        const mobileClock = document.getElementById('mobileClock');
+        if (mobileClock) mobileClock.innerText = timeStr;
+    }
+    
+    const savedMode = localStorage.getItem('displayMode');
+    if (savedMode && ['auto', 'pc', 'mobile'].includes(savedMode)) currentMode = savedMode;
+    
+    renderLinks();
+    renderPhoneKeys();
+    renderNavDpad();
+    updateLayout();
+    updateClocks();
+    setInterval(updateClocks, 1000);
+</script>
+</body>
+</html>
