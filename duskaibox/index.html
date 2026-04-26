@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>duskaibox</title>
+<style>
+@import url("https://fontsapi.zeoseven.com/65/main/result.css");
+:root{--bubble-opacity:0.85;--bg-mask-opacity:0.2;--bubble-blur:2px;--border-standard:2px solid #fff;--mobile-btn-height:50px;--desktop-btn-height:44px;--menu-bg:#111;--menu-hover:#581C87;--menu-danger:#771f1f;--font-main:"BoutiqueBitmap9x9",monospace;}
+*{margin:0;padding:0;box-sizing:border-box;border-radius:0!important;scrollbar-width:thin;-webkit-tap-highlight-color:transparent;transform:translateZ(0);font-family:var(--font-main)!important;font-weight:normal;}
+input,button,select,textarea,option,optgroup{font-family:var(--font-main)!important;font-weight:normal;pointer-events:auto;}
+body{background:#000;color:#fff;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;font-size:18px;-webkit-text-size-adjust:none;overscroll-behavior:none;user-select:none;}
+.config-bar,.input-bar,.control-panel,.bubble-menu,.mobile-bubble-menu,.modal-box,details,input,button,select,textarea{border:var(--border-standard)!important;}
+summary,.details-divider,.bubble-menu-group,.mobile-menu-group,.name,.chat-box,.chat-wrap,.menu-close-btn{border:none!important;}
+@keyframes flashHard {0%{color:#8A2BE2;}33%{color:#8A2BE2;}33.1%{color:#FFFFFF;}66%{color:#FFFFFF;}66.1%{color:#FF69B4;}100%{color:#FF69B4;}}
+.flash-text{width:100%;font-size:14px;line-height:1.5;text-align:center;margin:0 0 8px 0;padding:0;overflow:hidden;}
+.flash-text span{display:inline;animation:flashHard 1s linear infinite;transition:none!important;}
+.menu-close-btn{position:absolute;top:15px;right:10px;width:36px;height:36px;background:transparent;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;opacity:0.7;transition:all .2s;}
+.menu-close-btn:active{opacity:1;background:var(--menu-hover);}
+details{width:100%;margin-bottom:8px;background:var(--menu-bg);overflow:hidden;flex-shrink:0;}
+summary{list-style:none;width:100%;padding:10px 12px;background:#0a0a0a;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:space-between;min-height:var(--desktop-btn-height);user-select:none;}
+summary::-webkit-details-marker{display:none;}
+summary::after{content:"▼";font-size:12px;color:#aaa;transition:transform .2s ease;}
+details[open] summary::after{transform:rotate(180deg);}
+summary:active{background:#1a1a1a;}
+.details-content{padding:12px;display:flex;flex-direction:column;gap:10px;}
+.details-divider{width:100%;border-top:1px solid #333!important;margin:4px 0;}
+.bubble-menu{position:absolute;background:var(--menu-bg);z-index:99999;display:none;flex-direction:column;min-width:220px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.8);}
+.bubble-menu.show{display:flex;}
+.bubble-menu-group{font-size:12px;color:#aaa;padding:6px 12px;background:#0a0a0a;border-bottom:1px solid #333;}
+.bubble-menu-btn{width:100%;background:transparent;border:none!important;border-bottom:1px solid #333!important;color:#fff;padding:10px 15px;text-align:left;cursor:pointer;font-size:16px;min-height:var(--desktop-btn-height);display:flex;flex-direction:column;justify-content:center;}
+.bubble-menu-btn:last-child{border-bottom:none!important;}
+.bubble-menu-btn:active{background:var(--menu-hover);}
+.bubble-menu-btn.danger:active{background:var(--menu-danger);}
+.mobile-menu-mask{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.7);z-index:99998;display:none;opacity:0;transition:opacity .2s ease;}
+.mobile-menu-mask.show{display:block;opacity:1;}
+.mobile-bubble-menu{position:fixed;bottom:0;left:0;width:100vw;background:var(--menu-bg);z-index:99999;display:none;flex-direction:column;transform:translateY(100%);transition:transform .25s ease-out;padding-bottom:env(safe-area-inset-bottom);}
+.mobile-bubble-menu.show{display:flex;transform:translateY(0);}
+.mobile-menu-group{font-size:13px;color:#aaa;padding:10px 16px;background:#0a0a0a;border-bottom:1px solid #333;}
+.mobile-menu-btn{width:100%;background:transparent;border:none!important;border-bottom:1px solid #333!important;color:#fff;padding:0 16px;text-align:left;cursor:pointer;font-size:17px;min-height:var(--mobile-btn-height);display:flex;flex-direction:column;justify-content:center;}
+.mobile-menu-btn:last-child{border-bottom:none!important;}
+.mobile-menu-btn:active{background:var(--menu-hover);}
+.mobile-menu-btn.danger:active{background:var(--menu-danger);}
+.mobile-menu-cancel{margin-top:8px;background:#222;border-top:2px solid #333!important;font-weight:bold;text-align:center;}
+.control-panel{position:absolute;top:0;left:0;height:100%;width:280px;background:var(--menu-bg);transform:translateX(-100%);transition:transform .25s ease-out;z-index:9999;padding:60px 10px 20px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overflow-x:hidden;font-size:18px;-webkit-overflow-scrolling:touch;min-height:0;}
+.control-panel.open{transform:translateX(0);}
+.control-panel::-webkit-scrollbar{width:4px;}
+.control-panel::-webkit-scrollbar-thumb{background:#555;}
+.btn-danger{background:var(--menu-danger)!important;}
+.btn-danger:active{background:#992828!important;}
+.btn-secondary{background:#333!important;}
+.btn-secondary:active{background:#444!important;}
+.btn-row{display:flex;gap:8px;width:100%;}
+.btn-row button,.btn-row label{flex:1;margin:0!important;min-height:var(--desktop-btn-height);display:flex;align-items:center;justify-content:center;}
+#bgImageFile,#importFile,#presetImportFile,#worldbookImportFile{display:none;}
+.form-group{display:flex;flex-direction:column;gap:5px;width:100%;}
+.form-group label{color:#ccc;font-size:16px;}
+.form-group input,.form-group select,.form-group textarea{background:#222;color:#fff;font-size:18px;padding:8px 10px;resize:none;}
+.form-group button{background:var(--menu-hover);color:#fff;font-size:16px;padding:8px;cursor:pointer;margin-top:5px;min-height:var(--desktop-btn-height);}
+#fileSelectBtn,#presetFileSelectBtn,#importFileBtn{width:100%;background:#333;color:#fff;padding:8px;font-size:16px;cursor:pointer;text-align:center;min-height:var(--desktop-btn-height);display:flex;align-items:center;justify-content:center;}
+#fileSelectBtn:active,#presetFileSelectBtn:active,#importFileBtn:active{background:#444;}
+.panel-toggle{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:36px;height:36px;background:rgba(0,0,0,.3);color:#fff;border:var(--border-standard)!important;z-index:1000;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0.6;transition:opacity .2s;}
+.panel-toggle:hover,.panel-toggle:active{opacity:1;background:var(--menu-hover);}
+.config-bar{background:#111;padding:12px;font-size:18px;z-index:100;display:flex;align-items:center;justify-content:center;position:relative;}
+.top-title-text{text-align:center;flex-shrink:0;}
+.chat-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;position:relative;background:#000;background-image:none;background-repeat:no-repeat;background-position:center;background-size:cover;background-attachment:fixed;}
+.chat-wrap::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:#000;opacity:var(--bg-mask-opacity);z-index:1;pointer-events:none;}
+.chat-box{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;-webkit-overflow-scrolling:touch;align-items:center;font-size:18px;background:transparent;z-index:10;position:relative;}
+.chat-box::-webkit-scrollbar{width:4px;}
+.chat-box::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);}
+.author-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:rgba(255,255,255,.15);z-index:2;pointer-events:none;user-select:none;letter-spacing:2px;display:none;}
+.author-watermark.show{display:block;}
+.msg-user{max-width:85%;width:85%;padding:6px 10px;word-wrap:break-word;border:var(--bubble-border);align-self:center;background:rgba(0,0,0,var(--bubble-opacity));backdrop-filter:blur(var(--bubble-blur));z-index:10;position:relative;transition:transform .1s ease;cursor:pointer;}
+.msg-user:active{transform:scale(.98);background:rgba(0,0,0,.95);}
+.msg-bot{max-width:85%;width:85%;padding:6px 10px;word-wrap:break-word;border:var(--bubble-border);align-self:center;background:rgba(0,0,0,var(--bubble-opacity));backdrop-filter:blur(var(--bubble-blur));z-index:10;position:relative;transition:transform .1s ease;cursor:pointer;}
+.msg-bot:active{transform:scale(.98);background:rgba(0,0,0,.95);}
+.msg-system{max-width:70%;width:fit-content;padding:8px 12px;word-wrap:break-word;border:var(--border-standard);align-self:center;background:rgba(0,0,0,.9);backdrop-filter:blur(var(--bubble-blur));z-index:10;position:relative;text-align:center;}
+.name{font-weight:normal;margin-bottom:6px;display:block;font-size:19px;}
+.input-bar{display:flex;background:#111;position:relative;z-index:100;padding-bottom:env(safe-area-inset-bottom);flex-shrink:0;}
+#userInput{flex:1;background:#222;border:none!important;border-right:var(--border-standard)!important;color:#fff;padding:10px 12px;font-size:18px;white-space:pre-wrap;word-wrap:break-word;overflow-y:auto;min-height:48px;max-height:100px;outline:none;}
+#sendBtn{width:80px;background:var(--menu-hover);border:none!important;color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;align-self:stretch;}
+#sendBtn:active{background:#7b2cb0;}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:100000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-box{width:90%;max-width:300px;background:#111;padding:20px;display:flex;flex-direction:column;gap:15px;pointer-events:auto;}
+.modal-title{font-size:18px;text-align:center;}
+.modal-desc{font-size:14px;color:#aaa;text-align:center;}
+.modal-input{width:100%;background:#222;color:#fff;padding:8px 10px;font-size:16px;min-height:var(--desktop-btn-height);}
+.modal-btn-row{display:flex;gap:10px;}
+.modal-btn-row button{flex:1;padding:8px;color:#fff;cursor:pointer;min-height:var(--desktop-btn-height);}
+.modal-cancel{background:#333;}
+.modal-confirm{background:var(--menu-hover);}
+.modal-confirm.danger{background:var(--menu-danger);}
+.worldbook-modal{width:92vw!important;max-width:900px!important;height:85vh!important;max-height:780px!important;display:flex;flex-direction:column;padding:12px!important;}
+.worldbook-header{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.worldbook-main{flex:1;display:flex;gap:12px;min-height:0;overflow:hidden;}
+.worldbook-list{width:30%;display:flex;flex-direction:column;gap:8px;overflow-y:auto;border:var(--border-standard);padding:10px;background:#111;}
+.worldbook-editor{flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.worldbook-entry-item{display:flex;align-items:center;gap:6px;padding:8px;background:#222;border:var(--border-standard);cursor:pointer;}
+.worldbook-entry-item.active{background:var(--menu-hover);}
+.worldbook-entry-item .enable-dot{width:8px;height:8px;border-radius:50%!important;}
+.worldbook-entry-item .enable-dot.active{background:#00ff00;}
+.worldbook-entry-item .enable-dot.inactive{background:#ff0000;}
+.worldbook-entry-item .entry-key{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@media screen and (max-width:767px){
+.bubble-menu{display:none!important;}
+input:not(.panel-toggle),button:not(.panel-toggle),select,textarea{min-height:var(--mobile-btn-height);}
+.btn-row button,.btn-row label{min-height:var(--mobile-btn-height);}
+.form-group button{min-height:var(--mobile-btn-height);}
+#fileSelectBtn,#presetFileSelectBtn,#importFileBtn{min-height:var(--mobile-btn-height);}
+.control-panel{width:85vw;max-width:320px;}
+summary{min-height:var(--mobile-btn-height);}
+.menu-close-btn{width:40px;height:40px;font-size:26px;}
+.msg-system{max-width:85%;}
+.worldbook-main{flex-direction:column;}
+.worldbook-list{width:100%;height:35%;}
+.worldbook-modal{width:96vw!important;height:90vh!important;max-width:96vw!important;max-height:90vh!important;margin:5vh auto!important;}
+}
+</style>
+</head>
+<body>
+<div class="bubble-menu" id="desktopBubbleMenu">
+<div class="bubble-menu-group">剧情编辑</div>
+<button class="bubble-menu-btn danger" id="desktopMenuDelete">删除本条消息</button>
+<button class="bubble-menu-btn" id="desktopMenuEdit">修改并回溯对话</button>
+</div>
+<div class="mobile-menu-mask" id="mobileMenuMask"></div>
+<div class="mobile-bubble-menu" id="mobileBubbleMenu">
+<div class="mobile-menu-group">消息操作</div>
+<button class="mobile-menu-btn" id="mobileMenuEdit">修改并回溯对话</button>
+<button class="mobile-menu-btn danger" id="mobileMenuDelete">删除本条消息</button>
+<button class="mobile-menu-btn mobile-menu-cancel" id="mobileMenuCancel">取消</button>
+</div>
+<div class="modal-overlay" id="confirmModal">
+<div class="modal-box" id="modalBox">
+<div class="modal-title" id="modalTitle">确认操作</div>
+<div class="modal-desc" id="modalDesc">此操作不可撤销</div>
+<input type="text" class="modal-input" id="modalInput" style="display:none;">
+<div class="modal-btn-row">
+<button class="modal-cancel" id="modalCancel">取消</button>
+<button class="modal-confirm" id="modalConfirm">确认</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="worldbookModal">
+<div class="modal-box worldbook-modal" id="worldbookBox">
+<div class="worldbook-header">
+<select id="worldbookSelect" style="flex:1;min-width:150px;"></select>
+<button id="newWorldbookBtn" class="btn-secondary">新建</button>
+<button id="deleteWorldbookBtn" class="btn-danger">删除</button>
+<label for="worldbookImportFile" id="worldbookImportBtn" class="btn-secondary">导入</label>
+<input type="file" id="worldbookImportFile" accept=".json">
+<button id="worldbookCloseBtn" class="btn-secondary">关闭</button>
+</div>
+<div class="worldbook-main">
+<div class="worldbook-list" id="worldbookEntryList">
+<button id="newEntryBtn" class="btn-secondary">新建词条</button>
+</div>
+<div class="worldbook-editor">
+<div class="form-group" style="margin:0;">
+<label>触发关键词</label>
+<input type="text" id="entryKey" placeholder="逗号分隔多个关键词">
+</div>
+<div class="form-group" style="margin:0;flex:1;display:flex;flex-direction:column;">
+<label>词条内容</label>
+<textarea id="entryContent" placeholder="输入世界书设定内容" style="flex:1;resize:none;"></textarea>
+</div>
+<div class="btn-row">
+<label style="flex:none;display:flex;align-items:center;gap:5px;"><input type="checkbox" id="entryEnable"> 启用词条</label>
+<button id="saveEntryBtn" class="btn-secondary">保存词条</button>
+<button id="deleteEntryBtn" class="btn-danger">删除词条</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="control-panel" id="controlPanel">
+<button class="menu-close-btn" id="menuCloseBtn">×</button>
+<details open>
+<summary>基础连接配置</summary>
+<div class="details-content">
+<div class="form-group">
+<label>接口地址</label>
+<input type="text" id="apiBase" value="">
+</div>
+<div class="form-group">
+<label>API Key</label>
+<input type="text" id="apiKey" value="">
+</div>
+<div class="form-group">
+<label>模型</label>
+<select id="modelSelect"><option value="gpt-3.5-turbo">gpt-3.5-turbo</option></select>
+<button id="fetchModelsBtn">刷新模型列表</button>
+</div>
+</div>
+</details>
+<details>
+<summary>人设剧情配置</summary>
+<div class="details-content">
+<div class="form-group">
+<label>你的名字</label>
+<input type="text" id="userName" value="用户">
+</div>
+<div class="form-group">
+<label>名字颜色</label>
+<input type="color" id="userColor" value="#ffffff">
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<label>AI名字</label>
+<input type="text" id="botName" value="AI">
+</div>
+<div class="form-group">
+<label>名字颜色</label>
+<input type="color" id="botColor" value="#ffffff">
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<label>系统名称</label>
+<input type="text" id="systemName" value="系统">
+</div>
+<div class="form-group">
+<label>系统名称颜色</label>
+<input type="color" id="systemColor" value="#ff5555">
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<label>系统提示词</label>
+<textarea id="systemPrompt" rows="4">你是一个有用的助手。</textarea>
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<button id="openWorldbookBtn">世界书管理器</button>
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<label>温度 <span id="tempText">0.7</span></label>
+<input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+</div>
+<div class="form-group">
+<label>Top P <span id="topPText">0.9</span></label>
+<input type="range" id="topP" min="0" max="1" step="0.05" value="0.9">
+</div>
+</div>
+</details>
+<details>
+<summary>记忆管理</summary>
+<div class="details-content">
+<button id="clearHistoryBtn" class="btn-danger">清空对话历史</button>
+<button id="resetPromptBtn" class="btn-secondary">重置系统提示词</button>
+<button id="clearAllBtn" class="btn-danger">清空全部数据</button>
+</div>
+</details>
+<details>
+<summary>存档与预设</summary>
+<div class="details-content">
+<div class="form-group">
+<div class="btn-row">
+<button id="exportBtn" class="btn-secondary">导出剧情</button>
+<label for="importFile" id="importFileBtn">导入剧情</label>
+<input type="file" id="importFile" accept=".json,.txt">
+</div>
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<input type="text" id="presetName" placeholder="预设名称">
+<div class="btn-row">
+<button id="savePresetBtn" class="btn-secondary">保存人设</button>
+<label for="presetImportFile" id="presetFileSelectBtn">导入预设</label>
+<input type="file" id="presetImportFile" accept=".json">
+</div>
+</div>
+<div class="form-group">
+<select id="presetSelect"></select>
+<div class="btn-row">
+<button id="loadPresetBtn" class="btn-secondary">加载预设</button>
+<button id="deletePresetBtn" class="btn-danger">删除预设</button>
+</div>
+</div>
+</div>
+</details>
+<details>
+<summary>界面样式设置</summary>
+<div class="details-content">
+<div class="form-group">
+<label>顶部标题</label>
+<input type="text" id="topTitle" value="<nameless>">
+</div>
+<div class="form-group">
+<label>标题颜色</label>
+<input type="color" id="topTitleColor" value="#ffffff">
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<label>对话背景图</label>
+<label for="bgImageFile" id="fileSelectBtn">选择图片</label>
+<input type="file" id="bgImageFile" accept="image/*">
+<button id="clearBgBtn" class="btn-danger">清除背景图</button>
+</div>
+<div class="form-group">
+<label>背景暗度 <span id="bgOpacityText">0.2</span></label>
+<input type="range" id="bgImageOpacity" min="0" max="1" step="0.05" value="0.2">
+</div>
+<hr class="details-divider">
+<div class="form-group">
+<label>气泡透明度 <span id="opacityText">0.85</span></label>
+<input type="range" id="bubbleOpacity" min="0" max="1" step="0.05" value="0.85">
+</div>
+<div class="form-group">
+<label>气泡模糊度 <span id="blurText">2</span>px</label>
+<input type="range" id="bubbleBlur" min="0" max="10" step="1" value="2">
+</div>
+<div class="form-group">
+<label>气泡边框</label>
+<select id="bubbleBorderSwitch">
+<option value="show">显示边框</option>
+<option value="hide">隐藏边框</option>
+</select>
+</div>
+<div class="form-group">
+<label>作者水印</label>
+<select id="watermarkSwitch">
+<option value="show">显示</option>
+<option value="hide">隐藏</option>
+</select>
+</div>
+</div>
+</details>
+<details>
+<summary>输入操作设置</summary>
+<div class="details-content">
+<div class="form-group">
+<label>Enter键发送</label>
+<select id="enterSendSwitch">
+<option value="on">开启</option>
+<option value="off">关闭</option>
+</select>
+</div>
+<div class="form-group">
+<label>发送后清空输入框</label>
+<select id="autoClearSwitch">
+<option value="on">开启</option>
+<option value="off">关闭</option>
+</select>
+</div>
+</div>
+</details>
+<details>
+<summary>友情链接</summary>
+<div class="details-content">
+<div class="flash-text"><span style="animation-delay: 0.00s">这</span><span style="animation-delay: 0.21s">个</span><span style="animation-delay: 0.47s">页</span><span style="animation-delay: 0.13s">面</span><span style="animation-delay: 0.82s">是</span><span style="animation-delay: 0.35s">根</span><span style="animation-delay: 0.66s">据</span><span style="animation-delay: 0.09s">游</span><span style="animation-delay: 0.51s">戏</span><span style="animation-delay: 0.74s">v</span><span style="animation-delay: 0.29s">i</span><span style="animation-delay: 0.91s">v</span><span style="animation-delay: 0.18s">i</span><span style="animation-delay: 0.58s">d</span><span style="animation-delay: 0.79s">/</span><span style="animation-delay: 0.42s">s</span><span style="animation-delay: 0.04s">t</span><span style="animation-delay: 0.31s">a</span><span style="animation-delay: 0.63s">s</span><span style="animation-delay: 0.11s">i</span><span style="animation-delay: 0.87s">s</span><span style="animation-delay: 0.25s">制</span><span style="animation-delay: 0.54s">作</span><span style="animation-delay: 0.70s">的</span></div>
+<a href="https://store.steampowered.com/app/2093940/vividstasis/" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+<button class="btn-secondary" style="width:100%;">vivid/stasis Steam官方商店</button>
+</a>
+</div>
+</details>
+<hr class="details-divider">
+<button id="saveBtn">保存全部配置</button>
+</div>
+<div class="config-bar" id="topBar">
+  <button class="panel-toggle" id="panelToggle">☰</button>
+  <span class="top-title-text" id="topTitleText"><nameless></span>
+</div>
+<div class="chat-wrap">
+<div class="author-watermark" id="authorWatermark"></div>
+<div class="chat-box" id="chatBox"></div>
+</div>
+<div class="input-bar">
+<textarea id="userInput" placeholder="输入消息..."></textarea>
+<button id="sendBtn">发送</button>
+</div>
+<script>
+const $=(id)=>document.getElementById(id);
+const DOM={menuCloseBtn:$('menuCloseBtn'),desktopBubbleMenu:$('desktopBubbleMenu'),mobileBubbleMenu:$('mobileBubbleMenu'),mobileMenuMask:$('mobileMenuMask'),desktopMenuDelete:$('desktopMenuDelete'),desktopMenuEdit:$('desktopMenuEdit'),mobileMenuEdit:$('mobileMenuEdit'),mobileMenuDelete:$('mobileMenuDelete'),mobileMenuCancel:$('mobileMenuCancel'),confirmModal:$('confirmModal'),modalBox:$('modalBox'),modalTitle:$('modalTitle'),modalDesc:$('modalDesc'),modalInput:$('modalInput'),modalCancel:$('modalCancel'),modalConfirm:$('modalConfirm'),controlPanel:$('controlPanel'),panelToggle:$('panelToggle'),topBar:$('topBar'),topTitleText:$('topTitleText'),chatBox:$('chatBox'),chatWrap:document.querySelector('.chat-wrap'),userInput:$('userInput'),sendBtn:$('sendBtn'),apiBase:$('apiBase'),apiKey:$('apiKey'),modelSelect:$('modelSelect'),fetchModelsBtn:$('fetchModelsBtn'),userName:$('userName'),userColor:$('userColor'),botName:$('botName'),botColor:$('botColor'),systemName:$('systemName'),systemColor:$('systemColor'),systemPrompt:$('systemPrompt'),temperature:$('temperature'),tempText:$('tempText'),topP:$('topP'),topPText:$('topPText'),clearHistoryBtn:$('clearHistoryBtn'),resetPromptBtn:$('resetPromptBtn'),clearAllBtn:$('clearAllBtn'),exportBtn:$('exportBtn'),importFile:$('importFile'),presetName:$('presetName'),savePresetBtn:$('savePresetBtn'),presetImportFile:$('presetImportFile'),presetSelect:$('presetSelect'),loadPresetBtn:$('loadPresetBtn'),deletePresetBtn:$('deletePresetBtn'),topTitle:$('topTitle'),topTitleColor:$('topTitleColor'),bgImageFile:$('bgImageFile'),fileSelectBtn:$('fileSelectBtn'),clearBgBtn:$('clearBgBtn'),bgImageOpacity:$('bgImageOpacity'),bgOpacityText:$('bgOpacityText'),bubbleOpacity:$('bubbleOpacity'),opacityText:$('opacityText'),bubbleBlur:$('bubbleBlur'),blurText:$('blurText'),bubbleBorderSwitch:$('bubbleBorderSwitch'),watermarkSwitch:$('watermarkSwitch'),enterSendSwitch:$('enterSendSwitch'),autoClearSwitch:$('autoClearSwitch'),saveBtn:$('saveBtn'),authorWatermark:$('authorWatermark'),openWorldbookBtn:$('openWorldbookBtn'),worldbookModal:$('worldbookModal'),worldbookSelect:$('worldbookSelect'),newWorldbookBtn:$('newWorldbookBtn'),deleteWorldbookBtn:$('deleteWorldbookBtn'),worldbookImportFile:$('worldbookImportFile'),worldbookCloseBtn:$('worldbookCloseBtn'),worldbookEntryList:$('worldbookEntryList'),newEntryBtn:$('newEntryBtn'),entryKey:$('entryKey'),entryContent:$('entryContent'),entryEnable:$('entryEnable'),saveEntryBtn:$('saveEntryBtn'),deleteEntryBtn:$('deleteEntryBtn')};
+const isMobile=window.innerWidth<768;
+let modalConfirmCallback=null;
+let currentBubbleIndex=-1;
+let currentBubbleElement=null;
+let currentEntryId=null;
+let CONFIG={baseUrl:"",apiKey:"",model:"gpt-3.5-turbo",temperature:0.7,topP:0.9,userName:"用户",userColor:"#ffffff",botName:"AI",botColor:"#ffffff",systemName:"系统",systemColor:"#ff5555",systemPrompt:"你是一个有用的助手。",topTitle:"<nameless>",topTitleColor:"#ffffff",bgImageBase64:"",bubbleOpacity:0.85,bgImageOpacity:0.2,bubbleBlur:2,bubbleBorder:"show",watermarkSwitch:"show",enterSendSwitch:"on",autoClearSwitch:"on",activeWorldBook:"默认世界书",worldBooks:{"默认世界书":{entries:[]}},history:[],presets:{}};
+function debounce(func,wait=50){let timeout;return function(...args){clearTimeout(timeout);timeout=setTimeout(()=>func.apply(this,args),wait);}}
+function getNowTime(){const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');const h=String(d.getHours()).padStart(2,'0');const min=String(d.getMinutes()).padStart(2,'0');const s=String(d.getSeconds()).padStart(2,'0');return `${y}-${m}-${day} ${h}:${min}:${s}`;}
+function showModal(options){const{title,desc,inputValue=null,confirmClass="",onConfirm}=options;DOM.modalTitle.innerText=title;DOM.modalDesc.innerText=desc;DOM.modalInput.style.display=inputValue!==null?"block":"none";if(inputValue!==null)DOM.modalInput.value=inputValue;DOM.modalConfirm.className=`modal-confirm ${confirmClass}`;modalConfirmCallback=onConfirm;DOM.confirmModal.classList.add("show");}
+function closeModal(){DOM.confirmModal.classList.remove("show");modalConfirmCallback=null;currentBubbleIndex=-1;currentBubbleElement=null;}
+DOM.modalConfirm.addEventListener('click',(e)=>{e.stopPropagation();if(modalConfirmCallback&&typeof modalConfirmCallback==='function'){try{modalConfirmCallback();}catch(err){addSystemMsg('操作执行失败');}}closeModal();});
+DOM.modalCancel.addEventListener('click',(e)=>{e.stopPropagation();closeModal();});
+DOM.confirmModal.addEventListener('click',(e)=>{if(e.target===DOM.confirmModal){closeModal();}});
+function closeAllBubbleMenus(){DOM.desktopBubbleMenu.classList.remove("show");DOM.mobileBubbleMenu.classList.remove("show");DOM.mobileMenuMask.classList.remove("show");currentBubbleIndex=-1;currentBubbleElement=null;}
+function setDesktopMenuPosition(bubbleRect){const menu=DOM.desktopBubbleMenu;const screenWidth=window.innerWidth;const screenHeight=window.innerHeight;const menuWidth=menu.offsetWidth;const menuHeight=menu.offsetHeight;const bottomSpace=screenHeight-bubbleRect.bottom;const topSpace=bubbleRect.top;let top,left;if(bottomSpace>=menuHeight+10){top=bubbleRect.bottom+8;}else if(topSpace>=menuHeight+10){top=bubbleRect.top-menuHeight-8;}else{top=(screenHeight-menuHeight)/2;}left=bubbleRect.left+(bubbleRect.width/2)-(menuWidth/2);if(left<10)left=10;if(left+menuWidth>screenWidth-10)left=screenWidth-menuWidth-10;menu.style.left=`${left}px`;menu.style.top=`${top}px`;}
+function openBubbleMenu(index,element,e){e.stopPropagation();currentBubbleIndex=index;currentBubbleElement=element;const bubbleRect=element.getBoundingClientRect();if(isMobile){DOM.mobileMenuMask.classList.add("show");setTimeout(()=>{DOM.mobileBubbleMenu.classList.add("show");},10);}else{setDesktopMenuPosition(bubbleRect);DOM.desktopBubbleMenu.classList.add("show");}}
+function updateAuthorWatermark(){const isShow=CONFIG.watermarkSwitch==="show"&&CONFIG.history.length===0;isShow?DOM.authorWatermark.classList.add("show"):DOM.authorWatermark.classList.remove("show");}
+const updateBubbleStyle=debounce(()=>{document.documentElement.style.setProperty("--bubble-opacity",CONFIG.bubbleOpacity);document.documentElement.style.setProperty("--bubble-blur",`${CONFIG.bubbleBlur}px`);document.documentElement.style.setProperty("--bubble-border",CONFIG.bubbleBorder==="show"?"2px solid #fff":"none");DOM.opacityText.innerText=CONFIG.bubbleOpacity.toFixed(2);DOM.blurText.innerText=CONFIG.bubbleBlur;});
+const updateBgImageOpacity=debounce(()=>{document.documentElement.style.setProperty("--bg-mask-opacity",CONFIG.bgImageOpacity);DOM.bgOpacityText.innerText=CONFIG.bgImageOpacity.toFixed(2);});
+function updateChatBg(){if(!CONFIG.bgImageBase64||CONFIG.bgImageBase64.trim()===""){DOM.chatWrap.style.backgroundImage="none";DOM.chatWrap.style.backgroundColor="#000";return;}DOM.chatWrap.style.backgroundImage=`url(${CONFIG.bgImageBase64})`;DOM.chatWrap.style.backgroundColor="transparent";}
+function updateTopTitle(){DOM.topTitleText.innerText=CONFIG.topTitle;DOM.topBar.style.color=CONFIG.topTitleColor;}
+function renderAllHistory(){const fragment=document.createDocumentFragment();CONFIG.history.forEach((msg,index)=>{fragment.appendChild(createBubbleElement(msg.content,msg.role,index));});DOM.chatBox.innerHTML="";DOM.chatBox.appendChild(fragment);DOM.chatBox.scrollTop=DOM.chatBox.scrollHeight;updateAuthorWatermark();}
+function createBubbleElement(text,role,index){const div=document.createElement("div");if(role==="user"){div.className="msg-user";}else if(role==="assistant"){div.className="msg-bot";}else if(role==="system"){div.className="msg-system";}div.dataset.index=index;div.dataset.role=role;if(role==="system"){const content=document.createElement("div");content.innerText=`【${CONFIG.systemName}】${text}`;content.style.color=CONFIG.systemColor;div.appendChild(content);return div;}const name=document.createElement("span");name.className="name";name.style.color=role==="user"?CONFIG.userColor:CONFIG.botColor;name.innerText=role==="user"?CONFIG.userName:CONFIG.botName;const content=document.createElement("div");content.innerText=text;div.appendChild(name);div.appendChild(content);if(role==="user"||role==="assistant"){div.addEventListener('click',(e)=>openBubbleMenu(index,div,e));}return div;}
+function addSystemMsg(text){CONFIG.history.push({role:"system",content:text});saveConfigToLocal();const bubble=createBubbleElement(text,"system",CONFIG.history.length-1);DOM.chatBox.appendChild(bubble);DOM.chatBox.scrollTop=DOM.chatBox.scrollHeight;updateAuthorWatermark();}
+function addUserMsg(text,noScroll=false){CONFIG.history.push({role:"user",content:text});saveConfigToLocal();const bubble=createBubbleElement(text,"user",CONFIG.history.length-1);DOM.chatBox.appendChild(bubble);if(!noScroll)DOM.chatBox.scrollTop=DOM.chatBox.scrollHeight;updateAuthorWatermark();}
+function addBotMsg(text,noScroll=false){CONFIG.history.push({role:"assistant",content:text});saveConfigToLocal();const bubble=createBubbleElement(text,"assistant",CONFIG.history.length-1);DOM.chatBox.appendChild(bubble);if(!noScroll)DOM.chatBox.scrollTop=DOM.chatBox.scrollHeight;updateAuthorWatermark();}
+function deleteCurrentBubble(){try{if(currentBubbleIndex<0||currentBubbleIndex>=CONFIG.history.length){addSystemMsg("删除失败");return;}CONFIG.history.splice(currentBubbleIndex,1);saveConfigToLocal();renderAllHistory();addSystemMsg("消息已删除");}catch(err){addSystemMsg("删除失败");}closeAllBubbleMenus();}
+function editAndRollbackBubble(){if(currentBubbleIndex<0||currentBubbleIndex>=CONFIG.history.length){addSystemMsg("操作失败");closeAllBubbleMenus();return;}const currentMsg=CONFIG.history[currentBubbleIndex];showModal({title:"修改消息",desc:"修改后删除后续对话",inputValue:currentMsg.content,confirmClass:"",onConfirm:()=>{const newContent=DOM.modalInput.value.trim();if(!newContent){addSystemMsg("内容不能为空");return;}CONFIG.history[currentBubbleIndex].content=newContent;CONFIG.history=CONFIG.history.slice(0,currentBubbleIndex+1);saveConfigToLocal();renderAllHistory();addSystemMsg("修改完成");}});closeAllBubbleMenus();}
+function clearHistory(){try{CONFIG.history=[];saveConfigToLocal();renderAllHistory();addSystemMsg("对话已清空");}catch(err){addSystemMsg("清空失败");}}
+function resetPrompt(){try{CONFIG.systemPrompt="你是一个有用的助手。";DOM.systemPrompt.value=CONFIG.systemPrompt;saveConfigToLocal();addSystemMsg("提示词已重置");}catch(err){addSystemMsg("重置失败");}}
+function clearAllData(){try{localStorage.removeItem("pixelChatConfig");window.location.reload();}catch(err){addSystemMsg("清空失败");}}
+function exportHistory(){try{const data={title:CONFIG.topTitle,userName:CONFIG.userName,botName:CONFIG.botName,systemName:CONFIG.systemName,history:CONFIG.history};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`${CONFIG.topTitle}_存档.json`;a.click();URL.revokeObjectURL(url);addSystemMsg("导出成功");}catch(err){addSystemMsg("导出失败");}}
+function importHistory(file){const reader=new FileReader();reader.onload=(evt)=>{try{const data=JSON.parse(evt.target.result);if(data.history){CONFIG.history=data.history;if(data.userName)CONFIG.userName=data.userName;if(data.botName)CONFIG.botName=data.botName;if(data.systemName)CONFIG.systemName=data.systemName;if(data.title)CONFIG.topTitle=data.title;saveConfigToLocal();syncFormWithConfig();renderAllHistory();addSystemMsg("导入成功");}}catch(e){addSystemMsg("导入失败");}};reader.readAsText(file);}
+function refreshPresetSelect(){DOM.presetSelect.innerHTML="";Object.keys(CONFIG.presets).forEach(name=>{const opt=document.createElement("option");opt.value=name;opt.innerText=name;DOM.presetSelect.appendChild(opt);});}
+function savePreset(){const presetName=DOM.presetName.value.trim();if(!presetName){addSystemMsg("请输入名称");return;}CONFIG.presets[presetName]={systemPrompt:CONFIG.systemPrompt,userName:CONFIG.userName,userColor:CONFIG.userColor,botName:CONFIG.botName,botColor:CONFIG.botColor,systemName:CONFIG.systemName,systemColor:CONFIG.systemColor,temperature:CONFIG.temperature,topP:CONFIG.topP};saveConfigToLocal();refreshPresetSelect();addSystemMsg("预设已保存");}
+function loadPreset(){const presetName=DOM.presetSelect.value;if(!presetName||!CONFIG.presets[presetName]){addSystemMsg("请选择预设");return;}const preset=CONFIG.presets[presetName];Object.assign(CONFIG,preset);saveConfigToLocal();syncFormWithConfig();addSystemMsg("预设已加载");}
+function deletePreset(){const presetName=DOM.presetSelect.value;if(!presetName||!CONFIG.presets[presetName]){addSystemMsg("选择预设");return;}delete CONFIG.presets[presetName];saveConfigToLocal();refreshPresetSelect();addSystemMsg("预设已删除");}
+function loadConfigFromLocal(){const saved=localStorage.getItem("pixelChatConfig");if(saved){try{CONFIG={...CONFIG,...JSON.parse(saved)};syncFormWithConfig();updateTopTitle();updateChatBg();updateBubbleStyle();updateBgImageOpacity();renderAllHistory();refreshPresetSelect();refreshWorldbookSelect();renderWorldbookEntries();}catch(e){}}}
+function saveConfigToLocal(){try{localStorage.setItem("pixelChatConfig",JSON.stringify(CONFIG));}catch(err){}}
+function syncFormWithConfig(){
+  DOM.apiBase.value=CONFIG.baseUrl;
+  DOM.apiKey.value=CONFIG.apiKey;
+  const savedModel=CONFIG.model;
+  const modelOptions=Array.from(DOM.modelSelect.options).map(opt=>opt.value);
+  if(!modelOptions.includes(savedModel)){const newOpt=document.createElement("option");newOpt.value=savedModel;newOpt.innerText=savedModel;DOM.modelSelect.appendChild(newOpt);}
+  DOM.modelSelect.value=savedModel;
+  DOM.temperature.value=CONFIG.temperature;
+  DOM.topP.value=CONFIG.topP;
+  DOM.tempText.innerText=CONFIG.temperature.toFixed(1);
+  DOM.topPText.innerText=CONFIG.topP.toFixed(2);
+  DOM.userName.value=CONFIG.userName;
+  DOM.userColor.value=CONFIG.userColor;
+  DOM.botName.value=CONFIG.botName;
+  DOM.botColor.value=CONFIG.botColor;
+  DOM.systemName.value=CONFIG.systemName;
+  DOM.systemColor.value=CONFIG.systemColor;
+  DOM.systemPrompt.value=CONFIG.systemPrompt;
+  DOM.topTitle.value=CONFIG.topTitle;
+  DOM.topTitleColor.value=CONFIG.topTitleColor;
+  DOM.bgImageOpacity.value=CONFIG.bgImageOpacity;
+  DOM.bubbleOpacity.value=CONFIG.bubbleOpacity;
+  DOM.bubbleBlur.value=CONFIG.bubbleBlur;
+  DOM.bubbleBorderSwitch.value=CONFIG.bubbleBorder;
+  DOM.watermarkSwitch.value=CONFIG.watermarkSwitch;
+  DOM.enterSendSwitch.value=CONFIG.enterSendSwitch;
+  DOM.autoClearSwitch.value=CONFIG.autoClearSwitch;
+}
+async function fetchRealModels(){
+  CONFIG.baseUrl=DOM.apiBase.value.trim();
+  CONFIG.apiKey=DOM.apiKey.value.trim();
+  DOM.fetchModelsBtn.disabled=true;
+  DOM.fetchModelsBtn.innerText="加载中";
+  try{
+    const res=await fetch(CONFIG.baseUrl+"models",{method:"GET",headers:{"Authorization":"Bearer "+CONFIG.apiKey}});
+    if(!res.ok)throw new Error();
+    const data=await res.json();
+    DOM.modelSelect.innerHTML="";
+    const models=data.data||[];
+    if(models.length===0){const opt=document.createElement("option");opt.value="gpt-3.5-turbo";opt.innerText="默认模型";DOM.modelSelect.appendChild(opt);}
+    else{models.forEach(m=>{const opt=document.createElement("option");opt.value=m.id||m.model;opt.innerText=m.id||m.model;DOM.modelSelect.appendChild(opt);});}
+    const savedModel=CONFIG.model;
+    const modelOptions=Array.from(DOM.modelSelect.options).map(opt=>opt.value);
+    DOM.modelSelect.value=modelOptions.includes(savedModel)?savedModel:models[0]?.id||"gpt-3.5-turbo";
+    CONFIG.model=DOM.modelSelect.value;
+    addSystemMsg("模型刷新成功");
+  }catch(e){addSystemMsg("模型获取失败");syncFormWithConfig();}
+  finally{DOM.fetchModelsBtn.disabled=false;DOM.fetchModelsBtn.innerText="刷新模型列表";}
+}
+function refreshWorldbookSelect(){DOM.worldbookSelect.innerHTML="";Object.keys(CONFIG.worldBooks).forEach(name=>{const opt=document.createElement("option");opt.value=name;opt.innerText=name;DOM.worldbookSelect.appendChild(opt);});DOM.worldbookSelect.value=CONFIG.activeWorldBook;}
+function renderWorldbookEntries(){const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];if(!activeBook)return;const listEl=DOM.worldbookEntryList;const newBtn=DOM.newEntryBtn;listEl.innerHTML="";listEl.appendChild(newBtn);activeBook.entries.forEach(entry=>{const item=document.createElement("div");item.className=`worldbook-entry-item ${currentEntryId===entry.id?"active":""}`;item.dataset.id=entry.id;item.innerHTML=`<span class="enable-dot ${entry.enable?"active":"inactive"}"></span><span class="entry-key">${entry.key}</span>`;item.addEventListener('click',()=>loadEntry(entry.id));listEl.appendChild(item);});}
+function loadEntry(id){const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];const entry=activeBook.entries.find(e=>e.id===id);if(!entry)return;currentEntryId=id;DOM.entryKey.value=entry.key;DOM.entryContent.value=entry.content;DOM.entryEnable.checked=entry.enable;renderWorldbookEntries();}
+function clearEntryEditor(){currentEntryId=null;DOM.entryKey.value="";DOM.entryContent.value="";DOM.entryEnable.checked=false;renderWorldbookEntries();}
+function openWorldbookModal(){refreshWorldbookSelect();renderWorldbookEntries();clearEntryEditor();DOM.worldbookModal.classList.add("show");}
+function closeWorldbookModal(){DOM.worldbookModal.classList.remove("show");clearEntryEditor();saveConfigToLocal();}
+function newWorldbook(){showModal({title:"新建世界书",desc:"输入世界书名称",inputValue:"",onConfirm:()=>{const name=DOM.modalInput.value.trim();if(!name||CONFIG.worldBooks[name]){addSystemMsg("名称无效或已存在");return;}CONFIG.worldBooks[name]={entries:[]};CONFIG.activeWorldBook=name;refreshWorldbookSelect();renderWorldbookEntries();clearEntryEditor();}});}
+function deleteWorldbook(){const name=CONFIG.activeWorldBook;if(Object.keys(CONFIG.worldBooks).length<=1){addSystemMsg("至少保留一个世界书");return;}showModal({title:"删除世界书",desc:`确认删除「${name}」`,confirmClass:"danger",onConfirm:()=>{delete CONFIG.worldBooks[name];CONFIG.activeWorldBook=Object.keys(CONFIG.worldBooks)[0];refreshWorldbookSelect();renderWorldbookEntries();clearEntryEditor();}});}
+function importWorldbook(file){const reader=new FileReader();reader.onload=(evt)=>{try{const data=JSON.parse(evt.target.result);if(!data.name||!data.entries)throw new Error();if(CONFIG.worldBooks[data.name])data.name=data.name+"_"+Date.now();CONFIG.worldBooks[data.name]={entries:data.entries};CONFIG.activeWorldBook=data.name;refreshWorldbookSelect();renderWorldbookEntries();addSystemMsg("世界书导入成功");}catch(e){addSystemMsg("导入格式错误");}};reader.readAsText(file);}
+function newEntry(){const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];const newId=Date.now().toString();activeBook.entries.push({id:newId,key:"新词条",content:"",enable:true});loadEntry(newId);}
+function saveEntry(){if(!currentEntryId){addSystemMsg("请先选择或新建词条");return;}const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];const entry=activeBook.entries.find(e=>e.id===currentEntryId);if(!entry)return;entry.key=DOM.entryKey.value.trim();entry.content=DOM.entryContent.value.trim();entry.enable=DOM.entryEnable.checked;if(!entry.key){addSystemMsg("关键词不能为空");return;}renderWorldbookEntries();saveConfigToLocal();addSystemMsg("词条已保存");}
+function deleteEntry(){if(!currentEntryId){addSystemMsg("请先选择词条");return;}const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];activeBook.entries=activeBook.entries.filter(e=>e.id!==currentEntryId);clearEntryEditor();saveConfigToLocal();addSystemMsg("词条已删除");}
+function buildFinalSystemPrompt(){
+  const now=getNowTime();
+  let prompt=`你的名字是${CONFIG.botName}\n用户名字是${CONFIG.userName}\n当前对话时间：${now}\n${CONFIG.systemPrompt}`;
+  const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];
+  if(activeBook&&activeBook.entries.length>0){
+    const enableEntries=activeBook.entries.filter(e=>e.enable);
+    if(enableEntries.length>0){
+      prompt+="\n\n【世界书设定】\n以下是对话必须严格遵守的设定，当用户提到对应关键词时，必须完全按照设定内容回复，不得偏离设定：";
+      enableEntries.forEach((entry,idx)=>{prompt+=`\n${idx+1}. 触发关键词：${entry.key} - 设定内容：${entry.content}`;});
+    }
+  }
+  return prompt;
+}
+async function send(){
+  const txt=DOM.userInput.value.trim();
+  if(!txt)return;
+  addUserMsg(txt);
+  if(CONFIG.autoClearSwitch==="on")DOM.userInput.value="";
+  try{
+    const finalSystemPrompt=buildFinalSystemPrompt();
+    const sendHistory=CONFIG.history.filter(msg=>msg.role==="user"||msg.role==="assistant");
+    const messages=[{role:"system",content:finalSystemPrompt},...sendHistory];
+    const res=await fetch(CONFIG.baseUrl+"chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+CONFIG.apiKey},body:JSON.stringify({model:CONFIG.model,messages:messages,temperature:CONFIG.temperature,top_p:CONFIG.topP})});
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||"无回复";
+    addBotMsg(reply);
+  }catch(e){addSystemMsg("请求失败");}
+}
+DOM.menuCloseBtn.addEventListener('click',(e)=>{e.stopPropagation();DOM.controlPanel.classList.remove("open");});
+[DOM.desktopMenuDelete,DOM.mobileMenuDelete].forEach(btn=>{btn.addEventListener('click',(e)=>{e.stopPropagation();showModal({title:"删除消息",desc:"确认删除本条消息",confirmClass:"danger",onConfirm:deleteCurrentBubble});});});
+[DOM.desktopMenuEdit,DOM.mobileMenuEdit].forEach(btn=>{btn.addEventListener('click',(e)=>{e.stopPropagation();editAndRollbackBubble();});});
+DOM.mobileMenuCancel.addEventListener('click',(e)=>{e.stopPropagation();closeAllBubbleMenus();});
+DOM.mobileMenuMask.addEventListener('click',closeAllBubbleMenus);
+document.addEventListener('click',(e)=>{if(!DOM.desktopBubbleMenu.contains(e.target))closeAllBubbleMenus();if(!DOM.controlPanel.contains(e.target)&&!DOM.panelToggle.contains(e.target)){DOM.controlPanel.classList.remove("open");}});
+DOM.panelToggle.addEventListener('click',(e)=>{e.stopPropagation();DOM.controlPanel.classList.toggle("open");});
+DOM.saveBtn.addEventListener('click',()=>{
+  CONFIG.baseUrl=DOM.apiBase.value.trim();
+  CONFIG.apiKey=DOM.apiKey.value.trim();
+  CONFIG.model=DOM.modelSelect.value;
+  CONFIG.temperature=parseFloat(DOM.temperature.value);
+  CONFIG.topP=parseFloat(DOM.topP.value);
+  CONFIG.userName=DOM.userName.value||"用户";
+  CONFIG.userColor=DOM.userColor.value||"#fff";
+  CONFIG.botName=DOM.botName.value||"AI";
+  CONFIG.botColor=DOM.botColor.value||"#fff";
+  CONFIG.systemName=DOM.systemName.value||"系统";
+  CONFIG.systemColor=DOM.systemColor.value||"#ff5555";
+  CONFIG.systemPrompt=DOM.systemPrompt.value;
+  CONFIG.topTitle=DOM.topTitle.value||"<nameless>";
+  CONFIG.topTitleColor=DOM.topTitleColor.value||"#fff";
+  CONFIG.bubbleOpacity=parseFloat(DOM.bubbleOpacity.value);
+  CONFIG.bgImageOpacity=parseFloat(DOM.bgImageOpacity.value);
+  CONFIG.bubbleBlur=parseInt(DOM.bubbleBlur.value);
+  CONFIG.bubbleBorder=DOM.bubbleBorderSwitch.value;
+  CONFIG.watermarkSwitch=DOM.watermarkSwitch.value;
+  CONFIG.enterSendSwitch=DOM.enterSendSwitch.value;
+  CONFIG.autoClearSwitch=DOM.autoClearSwitch.value;
+  saveConfigToLocal();
+  updateTopTitle();
+  updateBubbleStyle();
+  updateBgImageOpacity();
+  updateAuthorWatermark();
+  renderAllHistory();
+  DOM.controlPanel.classList.remove("open");
+  addSystemMsg("配置已保存");
+});
+DOM.fetchModelsBtn.addEventListener('click',fetchRealModels);
+DOM.sendBtn.addEventListener('click',send);
+DOM.userInput.addEventListener('keydown',(e)=>{if(CONFIG.enterSendSwitch==="on"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+DOM.bgImageFile.addEventListener('change',(e)=>{const file=e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){addSystemMsg("请选择图片");return;}const reader=new FileReader();reader.onload=(evt)=>{CONFIG.bgImageBase64=evt.target.result;updateChatBg();addSystemMsg("背景图已加载");};reader.readAsDataURL(file);});
+DOM.clearBgBtn.addEventListener('click',()=>{CONFIG.bgImageBase64="";DOM.bgImageFile.value="";updateChatBg();addSystemMsg("背景图已清除");});
+DOM.temperature.addEventListener('input',debounce((e)=>{CONFIG.temperature=parseFloat(e.target.value);DOM.tempText.innerText=CONFIG.temperature.toFixed(1);}));
+DOM.topP.addEventListener('input',debounce((e)=>{CONFIG.topP=parseFloat(e.target.value);DOM.topPText.innerText=CONFIG.topP.toFixed(2);}));
+DOM.bgImageOpacity.addEventListener('input',(e)=>{CONFIG.bgImageOpacity=parseFloat(e.target.value);updateBgImageOpacity();});
+DOM.bubbleOpacity.addEventListener('input',(e)=>{CONFIG.bubbleOpacity=parseFloat(e.target.value);updateBubbleStyle();});
+DOM.bubbleBlur.addEventListener('input',(e)=>{CONFIG.bubbleBlur=parseInt(e.target.value);updateBubbleStyle();});
+DOM.clearHistoryBtn.addEventListener('click',()=>{showModal({title:"清空对话",desc:"清空全部聊天记录",confirmClass:"danger",onConfirm:clearHistory});});
+DOM.resetPromptBtn.addEventListener('click',resetPrompt);
+DOM.clearAllBtn.addEventListener('click',()=>{showModal({title:"恢复默认",desc:"清空所有本地配置",confirmClass:"danger",onConfirm:clearAllData});});
+DOM.exportBtn.addEventListener('click',exportHistory);
+DOM.importFile.addEventListener('change',(e)=>{const file=e.target.files[0];if(file)importHistory(file);});
+DOM.savePresetBtn.addEventListener('click',savePreset);
+DOM.loadPresetBtn.addEventListener('click',loadPreset);
+DOM.deletePresetBtn.addEventListener('click',()=>{showModal({title:"删除预设",desc:"永久删除该人设",confirmClass:"danger",onConfirm:deletePreset});});
+DOM.openWorldbookBtn.addEventListener('click',openWorldbookModal);
+DOM.worldbookCloseBtn.addEventListener('click',closeWorldbookModal);
+DOM.worldbookModal.addEventListener('click',(e)=>{if(e.target===DOM.worldbookModal)closeWorldbookModal();});
+DOM.worldbookSelect.addEventListener('change',()=>{CONFIG.activeWorldBook=DOM.worldbookSelect.value;renderWorldbookEntries();clearEntryEditor();});
+DOM.newWorldbookBtn.addEventListener('click',newWorldbook);
+DOM.deleteWorldbookBtn.addEventListener('click',deleteWorldbook);
+DOM.worldbookImportFile.addEventListener('change',(e)=>{const file=e.target.files[0];if(file)importWorldbook(file);});
+DOM.newEntryBtn.addEventListener('click',newEntry);
+DOM.saveEntryBtn.addEventListener('click',saveEntry);
+DOM.deleteEntryBtn.addEventListener('click',deleteEntry);
+window.addEventListener('resize',debounce(()=>{isMobile=window.innerWidth<768;closeAllBubbleMenus();},100));
+document.addEventListener('DOMContentLoaded',()=>{loadConfigFromLocal();});
+</script>
+</body>
+</html>
