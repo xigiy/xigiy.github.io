@@ -472,15 +472,32 @@ function importWorldbook(file){const reader=new FileReader();reader.onload=(evt)
 function newEntry(){const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];const newId=Date.now().toString();activeBook.entries.push({id:newId,key:"新词条",content:"",enable:true});loadEntry(newId);}
 function saveEntry(){if(!currentEntryId){addSystemMsg("请先选择或新建词条");return;}const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];const entry=activeBook.entries.find(e=>e.id===currentEntryId);if(!entry)return;entry.key=DOM.entryKey.value.trim();entry.content=DOM.entryContent.value.trim();entry.enable=DOM.entryEnable.checked;if(!entry.key){addSystemMsg("关键词不能为空");return;}renderWorldbookEntries();saveConfigToLocal();addSystemMsg("词条已保存");}
 function deleteEntry(){if(!currentEntryId){addSystemMsg("请先选择词条");return;}const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];activeBook.entries=activeBook.entries.filter(e=>e.id!==currentEntryId);clearEntryEditor();saveConfigToLocal();addSystemMsg("词条已删除");}
-function buildFinalSystemPrompt(){
-  const now=getNowTime();
-  let prompt=`你的名字是${CONFIG.botName}\n用户名字是${CONFIG.userName}\n当前对话时间：${now}\n${CONFIG.systemPrompt}`;
+function buildFinalSystemPrompt(userInputText){
+  const nowTime=getNowTime();
+  let prompt=`【基础强制设定】
+你的名字是：${CONFIG.botName}
+用户的名字是：${CONFIG.userName}
+当前对话时间：${nowTime}
+你必须严格记住以上信息，用户问起时必须准确回答，绝对不能遗忘。
+
+【核心行为指令】
+${CONFIG.systemPrompt}`;
+
   const activeBook=CONFIG.worldBooks[CONFIG.activeWorldBook];
   if(activeBook&&activeBook.entries.length>0){
+    const scanText=`${CONFIG.userName} ${userInputText}`.toLowerCase();
     const enableEntries=activeBook.entries.filter(e=>e.enable);
-    if(enableEntries.length>0){
-      prompt+="\n\n【世界书设定】\n以下是对话必须严格遵守的设定，当用户提到对应关键词时，必须完全按照设定内容回复，不得偏离设定：";
-      enableEntries.forEach((entry,idx)=>{prompt+=`\n${idx+1}. 触发关键词：${entry.key} - 设定内容：${entry.content}`;});
+    const matchedEntries=[];
+    enableEntries.forEach(entry=>{
+      const keywords=entry.key.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k);
+      const isMatch=keywords.some(key=>scanText.includes(key));
+      if(isMatch)matchedEntries.push(entry);
+    });
+    if(matchedEntries.length>0){
+      prompt+="\n\n【匹配到的世界书设定】\n以下是本次对话必须严格遵守的设定，绝对不能偏离：";
+      matchedEntries.forEach((entry,idx)=>{
+        prompt+=`\n${idx+1}. 触发关键词：${entry.key} - 设定内容：${entry.content}`;
+      });
     }
   }
   return prompt;
@@ -491,7 +508,7 @@ async function send(){
   addUserMsg(txt);
   if(CONFIG.autoClearSwitch==="on")DOM.userInput.value="";
   try{
-    const finalSystemPrompt=buildFinalSystemPrompt();
+    const finalSystemPrompt=buildFinalSystemPrompt(txt);
     const sendHistory=CONFIG.history.filter(msg=>msg.role==="user"||msg.role==="assistant");
     const messages=[{role:"system",content:finalSystemPrompt},...sendHistory];
     const res=await fetch(CONFIG.baseUrl+"chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+CONFIG.apiKey},body:JSON.stringify({model:CONFIG.model,messages:messages,temperature:CONFIG.temperature,top_p:CONFIG.topP})});
