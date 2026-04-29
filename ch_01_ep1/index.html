@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>vivid/stasis 剧情整理</title>
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css"/>
+<style>
+:root{
+  --color-bg-main:#000;
+  --color-bg-panel:#111;
+  --color-bg-card:#222;
+  --color-bg-hover:#581C87;
+  --color-bg-secondary:#333;
+  --color-text-primary:#fff;
+  --color-text-secondary:#aaa;
+  --border-standard:2px solid #fff;
+  --border-thin:1px solid #333;
+  --font-main:"BoutiqueBitmap9x9",monospace;
+  --highlight-color:#88DDFF;        /* 文本高亮颜色 */
+  --narrator-color:#aaa;           /* 旁白文字颜色 */
+}
+*{
+  margin:0;padding:0;box-sizing:border-box;
+  border-radius:0!important;
+  scrollbar-width:thin;
+  -webkit-tap-highlight-color:transparent;
+  transform:translateZ(0);
+}
+body{
+  background:var(--color-bg-main);
+  color:var(--color-text-primary);
+  font-family:var(--font-main)!important;
+  font-weight:normal;
+  font-size:18px;
+  min-height:100vh;
+  min-height:100dvh;
+  overflow-x:hidden;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ---------- 头部 & 元信息 ---------- */
+header h1{
+  font-size:28px;
+  letter-spacing:2px;
+  margin-bottom:5px;
+  color:#fff;
+}
+header h1 .pink{color:#FFB6C1;}
+header h1 .blue{color:#4FC3F7;}
+header p{
+  color:var(--color-text-secondary);
+  font-size:16px;
+  margin-bottom:20px;
+}
+.meta-panel{
+  background:var(--color-bg-panel);
+  border:var(--border-standard);
+  padding:15px;
+  margin-bottom:25px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.meta-line{
+  display:flex;
+  gap:8px;
+  font-size:16px;
+}
+.meta-label{
+  color:var(--color-text-secondary);
+  min-width:60px;
+}
+.meta-value{
+  color:var(--color-text-primary);
+}
+.meta-divider{
+  width:100%;
+  border-top:var(--border-thin);
+  margin:4px 0;
+}
+
+/* ---------- 章节标题 ---------- */
+.chapter-title{
+  font-size:22px;
+  margin-bottom:20px;
+  padding-bottom:10px;
+  border-bottom:var(--border-thin);
+}
+
+/* ---------- 对话气泡 ---------- */
+.msg-line{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:10px;
+  align-items:center;
+}
+.speaker-name{
+  font-size:14px;
+  width:85%;
+  max-width:85%;
+  text-align:left;
+}
+.msg-bubble{
+  max-width:85%;
+  width:85%;
+  padding:8px 12px;
+  background:rgba(0,0,0,0.85);
+  border:var(--border-standard);
+  backdrop-filter:blur(2px);
+  word-break:break-word;
+  line-height:1.6;
+  text-align:left;
+}
+.msg-narrator{
+  border:none;
+  color:var(--narrator-color);
+  background:transparent;
+}
+.highlight-text{
+  color:var(--highlight-color);
+}
+
+/* ---------- 分隔线（可带文字） ---------- */
+.chapter-divider{
+  width:100%;
+  border-top:var(--border-thin);
+  margin:12px 0;
+}
+.divider-with-text{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:12px 0;
+  width:100%;
+}
+.divider-with-text::before,
+.divider-with-text::after{
+  content:"";
+  flex:1;
+  border-top:var(--border-thin);
+}
+.divider-with-text span{
+  color:var(--color-text-secondary);
+  font-size:16px;
+  white-space:nowrap;
+  padding:0 4px;
+}
+
+/* ---------- 折叠面板 ---------- */
+.details-wrap{
+  width:100%;
+  margin-bottom:15px;
+  background:var(--color-bg-panel);
+  border:var(--border-standard);
+}
+.details-wrap summary{
+  list-style:none;
+  background:#0a0a0a;
+  padding:10px 15px;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  min-height:44px;
+}
+.details-wrap summary::-webkit-details-marker{display:none;}
+.details-wrap summary::after{
+  content:"▼";
+  font-size:12px;
+  color:#aaa;
+}
+.details-wrap[open] summary::after{
+  transform:rotate(180deg);
+}
+.details-content{
+  padding:15px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* ---------- 底部 ---------- */
+footer{
+  margin-top:auto;
+  padding-top:30px;
+  color:var(--color-text-secondary);
+  font-size:14px;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="pink">vivid</span><span class="blue">/</span><span class="blue">stasis</span> 剧情整理</h1>
+  <p>个人汉化，仅供学习交流</p>
+</header>
+
+<main>
+  <!-- 元信息面板 -->
+  <div class="meta-panel">
+    <div class="meta-line"><span class="meta-label">作品</span><span class="meta-value">vivid/stasis</span></div>
+    <div class="meta-divider"></div>
+    <div class="</span><span class="meta-value" id="metaChapter">-</span></div>
+    <div class="meta-line"><span class="meta-label">性质</span><span class="meta-value" id="metaType">-</span></div>
+    <div class="meta-line"><span class="meta-label">翻译</span><span class="meta-value">个人汉化</span></div>
+  </div>
+
+  <div id="chapterTitle"></div>
+  <div id="dialogueContainer"></div>
+</main>
+
+<footer>
+  <p>最终版权归 vivid/stasis 版权商所有，仅做汉化</p>
+</footer>
+
+<script>
+// ------------------- 章节配置 -------------------
+var CHAPTER = {
+  id: "episode_1",
+  title: "第一日 / 接近之入口",
+  special: false               // 若想让整章折叠，改成 true
+};
+
+// ------------------- 文本脚本 -------------------
+// 语法说明（保持原格式）
+//   |角色|文本|           → 角色对话（显示角色名）
+//   | |旁白文本|          → 旁白（无角色名、无边框）
+//   |-|文字-|            → 带文字的分隔线
+//   |^折叠标题^|[ … ]   → 折叠面板，内部仍可使用上面语法
+var SCRIPT = `
+|-第1章 missing/link-|
+
+|-第1节 站点；接近之入口-|
+
+| |Saturday 在种子岛警署询问她失踪妹妹的下落。|
+
+|-种子岛警署 上午10:04-|
+
+|旁白|种子岛警署。|
+
+|旁白|这里绝不是那种每天都有大批警官和调查员进出的繁忙枢纽，而是一间为岛上警察力量提供所需服务的简陋小屋。|
+
+|旁白|由于岛上缺乏**刺激**的活动，侦探和其他警官经常在这里享受休息时的宁静。|
+
+|旁白|然而，今天却不是这样的日子。我沿着路走到警察中心。即使从近处看，我也不能怪任何人完全错过它。|
+
+|Saturday|啊……种子岛警署。它……每次我记起它实际上有多小时，总让我措手不及。|
+
+|旁白|我走上小门廊来到门前，敲了敲门。几秒钟过去了，但似乎没有任何回应。|
+
+|Saturday|呃……好吧。|
+
+|旁白|我又敲了一次。结果一样。令人沮丧的是，第三次……第四次也是如此。|
+
+|Saturday|真的假的？？？我很难相信里面一个人都没有。|
+
+|旁白|我离开门廊，环顾四周。|
+
+|Saturday|也许我透过窗户看看能找到谁？|
+
+|旁白|我走到窗前，||看玩|||
+
+|Saturday|或者他们都出去找Tsuki了！大概是这样。我就知道在关键时候可以指望专业人士。|
+
+|旁白|我的意思是，大概不是这样，但我会抱有希望。上天知道我在这种情况下需要希望。|
+
+|旁白|我走回门廊，再次看向那扇门。|
+
+|Saturday|……好吧，牌子写着还在营业，所以……我猜他们是想让我直接试着开门？|
+
+|旁白|我转动门上生锈的把手，果然，门毫不费力地开了。|
+
+|Saturday|……啊。|
+
+|旁白|嗯，在外面站着也没多大用。我进去了。|
+
+|-种子岛警署 上午10:09-|
+
+|旁白|正如我透过窗户看到的那样，接待区一个人都没有。|
+
+|Saturday|这里真的是没人来啊……|
+
+|旁白|但我刚说完，就注意到走廊那边有一位女侦探。我朝她挥手，她从正在看的文件上抬起头来。|
+
+|Saturday|哦！女士！呃，嘿。嗯……打扰一下！……这里有谁能让我跟进一下失踪人员的报案吗？|
+
+|旁白|说实话，我还有很多别的话想说。|
+
+|旁白|保持坚强和正式远不是我的强项，但我觉得跟警察处不好关系可不是什么好主意。|
+
+|旁白|那位侦探，甚至没穿任何制服，指了指大厅后面的一个小隔间，然后走开了。|
+
+|Saturday|哦！呃……谢谢。|
+
+|旁白|我沿着走廊走过去，在小隔间的拐角处探头看了看。|
+
+|旁白|坐在后面的是一个穿着外套的女人，她一边看着其中一个屏幕，一边在记事本上写着什么。|
+
+|Saturday|嘿，侦探小姐，你现在有空吗？|
+
+|Saturday|我有几个问题想问关于……呃，我提交的那份报告，我把它放在活页夹里的某个地方——|
+
+|Saturday|……**操**。我到底把那该死的东西放哪儿了？？？|
+
+|旁白|我开始拼命翻找我的文件。侦探从屏幕上抬起头。她看起来有点困惑。|
+
+|Detective|呃，孩子，我觉得你不能就这么——|
+
+|Saturday|啊！找到了。|
+
+|旁白|我从活页夹里抽出那张纸，递给了她。|
+
+|Saturday|在这里！详细情况都在上面，如果你需要做——比如查一下什么的，或者……我可以告诉你她的名字，或者什么的。|
+
+|旁白|侦探叹了口气，不以为然地看了我。|
+
+|Detective|我们这里的失踪报案不多，所以这是几周来的第一起。|
+
+|Saturday|是、是的！Tsuki Tasogare。就是她。调查有什么进展吗？|
+
+|Detective|……从我们展开调查以来什么都没有。|
+
+|旁白|我皱起眉头。|
+
+|Saturday|什么都没有？已经过了一天了！你们至少得找到点什么吧！|
+
+|Detective|还不到一天。一个女孩失踪了，你就指望我们动员全部警力去找她？我们本来就资源有限。|
+
+|Saturday|我、我不是那个意思！我只是以为你们可能已经有了一些进展或者……什么的……？我不知道！！|
+
+|旁白|侦探又叹了口气。|
+
+|Detective|嗯，我们没有。如果我们找到她，会通知你的。在那之前，你为什么不放松点？你什么也做不了。|
+
+|Detective|担心自己无法控制的事情没有用。|
+
+|Saturday|哦，看在老天的份上——|
+
+|旁白|尽管她试图让我冷静下来，但显然她不知道这反而起了反效果。|
+
+|Saturday|好、好吧！那、那我自己来！我、我会找到她，然后——然后我会向你证明你们可以做得更好！|
+
+|旁白|这又引来了侦探的一声叹息。|
+
+|Detective|……听着，孩子，我理解你的担心，但如果你去违法或让自己陷入危险，我们不会因为你的情绪失控就保护你。|
+
+|Detective|我们最不想看到的就是找到你妹妹后，还得告诉她我们不得不把你关起来，明白吗？|
+
+|旁白|然而，侦探的话还没说完，我已经在出门的路上了。|
+
+|Detective|……天哪。真是个麻烦精。|
+
+|-种子岛警署 上午10:15-|
+
+|旁白|我一回到外面，就坐在门廊上试图让自己冷静下来。没什么效果。|
+
+|Saturday|我应该给Allison发消息，让她知道情况怎么样。|
+
+|saturnalorbit|该死的|
+
+|alli_tgshm|不顺利吗？|
+
+|saturnalorbit|是啊可以这么说|
+
+|saturnalorbit|他们**什么**都没有|
+
+|saturnalorbit|屁都没有|
+
+|alli_tgshm|嗯，才过了一天左右……|
+
+|saturnalorbit|天哪连你也这样|
+
+|saturnalorbit|那可是整整一天的机会等着她去死啊|
+
+|alli_tgshm|Sat，你打算怎么办？|
+
+|saturnalorbit|这还用问吗|
+
+|saturnalorbit|我去找她|
+
+|saturnalorbit|因为他们显然不打算找笑死|
+
+|alli_tgshm|我真的不觉得这是最好的主意。|
+
+|saturnalorbit|拜托这花不了多少时间的|
+
+|saturnalorbit|至少帮我一起贴一些寻人启事之类的|
+
+|alli_tgshm|我愿意帮你做这个，但我不想让你卷入比这更深的事情，好吗？|
+
+|alli_tgshm|Tsuki需要她妹妹能回家。|
+
+|saturnalorbit|好好好我知道了|
+
+|saturnalorbit|我会没事的|
+
+|saturnalorbit|我现在去公园|
+
+|saturnalorbit|你可以在那里跟我碰头吗|
+
+|alli_tgshm|好，我可以。我其实就在附近。我在那边见你，好吗？在那之前，尽量保持冷静|
+
+|saturnalorbit|我很冷静|
+
+|saturnalorbit|说真的|
+
+|saturnalorbit|你现在绝对没见过比我更冷静的人|
+
+|旁白|公园还有相当一段距离。但是……呃呃呃呃呃，这种天气我才不要走那么远。下一班公交什么时候来……？|
+
+|旁白|我在手机上查了一下。最近的车站要等十分钟。|
+
+|旁白|谢天谢地。|
+
+|旁白|我收起手机，从警署门廊站起来，开始走向公交站。|
+`;
+
+// ------------------- 角色颜色表 -------------------
+var CHARACTER_COLORS = {
+  "Dawn":     "#8A9BFF",
+  "解放者":   "#8A9BFF",
+  "Tsuki":    "#FF69B4",
+  "护卫者":   "#FF69B4",
+  "Saturday": "#FFB6C1",
+  "Storyteller":"#FFFFFF",
+  "Detective":"#FFD700",
+  "saturnalorbit":"#FFB6C1",
+  "alli_tgshm":"#81C784",
+  "Eri":      "#4FC3F7",
+  "Kotomi":   "#4FC3F7",
+  "Allison":  "#81C784",
+  "Chiyo":    "#FFF176"
+};
+var DEFAULT_COLOR = "#aaaaaa";
+
+// -------------------------------------------------
+// 解析脚本（保持原语法）
+function parseScript(text){
+  var lines = text.split(/\r?\n/);
+  var result = [];
+  var inFold = false, foldTitle = "", foldChildren = [];
+
+  function commitFold(){
+    if (foldTitle){
+      result.push({type:"fold",title:foldTitle,children:foldChildren});
+      foldTitle="";foldChildren=[];
+    }
+    inFold = false;
+  }
+
+  for (var i=0;i<lines.length;i++){
+    var raw = lines[i].trim();
+    if (!raw || /^\/\//.test(raw)) continue;
+
+    if (raw===']'){ commitFold(); continue; }
+
+    var foldMatch = raw.match(/^\|([\^])(.+)\1\|\[$/);
+    if (foldMatch){
+      commitFold();
+      inFold = true;
+      foldTitle = foldMatch[2].trim();
+      foldChildren = [];
+      continue;
+    }
+
+    var dividerMatch = raw.match(/^\|-(.+)-[|]?$/);
+    if (dividerMatch){
+      result.push({type:"divider",label:dividerMatch[1].trim()});
+      continue;
+    }
+
+    var dialogMatch = raw.match(/^\|([^|]*)\|([^|]*)\|?$/);
+    if (dialogMatch){
+      var speaker = dialogMatch[1].trim();
+      var txt = dialogMatch[2].trim();
+      var entry = {type:"dialog",speaker:speaker,text:txt};
+      if (inFold) foldChildren.push(entry);
+      else result.push(entry);
+      continue;
+    }
+  }
+  commitFold();
+  return result;
+}
+
+// 高亮处理（**文字** → <span class="highlight-text">文字</span>）
+function parseHighlight(text){
+  return text.replace(/\*\*(.+?)\*\*/g,'<span class="highlight-text">$1</span>');
+}
+
+// 创建单条对话的 DOM
+function createDialogueEl(d){
+  var wrapper = document.createElement('div');
+  wrapper.className='msg-line';
+
+  if (d.speaker && d.speaker.trim()){
+    var name = document.createElement('span');
+    name.className='speaker-name';
+    name.textContent=d.speaker;
+    var col = CHARACTER_COLORS[d.speaker]||DEFAULT_COLOR;
+    name.style.color=col;
+    wrapper.appendChild(name);
+  }
+
+  var bubble = document.createElement('div');
+  // 旁白（speaker 为空）使用无边框样式
+  bubble.className='msg-bubble' + (d.speaker && d.speaker.trim() ? '' : ' msg-narrator');
+  bubble.innerHTML=parseHighlight(d.text);
+  wrapper.appendChild(bubble);
+  return wrapper;
+}
+
+// 渲染章节
+function renderChapter(){
+  document.title = CHAPTER.title + " - vivid/stasis";
+  document.getElementById('metaChapter').textContent = 'EPISODE ' + CHAPTER.title;
+  document.getElementById('metaType').textContent = CHAPTER.special ? '特殊章（点击展开）' : '普通章';
+  document.getElementById('chapterTitle').innerHTML = '<div class="chapter-title">EPISODE ' + CHAPTER.title + '</div>';
+
+  var container = document.getElementById('dialogueContainer');
+  container.innerHTML='';
+
+  var parsed = parseScript(SCRIPT);
+
+  function renderItems(items,parent){
+    items.forEach(function(item){
+      if (item.type==='fold'){
+        var d = document.createElement('details');
+        d.className='details-wrap';
+        var s = document.createElement('summary');
+        s.textContent=item.title;
+        d.appendChild(s);
+        var inner = document.createElement('div');
+        inner.className='details-content';
+        renderItems(item.children,inner);
+        d.appendChild(inner);
+        parent.appendChild(d);
+      }else if (item.type==='dialog'){
+        parent.appendChild(createDialogueEl(item));
+      }else if (item.type==='divider'){
+        if (item.label){
+          var div=document.createElement('div');
+          div.className='divider-with-text';
+          var span=document.createElement('span');
+          span.textContent=item.label;
+          div.appendChild(span);
+          parent.appendChild(div);
+        }else{
+          var line=document.createElement('div');
+          line.className='chapter-divider';
+          parent.appendChild(line);
+        }
+      }
+    });
+  }
+
+  if (CHAPTER.special){
+    var d = document.createElement('details');
+    d.className='details-wrap';
+    var s = document.createElement('summary');
+    s.textContent = CHAPTER.title + ' (特殊章)';
+    d.appendChild(s);
+    var inner = document.createElement('div');
+    inner.className='details-content';
+    renderItems(parsed,inner);
+    d.appendChild(inner);
+    container.appendChild(d);
+  }else{
+    renderItems(parsed,container);
+  }
+}
+
+renderChapter();
+</script>
+</body>
+</html>
