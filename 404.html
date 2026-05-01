@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>404 | 星海溯溯</title>
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css"/>
+<style>
+:root{--font-main:"BoutiqueBitmap9x9",monospace;--color-text-main:#ffffff;--color-text-gray:#aaaaaa;--color-bg:#000000;--border-standard:2px solid #fff;}
+*{margin:0;padding:0;box-sizing:border-box;border-radius:0!important;scrollbar-width:thin;-webkit-tap-highlight-color:transparent;transform:translateZ(0);}
+/* 全屏 256 色彩虹渐变循环 */
+@keyframes rainbowFull{0%{background:#ff0000;}17%{background:#ffff00;}33%{background:#00ff00;}50%{background:#00ffff;}67%{background:#0000ff;}83%{background:#ff00ff;}100%{background:#ff0000;}}
+body{animation:rainbowFull 12s linear infinite;background:#ff0000;color:var(--color-text-main);font-family:var(--font-main)!important;font-weight:normal;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:48px;position:relative;}
+/* 单字独立闪烁 + 黑色描边 */
+@keyframes flashHard{0%{color:#8A2BE2;}33%{color:#8A2BE2;}33.1%{color:#FFFFFF;}66%{color:#FFFFFF;}66.1%{color:#FF69B4;}100%{color:#FF69B4;}}
+.flash-title{font-size:48px;font-weight:bold;text-align:center;display:flex;gap:4px;}
+.flash-title span{animation:flashHard 1s linear infinite;-webkit-text-stroke:2px #000;text-stroke:2px #000;}
+/* 黑底白边气泡 */
+.bubble-box{background:#000;border:var(--border-standard);padding:24px;width:90%;display:flex;flex-direction:column;gap:12px;font-size:18px;line-height:1.6;}
+a{color:var(--color-text-main);text-decoration:underline;}
+/* 底部文字固定在页面最底部 */
+.footer-text{position:fixed;bottom:20px;left:0;width:100%;color:var(--color-text-gray);font-size:14px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="flash-title">
+<span style="animation-delay:0.00s">4</span>
+<span style="animation-delay:0.20s">0</span>
+<span style="animation-delay:0.40s">4</span>
+<span style="animation-delay:0.60s">!</span>
+</div>
+<div class="bubble-box">
+<div>呜~星海溯溯的网页被Duskbreaker当成数据吃掉了QwQ</div>
+<div>如果你是通过shrinereport.xyz这个链接加前缀访问本站，可能是这个鸽马还没有适配完</div>
+<div>如果还有别的问题，详细见：</div>
+<div><a href="https://b23.tv/sRYhytP" target="_blank">FL_xigiy的bilibili</a></div>
+</div>
+<div class="footer-text">星海溯溯的各种页面--powered by github pages</div>
+</body>
+</html>
