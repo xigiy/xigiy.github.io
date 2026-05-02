@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>HUB-星海溯溯的V/S小站</title>
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css">
+<style>
+:root{
+--font-main:"BoutiqueBitmap9x9",monospace;
+--color-bg:#0a0a0f;
+--color-bg-deep:#050508;
+--color-text:#ffffff;
+--color-text-gray:#aaaaaa;
+--color-link:#4285F4;
+--color-link-hover:#70a5ff;
+--color-highlight:#ffc0cb;
+--color-title:#87cefa;
+--color-accent:#a855f7;
+--color-glow:#c084fc;
+--border-standard:2px solid #ffffff;
+--shadow-soft:0 4px 12px rgba(0,0,0,0.4);
+--shadow-hard:0 8px 24px rgba(0,0,0,0.7);
+--shadow-glow:0 0 20px rgba(168,85,247,0.35);
+--transition-fast:0.2s ease;
+--transition-normal:0.35s ease;
+}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+border-radius:0!important;
+scrollbar-width:thin;
+-webkit-tap-highlight-color:transparent;
+transform:translateZ(0);
+}
+body{
+background:var(--color-bg-deep);
+color:var(--color-text);
+font-family:var(--font-main)!important;
+font-weight:normal;
+min-height:100vh;
+padding:70px 20px 110px;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:52px;
+overflow-x:hidden;
+background-image:radial-gradient(circle at 50% 0%, rgba(168,85,247,0.08), transparent 60%);
+}
+@keyframes fadeInUp{
+from{opacity:0;transform:translateY(28px);}
+to{opacity:1;transform:translateY(0);}
+}
+@keyframes rainbowFull{
+0%{background:#ff0000;}
+17%{background:#ffff00;}
+33%{background:#00ff00;}
+50%{background:#00ffff;}
+67%{background:#0000ff;}
+83%{background:#ff00ff;}
+100%{background:#ff0000;}
+}
+@keyframes floatBubble{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-8px);}
+100%{transform:translateY(0px);}
+}
+@keyframes titleGlow{
+0%{text-shadow:0 0 8px var(--color-glow),0 0 16px var(--color-glow);}
+50%{text-shadow:0 0 16px var(--color-glow),0 0 32px var(--color-glow);}
+100%{text-shadow:0 0 8px var(--color-glow),0 0 16px var(--color-glow);}
+}
+.page-title{
+font-size:52px;
+font-weight:900 !important;
+text-align:center;
+animation:fadeInUp 0.8s ease forwards, titleGlow 3.5s ease-in-out infinite;
+color:var(--color-title);
+letter-spacing:3px;
+opacity:0;
+}
+.intro-bubble{
+width:100%;
+max-width:840px;
+background:var(--color-bg);
+border:var(--border-standard);
+padding:36px;
+font-size:20px;
+line-height:2;
+box-shadow:var(--shadow-hard),var(--shadow-glow);
+animation:fadeInUp 1s ease forwards, floatBubble 5s ease-in-out infinite;
+opacity:0;
+animation-delay:0.2s;
+transition:border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+word-break:break-all;
+position:relative;
+overflow:hidden;
+}
+.intro-bubble::before{
+content:"";
+position:absolute;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:linear-gradient(90deg,transparent,rgba(168,85,247,0.15),transparent);
+transition:left 0.6s ease;
+}
+.intro-bubble:hover::before{
+left:100%;
+}
+.intro-bubble:hover{
+border-color:var(--color-accent);
+transform:translateY(-6px) scale(1.01);
+box-shadow:var(--shadow-hard),0 0 30px rgba(168,85,247,0.5);
+}
+.intro-link{
+color:var(--color-link);
+text-decoration:underline;
+transition:color var(--transition-fast),text-shadow var(--transition-fast);
+word-break:break-all;
+display:inline;
+}
+.intro-link:hover{
+color:var(--color-link-hover);
+text-shadow:0 0 8px rgba(66,133,244,0.6);
+}
+.full-divider{
+width:100%;
+height:6px;
+background:linear-gradient(90deg,transparent,#ffffff,transparent);
+box-shadow:0 0 16px rgba(255,255,255,0.6);
+animation:fadeInUp 1s ease forwards;
+opacity:0;
+animation-delay:0.4s;
+}
+.color-section{
+width:100%;
+animation:rainbowFull 14s linear infinite;
+padding:52px 20px;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:36px;
+position:relative;
+}
+.color-section::before{
+content:"";
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.25);
+pointer-events:none;
+}
+.func-bubble{
+width:100%;
+max-width:840px;
+background:var(--color-bg);
+border:var(--border-standard);
+padding:36px;
+font-size:20px;
+line-height:2;
+box-shadow:var(--shadow-hard),var(--shadow-glow);
+animation:fadeInUp 1s ease forwards, floatBubble 5s ease-in-out infinite;
+opacity:0;
+transition:border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+word-break:break-all;
+position:relative;
+overflow:hidden;
+z-index:1;
+}
+.func-bubble::before{
+content:"";
+position:absolute;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:linear-gradient(90deg,transparent,rgba(168,85,247,0.15),transparent);
+transition:left 0.6s ease;
+z-index:-1;
+}
+.func-bubble:hover::before{
+left:100%;
+}
+.func-bubble:nth-child(1){animation-delay:0.6s, 0s;}
+.func-bubble:nth-child(2){animation-delay:0.8s, 1s;}
+.func-bubble:nth-child(3){animation-delay:1s, 2s;}
+.func-bubble:nth-child(4){animation-delay:1.2s, 3s;}
+.func-bubble:hover{
+border-color:var(--color-accent);
+transform:translateY(-6px) scale(1.01);
+box-shadow:var(--shadow-hard),0 0 30px rgba(168,85,247,0.5);
+}
+.friend-link-bubble{
+width:100%;
+max-width:840px;
+background:var(--color-bg);
+border:var(--border-standard);
+padding:36px;
+font-size:20px;
+line-height:2;
+box-shadow:var(--shadow-hard),var(--shadow-glow);
+animation:fadeInUp 1s ease forwards, floatBubble 5s ease-in-out infinite;
+opacity:0;
+animation-delay:0.5s, 1.5s;
+transition:border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+word-break:break-all;
+position:relative;
+overflow:hidden;
+z-index:1;
+}
+.friend-link-bubble::before{
+content:"";
+position:absolute;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:linear-gradient(90deg,transparent,rgba(168,85,247,0.15),transparent);
+transition:left 0.6s ease;
+z-index:-1;
+}
+.friend-link-bubble:hover::before{
+left:100%;
+}
+.friend-link-bubble:hover{
+border-color:var(--color-accent);
+transform:translateY(-6px) scale(1.01);
+box-shadow:var(--shadow-hard),0 0 30px rgba(168,85,247,0.5);
+}
+.footer-desc{
+position:fixed;
+bottom:24px;
+left:0;
+width:100%;
+text-align:center;
+font-size:14px;
+color:var(--color-text-gray);
+animation:fadeInUp 1s ease forwards;
+opacity:0;
+animation-delay:1.2s;
+letter-spacing:1px;
+text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+.back-top{
+position:fixed;
+bottom:78px;
+right:28px;
+width:58px;
+height:58px;
+background:var(--color-bg);
+border:var(--border-standard);
+color:var(--color-text);
+font-family:var(--font-main)!important;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+transition:background var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+z-index:999;
+box-shadow:var(--shadow-soft);
+}
+.back-top:hover{
+background:var(--color-accent);
+border-color:#fff;
+transform:scale(1.1) rotate(5deg);
+box-shadow:0 0 20px rgba(168,85,247,0.6);
+}
+.back-bottom{
+position:fixed;
+bottom:24px;
+right:28px;
+width:58px;
+height:58px;
+background:var(--color-bg);
+border:var(--border-standard);
+color:var(--color-text);
+font-family:var(--font-main)!important;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+transition:background var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+z-index:999;
+box-shadow:var(--shadow-soft);
+}
+.back-bottom:hover{
+background:var(--color-accent);
+border-color:#fff;
+transform:scale(1.1) rotate(-5deg);
+box-shadow:0 0 20px rgba(168,85,247,0.6);
+}
+.copy-btn{
+display:inline-block;
+margin-left:16px;
+padding:6px 14px;
+border:1px solid #fff;
+background:var(--color-bg);
+color:var(--color-text);
+cursor:pointer;
+font-size:14px;
+font-family:var(--font-main)!important;
+transition:background var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+box-shadow:var(--shadow-soft);
+position:relative;
+overflow:hidden;
+}
+.copy-btn::before{
+content:"";
+position:absolute;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);
+transition:left 0.4s ease;
+}
+.copy-btn:hover::before{
+left:100%;
+}
+.copy-btn:hover{
+background:var(--color-accent);
+border-color:#fff;
+transform:scale(1.08);
+box-shadow:0 0 12px rgba(168,85,247,0.5);
+}
+.copy-all-btn{
+display:block;
+margin:20px auto 0;
+padding:10px 20px;
+border:2px solid #fff;
+background:var(--color-bg);
+color:var(--color-text);
+cursor:pointer;
+font-size:16px;
+font-family:var(--font-main)!important;
+transition:background var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal);
+box-shadow:var(--shadow-soft);
+}
+.copy-all-btn:hover{
+background:var(--color-accent);
+border-color:#fff;
+transform:scale(1.03);
+}
+.status-bar{
+position:fixed;
+top:20px;
+left:20px;
+font-size:14px;
+color:var(--color-text-gray);
+font-family:var(--font-main)!important;
+z-index:999;
+opacity:0.8;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#444;border:1px solid #222;border-radius:0;}
+::-webkit-scrollbar-track{background:var(--color-bg-deep);}
+.text-highlight{
+color:var(--color-highlight);
+word-break:break-all;
+text-shadow:0 0 6px rgba(255,192,203,0.4);
+}
+.text-title{
+color:var(--color-title);
+font-weight:bold;
+text-shadow:0 0 6px rgba(135,206,250,0.4);
+}
+.text-accent{
+color:var(--color-accent);
+text-shadow:0 0 6px rgba(168,85,247,0.4);
+}
+.text-mono{
+color:var(--color-text-gray);
+font-style:italic;
+text-align:right;
+margin-top:16px;
+font-size:17px;
+opacity:0.75;
+}
+.toast{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:rgba(0,0,0,0.85);
+color:#fff;
+padding:12px 24px;
+border-radius:0;
+border:1px solid #fff;
+font-family:var(--font-main)!important;
+font-size:16px;
+z-index:9999;
+opacity:0;
+transition:opacity 0.3s ease;
+pointer-events:none;
+}
+.toast.show{
+opacity:1;
+}
+</style>
+</head>
+<body>
+<div class="status-bar">
+<span id="visit-time">访问时长：00:00</span>
+</div>
+
+<div class="page-title"><strong>HUB-星海溯溯的V/S小站</strong></div>
+
+<div class="intro-bubble">
+指尖划过这片名为<span class="text-highlight">The Void（虚空）</span>的静谧边界，我是<span class="text-title">星海溯溯</span>。<br>
+长久徘徊于无边虚无之中，目光无处停留，偶然瞥见<span class="text-highlight">Vivid/Stasis</span>这方鲜活又破碎的世界，可官方留下的线索与文本寥寥无几。于是我动手搭建了这片小小的站点，把散落各处的资料、文本、翻译一点点收拢整理，安静存放在这里。<br>
+你可以直接在任意 Tori 网站链接前加上“<span class="text-highlight">https://xigiy.github.io/</span>”，就能进入我整理后的镜像版本；同时，我也会持续为这片世界的文本内容提供中文翻译，让阅读不再被语言阻隔。<br>
+目前，我在这里整理并提供以下几项功能：
+<p class="text-mono">只是想给这片世界，多留一点痕迹。</p>
+</div>
+
+<div class="friend-link-bubble">
+    <span class="text-title">相关链接 · 入口</span><br>
+    <span class="text-highlight">Vivid/Stasis 官方 Steam 商店页</span>：
+    <a href="https://store.steampowered.com/app/2093940/vividstasis/" target="_blank" class="intro-link">https://store.steampowered.com/app/2093940/vividstasis/</a>
+    <button class="copy-btn" onclick="copyText('https://store.steampowered.com/app/2093940/vividstasis/')">复制</button>
+    <p class="text-mono">这是一切开始的地方。</p>
+</div>
+
+<div class="full-divider"></div>
+
+<div class="color-section">
+    <div class="func-bubble">
+        <span class="text-title">剧情文本翻译</span> — 对原作剧情文本进行整理与机翻，降低阅读门槛<br>
+        使用方式：例如<a href="https://xigiy.github.io/shrinereport.xyz/story/ch_01/episode_1" target="_blank" class="intro-link">https://xigiy.github.io/shrinereport.xyz/story/ch_01/episode_1</a>
+        <button class="copy-btn" onclick="copyText('https://xigiy.github.io/shrinereport.xyz/story/ch_01/episode_1')">复制</button>
+        <p class="text-mono">希望文字不再成为隔阂。</p>
+    </div>
+
+    <div class="func-bubble">
+        <span class="text-title">创作者推荐列表</span> — 收录圈内优质创作者主页，方便查阅与关注<br>
+        使用方式：查阅<a href="https://xigiy.github.io/shrinereport.xyz/bestup" target="_blank" class="intro-link">https://xigiy.github.io/shrinereport.xyz/bestup</a>
+        <button class="copy-btn" onclick="copyText('https://xigiy.github.io/shrinereport.xyz/bestup')">复制</button>
+        <p class="text-mono">把同路人，轻轻放在一起。</p>
+    </div>
+
+    <div class="func-bubble">
+        <span class="text-title">资料百科整理</span> — 现有官方资料过于零散单薄，我计划独立整理一份更完整的世界观档案（尚未动工）<br>
+        使用方式：暂无
+        <p class="text-mono">慢慢来，总会有整理好的一天。</p>
+    </div>
+
+    <div class="func-bubble">
+        <span class="text-title">网站界面汉化</span> — 原生英文界面使用门槛较高，后续将对网站整体进行汉化与功能增强（尚未动工）<br>
+        使用方式：暂无
+        <p class="text-mono">让这片虚空，更容易靠近一点。</p>
+    </div>
+
+    <button class="copy-all-btn" onclick="copyAllLinks()">📋 一键复制全部功能链接</button>
+</div>
+
+<div class="full-divider"></div>
+
+<button class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<button class="back-bottom" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">↓</button>
+
+<div class="footer-desc">
+Powered by GitHub Pages · 星海溯溯
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 2000);
+}
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast("✅ 链接已复制到剪贴板！");
+    }).catch(err => {
+        showToast("❌ 复制失败，请手动复制");
+    });
+}
+function copyAllLinks(){
+    const links = `
+剧情文本翻译：https://xigiy.github.io/shrinereport.xyz/story/ch_01/episode_1
+创作者推荐列表：https://xigiy.github.io/shrinereport.xyz/bestup
+Steam商店页：https://store.steampowered.com/app/2093940/vividstasis/
+    `;
+    navigator.clipboard.writeText(links.trim()).then(()=>{
+        showToast("✅ 全部链接已复制！");
+    }).catch(()=>{
+        showToast("❌ 复制失败");
+    });
+}
+let startTime = Date.now();
+function updateVisitTime(){
+    const diff = Math.floor((Date.now() - startTime)/1000);
+    const min = String(Math.floor(diff/60)).padStart(2,'0');
+    const sec = String(diff%60).padStart(2,'0');
+    document.getElementById('visit-time').innerText = `访问时长：${min}:${sec}`;
+}
+setInterval(updateVisitTime, 1000);
+</script>
+</body>
+</html>
