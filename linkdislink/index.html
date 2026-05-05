@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>连接/失联 模拟器 | 测试版 v1</title>
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css">
+    <style>
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            user-select: none; -webkit-user-select: none;
+            font-family: "BoutiqueBitmap9x9", "Courier New", monospace !important;
+        }
+        body {
+            background: #000; overflow: hidden;
+            height: 100vh; width: 100vw; touch-action: none;
+        }
+        /* 设置面板 */
+        #settingsPanel {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #111; display: flex;
+            flex-direction: column; align-items: center;
+            justify-content: center; z-index: 100;
+            padding: 20px; overflow-y: auto;
+        }
+        #settingsPanel h1 {
+            color: #fff; font-size: 32px;
+            margin-bottom: 20px; text-shadow: 0 0 10px #581C87;
+        }
+        .settingRow {
+            display: flex; align-items: center;
+            margin: 12px 0; color: #fff;
+            font-size: 18px; width: 90%; max-width: 500px;
+        }
+        .settingRow label {
+            flex: 1; text-align: right; padding-right: 15px;
+        }
+        .settingRow input[type="range"] {
+            flex: 2; height: 8px; -webkit-appearance: none;
+            background: #333; border-radius: 4px; outline: none;
+        }
+        .settingRow input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px;
+            background: #581C87; border: 2px solid #fff; border-radius: 50%;
+        }
+        .settingRow input[type="checkbox"] {
+            width: 20px; height: 20px; -webkit-appearance: none;
+            background: #333; border: 2px solid #fff; border-radius: 4px;
+            position: relative; cursor: pointer;
+        }
+        .settingRow input[type="checkbox"]:checked {
+            background: #0f0;
+        }
+        .settingRow input[type="checkbox"]::after {
+            content: '✓'; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); color: #000; font-size: 16px;
+            display: none;
+        }
+        .settingRow input[type="checkbox"]:checked::after {
+            display: block;
+        }
+        .valueDisplay {
+            flex: 0 0 60px; text-align: left; padding-left: 15px; color: #ff0;
+        }
+        /* 文件输入样式 */
+        .fileInputRow {
+            display: flex; flex-direction: column;
+            margin: 12px 0; color: #fff;
+            font-size: 16px; width: 90%; max-width: 500px;
+        }
+        .fileInputRow label {
+            margin-bottom: 6px; text-align: left;
+        }
+        .fileInputRow input[type="file"] {
+            background: #222; color: #fff;
+            border: 2px solid #fff; padding: 8px;
+            font-family: inherit; cursor: pointer;
+        }
+        #startGameBtn {
+            margin-top: 20px; padding: 15px 40px;
+            font-size: 24px; background: #581C87;
+            color: #fff; border: 2px solid #fff; cursor: pointer;
+            transition: all 0.2s;
+        }
+        #startGameBtn:hover {
+            background: #7c3aad; transform: scale(1.05);
+        }
+        #chartInfo {
+            margin-top: 15px; color: #ff0;
+            font-size: 14px; text-align: center;
+            max-width: 500px; line-height: 1.5;
+        }
+        /* 游戏界面 */
+        #game {
+            display: none; width: 100%; height: 100%; position: relative;
+        }
+        canvas {
+            display: block; width: 100%; height: 100%;
+            background: #111; position: absolute;
+            top: 0; left: 0; z-index: 10; pointer-events: auto;
+        }
+        /* 血条标签 */
+        #gaugeLabel {
+            position: absolute;
+            bottom: 60px;
+            left: 5%;
+            color: #f00;
+            font-size: 16px;
+            z-index: 20;
+            font-weight: bold;
+            text-shadow: 0 0 3px #000;
+        }
+        /* 血条本体 */
+        #gauge {
+            position: absolute; bottom: 40px;
+            left: 5%; width: 90%; height: 16px;
+            background: #300; border: 2px solid #f00;
+            z-index: 20; box-shadow: 0 0 5px rgba(255,0,0,0.5);
+            padding: 1px; box-sizing: border-box;
+        }
+        #gaugeFill {
+            height: 100%; width: 100%;
+            background: #f00; transition: width 0.1s;
+            box-shadow: 0 0 5px #f00;
+        }
+        #exitBtn {
+            position: absolute; bottom: 20px; right: 20px;
+            background: #333; color: #fff; border: 1px solid #fff;
+            padding: 8px 16px; font-size: 16px; z-index: 20;
+            cursor: pointer;
+        }
+        #debugInfo {
+            position: absolute; bottom: 10px; left: 10px;
+            color: #0f0; font-size: 12px; pointer-events: none;
+            z-index: 20; background: rgba(0,0,0,0.7);
+            padding: 5px; border: 1px solid #0f0;
+        }
+        /* 游戏结束遮罩 */
+        #gameOverOverlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 0, 0, 0.8);
+            display: none; align-items: center;
+            justify-content: center; z-index: 100;
+            animation: flash 0.5s;
+        }
+        @keyframes flash {
+            0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0.8; }
+        }
+        #gameOverText {
+            color: #fff; font-size: 48px;
+            text-shadow: 0 0 20px #000; font-weight: bold;
+        }
+        .loading {
+            color: #ff0 !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 设置面板 -->
+    <div id="settingsPanel">
+        <h1>游戏设置</h1>
+        
+        <div class="settingRow">
+            <label>流速</label>
+            <input type="range" id="speedSlider" min="100" max="600" value="300">
+            <span class="valueDisplay" id="speedValue">300</span>
+        </div>
+        
+        <div class="settingRow">
+            <label>启用血条</label>
+            <input type="checkbox" id="useGaugeCheck" checked>
+        </div>
+
+        <div class="fileInputRow">
+            <label>1. 选择 shatterinfo.json (元数据)</label>
+            <input type="file" id="shatterInfoFile" accept=".json">
+        </div>
+        
+        <div class="fileInputRow">
+            <label>2. 选择 .vsc文件 (音符数据)</label>
+            <input type="file" id="vscFile" accept=".txt,.vsc">
+        </div>
+        
+        <div class="fileInputRow">
+            <label>3. 选择音乐文件 (ogg)</label>
+            <input type="file" id="musicFile" accept=".ogg">
+        </div>
+        
+        <div class="fileInputRow">
+            <label>4. (可选) 选择曲绘图片 (png)(这个版本的加载有点丑丑的)</label>
+            <input type="file" id="imageFile" accept=".png">
+        </div>
+        
+        <button id="loadChartBtn" style="margin-top:10px;padding:10px 20px;background:#0a0;color:#fff;border:2px solid #fff;cursor:pointer;">加载谱面</button>
+        
+        <div id="chartInfo">未加载自定义谱面，将使用测试谱面</div>
+        
+        <button id="startGameBtn">开始游戏</button>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="game">
+        <canvas id="cvs"></canvas>
+        <div id="gaugeLabel">CHALLENGE</div>
+        <div id="gauge"><div id="gaugeFill"></div></div>
+        <button id="exitBtn">退出</button>
+        <div id="debugInfo">等待...</div>
+        <div id="gameOverOverlay">
+            <div id="gameOverText">生命耗尽</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM 元素
+            const settingsPanel = document.getElementById('settingsPanel');
+            const startGameBtn = document.getElementById('startGameBtn');
+            const speedSlider = document.getElementById('speedSlider');
+            const speedValue = document.getElementById('speedValue');
+            const useGaugeCheck = document.getElementById('useGaugeCheck');
+            const shatterInfoFile = document.getElementById('shatterInfoFile');
+            const vscFile = document.getElementById('vscFile');
+            const musicFile = document.getElementById('musicFile');
+            const imageFile = document.getElementById('imageFile');
+            const loadChartBtn = document.getElementById('loadChartBtn');
+            const chartInfo = document.getElementById('chartInfo');
+            const gameDiv = document.getElementById('game');
+            const canvas = document.getElementById('cvs');
+            const ctx = canvas.getContext('2d');
+            const gaugeFill = document.getElementById('gaugeFill');
+            const gaugeLabel = document.getElementById('gaugeLabel');
+            const gaugeEl = document.getElementById('gauge');
+            const exitBtn = document.getElementById('exitBtn');
+            const debugInfo = document.getElementById('debugInfo');
+            const gameOverOverlay = document.getElementById('gameOverOverlay');
+
+            // 游戏配置（从localStorage读取或使用默认值）
+            let gameSpeed = parseInt(localStorage.getItem('gameSpeed')) || 300;
+            let useGauge = localStorage.getItem('useGauge') !== 'false'; // 默认启用
+
+            // 更新UI显示
+            speedSlider.value = gameSpeed;
+            speedValue.textContent = gameSpeed;
+            useGaugeCheck.checked = useGauge;
+            gaugeEl.style.display = useGauge ? 'block' : 'none';
+            gaugeLabel.style.display = useGauge ? 'block' : 'none';
+
+            // 监听设置变化
+            speedSlider.addEventListener('input', () => {
+                gameSpeed = parseInt(speedSlider.value);
+                speedValue.textContent = gameSpeed;
+                localStorage.setItem('gameSpeed', gameSpeed);
+            });
+            useGaugeCheck.addEventListener('change', () => {
+                useGauge = useGaugeCheck.checked;
+                localStorage.setItem('useGauge', useGauge);
+                gaugeEl.style.display = useGauge ? 'block' : 'none';
+                gaugeLabel.style.display = useGauge ? 'block' : 'none';
+            });
+
+            // 文件读取工具函数
+            function readFileAsText(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(reader.error);
+                    reader.readAsText(file);
+                });
+            }
+
+            function readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(reader.error);
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(reader.error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // 解析 shatterinfo.json
+            function parseShatterInfo(jsonText) {
+                try {
+                    const data = JSON.parse(jsonText);
+                    return {
+                        title: data.title || "Unknown",
+                        artist: data.artist || "Unknown",
+                        bpm: parseFloat(data.bpm_display) || 120,
+                        difficulty: data.difficulty_name || "Unknown"
+                    };
+                } catch (e) {
+                    console.error("解析 shatterinfo.json 失败:", e);
+                    return null;
+                }
+            }
+
+            // 解析 vsc.txt (音符数据) - 支持 .vsc 和 .vsc.txt
+            function parseVSC(text) {
+                const lines = text.split('\n');
+                const notes = [];
+                let lineNum = 0;
+                
+                for (let rawLine of lines) {
+                    lineNum++;
+                    const line = rawLine.trim();
+                    if (!line || line.startsWith('//')) continue;
+                    
+                    const parts = line.split(',').map(p => p.trim()).filter(p => p !== '');
+                    if (parts.length < 3) {
+                        console.warn(`第 ${lineNum} 行格式错误: ${rawLine}`);
+                        continue;
+                    }
+                    
+                    const timeMs = parseFloat(parts[0]);
+                    if (isNaN(timeMs)) {
+                        console.warn(`第 ${lineNum} 行时间格式错误: ${parts[0]}`);
+                        continue;
+                    }
+                    
+                    const type = parseInt(parts[1]);
+                    const key = parseInt(parts[2]);
+                    
+                    const note = {
+                        time: timeMs / 1000,
+                        type: '',
+                        key: key,
+                        hit: false,
+                        lineNum: lineNum
+                    };
+                    
+                    switch (type) {
+                        case 1: note.type = 'chip'; break;
+                        case 2:
+                            if (parts.length < 4) {
+                                console.warn(`第 ${lineNum} 行Hold缺少结束时间: ${rawLine}`);
+                                continue;
+                            }
+                            const endTimeMs = parseFloat(parts[3]);
+                            if (isNaN(endTimeMs)) {
+                                console.warn(`第 ${lineNum} 行Hold结束时间格式错误: ${parts[3]}`);
+                                continue;
+                            }
+                            note.type = 'hold';
+                            note.duration = (endTimeMs - timeMs) / 1000;
+                            note.hitTime = 0;
+                            note.bonusSeconds = 0;
+                            break;
+                        case 0: note.type = 'mine'; break;
+                        case 6:
+                            note.type = 'bumper';
+                            note.side = (key < 2) ? 'L' : 'R';
+                            note.special = false;
+                            break;
+                        case 7:
+                            note.type = 'bumper';
+                            note.side = (key < 2) ? 'R' : 'L'; // 注意：可能是反的？根据谱面调整
+                            note.special = false;
+                            break;
+                        case 8:
+                            note.type = 'bumper';
+                            note.side = (key < 2) ? 'L' : 'R';
+                            note.special = true;
+                            break;
+                        default:
+                            console.warn(`第 ${lineNum} 行未知类型 ${type}: ${rawLine}`);
+                            continue;
+                    }
+                    
+                    notes.push(note);
+                }
+                
+                return notes;
+            }
+
+            // 计算理论总分
+            function calculateMaxScore(notes) {
+                let total = 0;
+                notes.forEach(n => {
+                    if (n.type === 'chip' || (n.type === 'bumper' && !n.special)) {
+                        total += 1010;
+                    } else if (n.type === 'bumper' && n.special) {
+                        total += 1010;
+                    } else if (n.type === 'hold') {
+                        total += 1010;
+                        const extraSeconds = Math.floor(n.duration);
+                        total += extraSeconds * 1000;
+                    }
+                });
+                return total;
+            }
+
+            // 游戏变量
+            let w, h, keyW, hitY;
+            let audioCtx, startTime, notes = [];
+            let score = 0, combo = 0, maxScore = 0;
+            let gauge = 100;
+            let isRunning = false, gameOver = false;
+            let effects = [], hitEffects = [];
+            let keyStates = {0: false, 1: false, 2: false, 3: false};
+            let customImage = null; // 曲绘图片
+            let customAudioBuffer = null; // 自定义音频
+
+            const JUDGMENT = {
+                chip: { critical: 0.035, great: 0.070, good: 0.110 },
+                bumper: { critical: 0.150 },
+                hold: { critical: 0.070, good: 0.110 },
+                mine: { fail: true }
+            };
+
+            const COLORS = {
+                leftChip: '#90EE90', rightChip: '#FFD700',
+                leftBumper: '#006400', leftBumperBorder: '#90EE90',
+                rightBumper: '#DAA520', rightBumperBorder: '#FFD700',
+                specialBumperBorder: '#FFFFFF',
+                mineFill: '#000000', mineBorder: '#FF0000',
+                hitEffect: '#FFFF00', hitEffectBorder: '#FFFFFF',
+                holdLeftBody: '#006400', holdLeftBorder: '#90EE90',
+                holdRightBody: '#DAA520', holdRightBorder: '#FFD700',
+                judgmentText: '#FFF', comboText: '#FF0', scoreText: '#FFF'
+            };
+
+            // 加载谱面按钮事件
+            loadChartBtn.addEventListener('click', async () => {
+                const shatterInfoInput = shatterInfoFile.files[0];
+                const vscInput = vscFile.files[0];
+                
+                if (!shatterInfoInput || !vscInput) {
+                    alert('请先选择 shatterinfo.json 和 vsc 文件！');
+                    return;
+                }
+                
+                try {
+                    loadChartBtn.textContent = '加载中...';
+                    loadChartBtn.classList.add('loading');
+                    
+                    // 并行读取文件
+                    const [shatterInfoText, vscText] = await Promise.all([
+                        readFileAsText(shatterInfoInput),
+                        readFileAsText(vscInput)
+                    ]);
+                    
+                    // 解析元数据
+                    chartMetadata = parseShatterInfo(shatterInfoText);
+                    if (!chartMetadata) {
+                        throw new Error('shatterinfo.json 格式错误');
+                    }
+                    
+                    // 自动计算流速：baseSpeed * (bpm / 120)
+                    const baseSpeed = 300; // 基础速度（120 BPM时）
+                    const autoSpeed = Math.round(baseSpeed * (chartMetadata.bpm / 120));
+                    // 限制在 100-600 范围内
+                    const clampedSpeed = Math.max(100, Math.min(600, autoSpeed));
+                    
+                    // 更新流速滑块
+                    gameSpeed = clampedSpeed;
+                    speedSlider.value = gameSpeed;
+                    speedValue.textContent = gameSpeed;
+                    localStorage.setItem('gameSpeed', gameSpeed);
+                    
+                    // 解析音符
+                    customNotes = parseVSC(vscText);
+                    if (customNotes.length === 0) {
+                        throw new Error('vsc 文件中没有有效的音符数据');
+                    }
+                    
+                    customNotes.sort((a, b) => a.time - b.time);
+                    maxScore = calculateMaxScore(customNotes);
+                    
+                    // 显示信息
+                    chartInfo.innerHTML = `
+                        <strong>谱面加载成功！</strong><br>
+                        歌曲: ${chartMetadata.title}<br>
+                        艺术家: ${chartMetadata.artist}<br>
+                        BPM: ${chartMetadata.bpm}<br>
+                        难度: ${chartMetadata.difficulty}<br>
+                        音符数量: ${customNotes.length}<br>
+                        理论总分: ${maxScore.toLocaleString()}<br>
+                        推荐流速: ${autoSpeed} → 已自动设置为 ${gameSpeed}
+                    `;
+                    
+                } catch (e) {
+                    alert('加载失败: ' + e.message);
+                    console.error(e);
+                    chartInfo.textContent = '加载失败，请检查文件格式';
+                } finally {
+                    loadChartBtn.textContent = '加载谱面';
+                    loadChartBtn.classList.remove('loading');
+                }
+            });
+
+            // 音乐文件加载（可选）
+            musicFile.addEventListener('change', async () => {
+                const file = musicFile.files[0];
+                if (!file) return;
+                
+                try {
+                    const arrayBuffer = await readFileAsArrayBuffer(file);
+                    if (!audioCtx) {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    customAudioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                    chartInfo.textContent += `<br>音乐已加载: ${file.name}`;
+                } catch (e) {
+                    alert('音乐加载失败: ' + e.message);
+                    console.error(e);
+                }
+            });
+
+            // 曲绘文件加载（可选）
+            imageFile.addEventListener('change', async () => {
+                const file = imageFile.files[0];
+                if (!file) return;
+                
+                try {
+                    const dataURL = await readFileAsDataURL(file);
+                    const img = new Image();
+                    img.onload = () => {
+                        customImage = img;
+                        chartInfo.textContent += `<br>曲绘已加载: ${file.name}`;
+                    };
+                    img.onerror = () => {
+                        alert('曲绘加载失败: 图片格式错误');
+                    };
+                    img.src = dataURL;
+                } catch (e) {
+                    alert('曲绘加载失败: ' + e.message);
+                    console.error(e);
+                }
+            });
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+                keyW = w / 4;
+                hitY = h * 0.85;
+            }
+            window.addEventListener('resize', resize);
+
+            // 默认谱面
+            function generateDefaultNotes() {
+                const notes = [];
+                let time = 1.0;
+                for(let i=0; i<10; i++) {
+                    notes.push({ time: time, type: 'chip', key: i%4, hit: false });
+                    time += 0.25;
+                }
+                notes.push({ time: time, type: 'hold', key: 0, duration: 1.5, hit: false, hitTime: 0, bonusSeconds: 0 });
+                time += 1.8;
+                notes.push({ time: time, type: 'hold', key: 2, duration: 2.0, hit: false, hitTime: 0, bonusSeconds: 0 });
+                time += 2.0;
+                for(let i=0; i<6; i++) {
+                    notes.push({ time: time, type: 'bumper', side: i%2===0 ? 'L' : 'R', special: false, hit: false });
+                    time += 0.5;
+                }
+                for(let i=0; i<8; i++) {
+                    notes.push({ time: time, type: 'bumper', side: i%2===0 ? 'L' : 'R', special: true, hit: false });
+                    time += 0.4;
+                }
+                notes.push({ time: time, type: 'mine', key: 3, hit: false });
+                time += 0.8;
+                notes.push({ time: time, type: 'chip', key: 1, hit: false });
+                return notes.sort((a,b) => a.time - b.time);
+            }
+
+            // 初始化音频上下文（用于解码）
+            function initAudioContext() {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            function createWavBuffer(sr, dur, freq) {
+                const fc = sr * dur;
+                const buf = new ArrayBuffer(44 + fc * 2);
+                const v = new DataView(buf);
+                const wS = (o, s) => { for(let i=0; i<s.length; i++) v.setUint8(o+i, s.charCodeAt(i)); };
+                wS(0,'RIFF'); v.setUint32(4, 36+fc*2, true);
+                wS(8,'WAVE'); wS(12,'fmt ');
+                v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+                v.setUint32(24, sr, true); v.setUint32(28, sr*2, true);
+                v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+                wS(36,'data'); v.setUint32(40, fc*2, true);
+                for(let i=0; i<fc; i++) {
+                    v.setInt16(44+i*2, Math.sin(2*Math.PI*freq*i/sr)*0.5*32767, true);
+                }
+                return buf;
+            }
+
+            function handleInput(inputKey, isKeyDown) {
+                if(!audioCtx || gameOver) return;
+                const now = audioCtx.currentTime - startTime;
+                keyStates[inputKey] = isKeyDown;
+
+                if(isKeyDown) {
+                    // 1. Mine
+                    if (inputKey >= 0 && inputKey <= 3) {
+                        const mineHit = notes.find(n => n.type === 'mine' && !n.hit && n.key === inputKey && Math.abs(n.time - now) < 0.15);
+                        if (mineHit) {
+                            mineHit.hit = true;
+                            combo = 0;
+                            if (useGauge) gauge = Math.max(0, gauge - 20);
+                            createEffect("MINE!", "#f00", hitY);
+                            return;
+                        }
+                    }
+
+                    // 2. Bumper (普通)
+                    let bumperHit = null;
+                    if (inputKey === 0 || inputKey === 1) {
+                        bumperHit = notes.find(n => n.type === 'bumper' && n.side === 'L' && !n.special && !n.hit && Math.abs(n.time - now) < JUDGMENT.bumper.critical);
+                    } else if (inputKey === 2 || inputKey === 3) {
+                        bumperHit = notes.find(n => n.type === 'bumper' && n.side === 'R' && !n.special && !n.hit && Math.abs(n.time - now) < JUDGMENT.bumper.critical);
+                    }
+                    if (bumperHit) {
+                        bumperHit.hit = true;
+                        score += 1000; combo++;
+                        if (useGauge) gauge = Math.min(100, gauge + 0.5);
+                        createEffect("Bumper", "#ff0", hitY);
+                        createHitEffect(bumperHit.side === 'L' ? 0.5 : 2.5, hitY);
+                        return;
+                    }
+
+                    // 3. Special Bumper
+                    let specialBumperHit = null;
+                    if (inputKey === 0 || inputKey === 1) {
+                        specialBumperHit = notes.find(n => n.type === 'bumper' && n.side === 'L' && n.special && !n.hit && Math.abs(n.time - now) < JUDGMENT.chip.good);
+                    } else if (inputKey === 2 || inputKey === 3) {
+                        specialBumperHit = notes.find(n => n.type === 'bumper' && n.side === 'R' && n.special && !n.hit && Math.abs(n.time - now) < JUDGMENT.chip.good);
+                    }
+                    if (specialBumperHit) {
+                        specialBumperHit.hit = true;
+                        const diff = Math.abs(specialBumperHit.time - now);
+                        let res="Miss", col="#f00", add=0;
+                        if (diff <= JUDGMENT.chip.critical) { res="A.Critical"; col="#0f0"; add=1010; combo++; if(useGauge) gauge=Math.min(100, gauge+0.5); }
+                        else if (diff <= JUDGMENT.chip.great) { res="Critical"; col="#0ff"; add=1000; combo++; if(useGauge) gauge=Math.min(100, gauge+0.4); }
+                        else if (diff <= JUDGMENT.chip.good) { res="Good"; col="#ff0"; add=500; combo++; if(useGauge) gauge=Math.min(100, gauge+0.2); }
+                        else { res="Miss"; col="#f00"; combo=0; if(useGauge) gauge=Math.max(0, gauge-18); }
+                        score += add;
+                        createEffect(res, col, hitY);
+                        createHitEffect(specialBumperHit.side === 'L' ? 0.5 : 2.5, hitY);
+                        return;
+                    }
+
+                    // 4. Chip / Hold
+                    const hitNote = notes.find(n => (n.type === 'chip' || n.type === 'hold') && !n.hit && n.key === inputKey && Math.abs(n.time - now) < JUDGMENT.hold.good);
+                    if (hitNote) {
+                        hitNote.hit = true;
+                        hitNote.hitTime = now;
+                        const diff = Math.abs(hitNote.time - now);
+                        let res="Miss", col="#f00", add=0;
+                        
+                        if (hitNote.type === 'chip') {
+                            if (diff <= JUDGMENT.chip.critical) { res="A.Critical"; col="#0f0"; add=1010; combo++; if(useGauge) gauge=Math.min(100, gauge+0.5); }
+                            else if (diff <= JUDGMENT.chip.great) { res="Critical"; col="#0ff"; add=1000; combo++; if(useGauge) gauge=Math.min(100, gauge+0.4); }
+                            else if (diff <= JUDGMENT.chip.good) { res="Good"; col="#ff0"; add=500; combo++; if(useGauge) gauge=Math.min(100, gauge+0.2); }
+                            else { res="Miss"; col="#f00"; combo=0; if(useGauge) gauge=Math.max(0, gauge-18); }
+                        } else {
+                            if (diff <= JUDGMENT.hold.critical) { res="A.Critical"; col="#0f0"; add=1010; combo++; if(useGauge) gauge=Math.min(100, gauge+0.5); }
+                            else if (diff <= JUDGMENT.hold.good) { res="Good"; col="#ff0"; add=500; combo++; if(useGauge) gauge=Math.min(100, gauge+0.2); }
+                            else { res="Miss"; col="#f00"; combo=0; if(useGauge) gauge=Math.max(0, gauge-18); }
+                            if (diff <= JUDGMENT.hold.good) {
+                                hitNote.bonusSeconds = 0;
+                            }
+                        }
+                        score += add;
+                        createEffect(res, col, hitY);
+                        createHitEffect(hitNote.key, hitY);
+                        return;
+                    }
+
+                    // 5. Late Miss
+                    const missedNote = notes.find(n => 
+                        n.type !== 'mine' && 
+                        !n.hit && 
+                        n.key === inputKey && 
+                        n.time < now && 
+                        now - n.time < 0.20
+                    );
+                    if (missedNote) {
+                        missedNote.hit = true;
+                        combo = 0;
+                        if (useGauge) gauge = Math.max(0, gauge - 18);
+                        createEffect("Miss (Late)", "#f00", hitY);
+                        return;
+                    }
+
+                    // 6. Early Miss (仅Chip/Hold)
+                    const earlyNote = notes.find(n => 
+                        (n.type === 'chip' || n.type === 'hold') && 
+                        !n.hit && 
+                        n.key === inputKey && 
+                        n.time > now && 
+                        n.time - now < 0.20 && 
+                        n.time - now > JUDGMENT.hold.good
+                    );
+                    if (earlyNote) {
+                        earlyNote.hit = true;
+                        combo = 0;
+                        if (useGauge) gauge = Math.max(0, gauge - 18);
+                        createEffect("Miss (Early)", "#f00", hitY);
+                        return;
+                    }
+                }
+            }
+
+            function createEffect(text, color, y) {
+                effects.push({ text, color, y: 50, life: 1.0, scale: 0.5, maxScale: 1.5 });
+                effects.push({ text: `Combo: ${combo}`, color: COLORS.comboText, y: 90, life: 1.0, scale: 0.5, maxScale: 1.2, isCombo: true });
+            }
+
+            function createHitEffect(keyIndex, y) {
+                const x = keyIndex * keyW + keyW / 2;
+                hitEffects.push({ x, y, life: 0.3, size: 30, color: COLORS.hitEffect, border: COLORS.hitEffectBorder });
+            }
+
+            function checkMisses(now) {
+                const missWindow = 0.20;
+                notes.forEach(n => {
+                    if (n.hit) return;
+                    if (n.type === 'mine') return;
+                    if (n.time < now - missWindow) {
+                        n.hit = true;
+                        combo = 0;
+                        if (useGauge) gauge = Math.max(0, gauge - 18);
+                        createEffect("Miss (Auto)", "#f00", hitY);
+                    }
+                });
+            }
+
+            function updateHoldBonus(now) {
+                notes.forEach(n => {
+                    if (n.type === 'hold' && n.hit && n.hitTime) {
+                        const isTimeInRange = now >= n.hitTime && now < (n.hitTime + n.duration);
+                        if (isTimeInRange && keyStates[n.key]) {
+                            const totalSeconds = Math.floor(now - n.hitTime);
+                            if (totalSeconds > n.bonusSeconds) {
+                                const addCount = totalSeconds - n.bonusSeconds;
+                                score += 1000 * addCount;
+                                if (useGauge) gauge = Math.min(100, gauge + 0.5 * addCount);
+                                n.bonusSeconds = totalSeconds;
+                            }
+                        }
+                    }
+                });
+            }
+
+            function draw() {
+                if(!audioCtx || gameOver) return;
+                const now = audioCtx.currentTime - startTime;
+
+                checkMisses(now);
+                updateHoldBonus(now);
+
+                ctx.clearRect(0, 0, w, h);
+                
+                // 绘制曲绘背景
+                if (customImage) {
+                    ctx.drawImage(customImage, 0, 0, w, h);
+                } else {
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(0, 0, w, h);
+                }
+
+                // 轨道线
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = 2;
+                for(let i=1; i<4; i++) {
+                    ctx.beginPath(); ctx.moveTo(i*keyW, 0); ctx.lineTo(i*keyW, h); ctx.stroke();
+                }
+
+                // 判定线
+                ctx.save();
+                ctx.shadowBlur=10; ctx.shadowColor='#fff';
+                ctx.strokeStyle='#fff'; ctx.lineWidth=4;
+                ctx.beginPath(); ctx.moveTo(0, hitY); ctx.lineTo(w, hitY); ctx.stroke();
+                ctx.restore();
+
+                const speed = gameSpeed;
+                let activeHolds = 0;
+
+                notes.forEach(n => {
+                    if(n.hit && n.type !== 'hold') return;
+                    const headY = hitY - (n.time - now) * speed;
+
+                    if(n.type === 'hold') {
+                        const tailTime = n.time + n.duration;
+                        const tailY = hitY - (tailTime - now) * speed;
+                        const minY = Math.min(headY, tailY);
+                        const maxY = Math.max(headY, tailY);
+                        const hH = maxY - minY;
+                        const isTimeInRange = now >= n.hitTime && now < (n.hitTime + n.duration);
+                        const isKeyHeld = keyStates[n.key];
+                        let isActive = false;
+                        if (n.hit && isTimeInRange && isKeyHeld) {
+                            isActive = true; activeHolds++;
+                        }
+
+                        let bodyColor, borderColor;
+                        if (n.key < 2) { bodyColor = COLORS.holdLeftBody; borderColor = COLORS.holdLeftBorder; }
+                        else { bodyColor = COLORS.holdRightBody; borderColor = COLORS.holdRightBorder; }
+
+                        // 头部
+                        ctx.fillStyle = '#fa0';
+                        ctx.fillRect(n.key*keyW + 5, headY - 15, keyW - 10, 30);
+                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+                        ctx.strokeRect(n.key*keyW + 5, headY - 15, keyW - 10, 30);
+
+                        // 长条主体
+                        if (n.hit) {
+                            if (isActive) {
+                                ctx.fillStyle = '#fff';
+                                ctx.fillRect(n.key*keyW + 5, minY, keyW - 10, hH);
+                                ctx.strokeStyle = borderColor; ctx.lineWidth = 2;
+                                ctx.strokeRect(n.key*keyW + 5, minY, keyW - 10, hH);
+                            } else {
+                                ctx.fillStyle = bodyColor;
+                                ctx.fillRect(n.key*keyW + 5, minY, keyW - 10, hH);
+                                ctx.strokeStyle = borderColor; ctx.lineWidth = 2;
+                                ctx.strokeRect(n.key*keyW + 5, minY, keyW - 10, hH);
+                            }
+                        } else {
+                            ctx.fillStyle = bodyColor;
+                            ctx.globalAlpha = 0.3;
+                            ctx.fillRect(n.key*keyW + 5, minY, keyW - 10, hH);
+                            ctx.globalAlpha = 1.0;
+                            ctx.strokeStyle = borderColor; ctx.lineWidth = 2;
+                            ctx.strokeRect(n.key*keyW + 5, minY, keyW - 10, hH);
+                        }
+                        if(isActive) {
+                            ctx.fillStyle = '#fff';
+                            ctx.font = '12px "BoutiqueBitmap9x9"';
+                            ctx.textAlign = 'center';
+                            ctx.fillText("ACTIVE", n.key*keyW + keyW/2, minY + hH/2);
+                        }
+                    } else {
+                        let y = headY;
+                        if(y > -50 && y < h + 50) {
+                            let fill = '#fff', border = '#000';
+                            if(n.type === 'chip') { fill = (n.key < 2) ? COLORS.leftChip : COLORS.rightChip; border = '#000'; }
+                            else if(n.type === 'bumper') {
+                                if(n.special) { 
+                                    fill = (n.side === 'L') ? COLORS.leftChip : COLORS.rightChip; 
+                                    border = COLORS.specialBumperBorder; 
+                                } else { 
+                                    fill = (n.side === 'L') ? COLORS.leftBumper : COLORS.rightBumper; 
+                                    border = (n.side === 'L') ? COLORS.leftBumperBorder : COLORS.rightBumperBorder; 
+                                }
+                            }
+                            else if(n.type === 'mine') { fill = COLORS.mineFill; border = COLORS.mineBorder; }
+
+                            if(n.type === 'bumper') {
+                                const startX = n.side==='L' ? 0 : keyW*2;
+                                ctx.fillStyle = fill; ctx.fillRect(startX + 5, y - 15, keyW*2 - 10, 30);
+                                ctx.strokeStyle = border; ctx.lineWidth = 2;
+                                ctx.strokeRect(startX + 5, y - 15, keyW*2 - 10, 30);
+                            } else {
+                                ctx.fillStyle = fill; ctx.fillRect(n.key*keyW + 5, y - 15, keyW - 10, 30);
+                                ctx.strokeStyle = border; ctx.lineWidth = 2;
+                                ctx.strokeRect(n.key*keyW + 5, y - 15, keyW - 10, 30);
+                            }
+                            if(n.type === 'mine') {
+                                ctx.fillStyle = '#f00';
+                                ctx.font='20px "BoutiqueBitmap9x9"'; ctx.textAlign='center';
+                                ctx.fillText("!", n.key*keyW+keyW/2, y+5);
+                                ctx.textAlign='left';
+                            }
+                        }
+                    }
+                });
+
+                // 打击特效
+                for(let i=hitEffects.length-1; i>=0; i--) {
+                    let h = hitEffects[i]; h.life -= 0.05;
+                    if(h.life <= 0) { hitEffects.splice(i,1); continue; }
+                    ctx.globalAlpha = h.life;
+                    ctx.fillStyle = h.color; ctx.strokeStyle = h.border; ctx.lineWidth = 2;
+                    const s = h.size; ctx.fillRect(h.x - s/2, h.y - s/2, s, s); ctx.strokeRect(h.x - s/2, h.y - s/2, s, s);
+                    ctx.globalAlpha = 1.0;
+                }
+
+                // 顶部判定文字 & Combo
+                for(let i=effects.length-1; i>=0; i--) {
+                    let e = effects[i]; e.life -= 0.02; e.scale += (e.maxScale - e.scale) * 0.1; e.y -= 1;
+                    if(e.life <= 0) { effects.splice(i,1); continue; }
+                    ctx.globalAlpha = e.life; ctx.fillStyle = e.color;
+                    ctx.font = `bold ${40 * e.scale}px "BoutiqueBitmap9x9", monospace`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.lineWidth = 3; ctx.strokeStyle = '#FFF'; ctx.strokeText(e.text, w/2, e.y);
+                    ctx.fillText(e.text, w/2, e.y); ctx.shadowBlur = 0; ctx.globalAlpha = 1.0;
+                }
+
+                // 分数 (百分比)
+                ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+                const scoreText = `Score: ${percentage.toFixed(3)}%`;
+                ctx.font = `bold 24px "BoutiqueBitmap9x9", monospace`;
+                ctx.lineWidth = 2; ctx.strokeStyle = '#FFF'; ctx.strokeText(scoreText, 10, 10);
+                ctx.fillStyle = COLORS.scoreText; ctx.fillText(scoreText, 10, 10);
+
+                // 调试信息
+                debugInfo.textContent = `Gauge: ${gauge.toFixed(1)}% | Keys: D[${keyStates[0]}] F[${keyStates[1]}] J[${keyStates[2]}] K[${keyStates[3]}] | Speed: ${gameSpeed}`;
+                gaugeFill.style.width = gauge + '%';
+
+                // 血条归零检测 (仅当启用血条时)
+                if(useGauge && gauge <= 0 && !gameOver) {
+                    gameOver = true;
+                    isRunning = false;
+                    gameOverOverlay.style.display = 'flex';
+                    setTimeout(() => {
+                        gameOverOverlay.style.display = 'none';
+                    }, 3000);
+                }
+
+                if(useGauge && gauge <= 0) debugInfo.textContent += "\nLIFE DEPLETED";
+            }
+
+            // 键盘事件
+            const map = {'KeyD':0, 'KeyF':1, 'KeyJ':2, 'KeyK':3};
+            window.addEventListener('keydown', e => {
+                if(map[e.code] !== undefined) handleInput(map[e.code], true);
+                if(e.key === 'Escape' && isRunning) {
+                    isRunning = false;
+                    gameDiv.style.display = 'none';
+                    settingsPanel.style.display = 'flex';
+                }
+            });
+            window.addEventListener('keyup', e => {
+                if(map[e.code] !== undefined) handleInput(map[e.code], false);
+            });
+
+            // 触摸事件
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                const r = canvas.getBoundingClientRect();
+                for(let i=0; i<e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    const x = t.clientX - r.left;
+                    const k = Math.floor(x / keyW);
+                    if(k >= 0 && k < 4) handleInput(k, true);
+                }
+            }, {passive: false});
+
+            canvas.addEventListener('touchend', e => {
+                e.preventDefault();
+                const r = canvas.getBoundingClientRect();
+                for(let i=0; i<e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    const x = t.clientX - r.left;
+                    const k = Math.floor(x / keyW);
+                    if(k >= 0 && k < 4) handleInput(k, false);
+                }
+            }, {passive: false});
+
+            // 退出按钮
+            exitBtn.addEventListener('click', () => {
+                if(audioCtx) audioCtx.close();
+                isRunning=false;
+                gameDiv.style.display='none';
+                settingsPanel.style.display='flex';
+            });
+
+            // 开始游戏按钮
+            startGameBtn.addEventListener('click', async () => {
+                settingsPanel.style.display = 'none';
+                gameDiv.style.display = 'block';
+                gameOverOverlay.style.display = 'none';
+                gameOver = false;
+                resize();
+                
+                // 使用自定义谱面或默认谱面
+                if (customNotes && customNotes.length > 0) {
+                    notes = customNotes;
+                } else {
+                    notes = generateDefaultNotes();
+                }
+                
+                // 重置游戏状态
+                score = 0; combo = 0; gauge = 100;
+                effects = []; hitEffects = [];
+                keyStates = {0: false, 1: false, 2: false, 3: false};
+                
+                try {
+                    initAudioContext();
+                    
+                    let audioBuffer;
+                    if (customAudioBuffer) {
+                        audioBuffer = customAudioBuffer;
+                    } else {
+                        // 默认音频
+                        const buf = createWavBuffer(44100, 12, 440);
+                        audioBuffer = await audioCtx.decodeAudioData(buf);
+                    }
+                    
+                    const src = audioCtx.createBufferSource();
+                    src.buffer = audioBuffer;
+                    src.connect(audioCtx.destination);
+                    src.start(0);
+                    startTime = audioCtx.currentTime;
+                    isRunning = true;
+                    draw();
+                    (function loop() {
+                        if(isRunning) { draw(); requestAnimationFrame(loop); }
+                    })();
+                } catch(e) { 
+                    debugInfo.textContent = "Error: " + e.message; 
+                    console.error(e);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
