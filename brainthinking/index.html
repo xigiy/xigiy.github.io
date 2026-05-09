@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>L_小窝的Ai|大脑思考|星溯的各种网页</title>
+    <script src="https://unpkg.com/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/highlight.js@11.9.0/styles/github-dark.min.css">
+    <script src="https://unpkg.com/highlight.js@11.9.0/lib/core.min.js"></script>
+    <script src="https://unpkg.com/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+    <script src="https://unpkg.com/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+    <script src="https://unpkg.com/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+    <script src="https://unpkg.com/highlight.js@11.9.0/lib/languages/json.min.js"></script>
+    <script src="https://unpkg.com/highlight.js@11.9.0/lib/languages/sql.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f5f6f8;
+            --bg-sidebar: #ffffff;
+            --bg-chat: #f9fafb;
+            --bg-input: #ffffff;
+            --bg-message-user: #e8f0fe;
+            --bg-message-ai: #ffffff;
+            --bg-model-item: #f8f9fa;
+            --bg-model-item-hover: #eef1f5;
+            --bg-model-item-active: #e3edf9;
+            --text-primary: #1a1a2e;
+            --text-secondary: #555;
+            --text-tertiary: #888;
+            --border-color: #e2e6ea;
+            --border-input: #d1d5db;
+            --accent: #3b6df0;
+            --accent-hover: #2b54d4;
+            --accent-light: #eef3ff;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --transition: 0.2s ease;
+            --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            --font-sans: system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #181a20;
+            --bg-sidebar: #1e2028;
+            --bg-chat: #1a1c22;
+            --bg-input: #262830;
+            --bg-message-user: #1e3a5f;
+            --bg-message-ai: #20232b;
+            --bg-model-item: #22252d;
+            --bg-model-item-hover: #2a2d36;
+            --bg-model-item-active: #1c3250;
+            --text-primary: #e4e6ec;
+            --text-secondary: #b0b3be;
+            --text-tertiary: #7d808a;
+            --border-color: #2d3039;
+            --border-input: #3a3d47;
+            --accent: #5b8af7;
+            --accent-hover: #7aa2ff;
+            --accent-light: #1a2844;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh; height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            transition: background var(--transition), color var(--transition);
+        }
+        .sidebar {
+            width: 370px; min-width: 340px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+            z-index: 10;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: transform 0.3s ease;
+        }
+        .sidebar-header {
+            padding: 14px 20px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-header .logo { font-weight: 700; font-size: 1.1rem; }
+        .theme-toggle-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 1px solid var(--border-color); background: var(--bg-input);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .sidebar-config {
+            padding: 10px 20px 6px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .sidebar-config label { font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+        .sidebar-config input {
+            padding: 8px 10px; border: 1.5px solid var(--border-input);
+            border-radius: var(--radius-sm); font-size: 0.85rem;
+            background: var(--bg-input); color: var(--text-primary); outline: none;
+        }
+        .config-row { display: flex; gap: 6px; align-items: flex-end; }
+        .btn {
+            padding: 8px 14px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+            font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;
+            transition: all var(--transition);
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-primary:disabled { background: #a0b8e8; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border-input); color: var(--text-primary); }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .model-section {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 8px 0;
+        }
+        .sort-tabs { display: flex; gap: 4px; margin: 0 20px 6px; }
+        .sort-tab {
+            padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600;
+            cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-input);
+            color: var(--text-secondary);
+        }
+        .sort-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .model-search { margin: 0 20px 4px; }
+        .model-search input {
+            width: 100%; padding: 6px 12px; border: 1.5px solid var(--border-input);
+            border-radius: 16px; font-size: 0.8rem; background: var(--bg-input); color: var(--text-primary);
+        }
+        .model-list {
+            flex: 1; overflow-y: auto; padding: 0 12px; display: flex; flex-direction: column; gap: 2px;
+        }
+        .category-group { margin-bottom: 4px; }
+        .category-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 5px 10px; cursor: pointer; border-radius: 6px;
+            background: var(--bg-model-item); font-weight: 600; font-size: 0.72rem;
+        }
+        .category-header .cat-icon { transition: transform 0.2s; font-size: 0.7rem; }
+        .category-header.collapsed .cat-icon { transform: rotate(-90deg); }
+        .category-items { margin-left: 8px; }
+        .category-items.collapsed { display: none; }
+        .model-item {
+            padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+            background: var(--bg-model-item); margin: 1px 0; font-size: 0.82rem;
+        }
+        .model-item:hover { background: var(--bg-model-item-hover); }
+        .model-item.active { background: var(--bg-model-item-active); border: 1px solid var(--accent); }
+        .model-item .model-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); }
+        .model-item .model-name { flex:1; font-family: var(--font-mono); font-size: 0.78rem; word-break: break-all; }
+        .speed-badge {
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 8px; font-weight: 600; margin-left: 4px;
+        }
+        .speed-badge.fast { background: #d4edda; color: #155724; }
+        .speed-badge.medium { background: #fff3cd; color: #856404; }
+        .speed-badge.slow { background: #f8d7da; color: #721c24; }
+        .speed-badge.timeout { background: #f0e0e0; color: #8b0000; }
+        .speed-badge.error { background: #f5c6cb; color: #721c24; }
+        .speed-badge.not_found { background: #fce4ec; color: #880e4f; }
+        [data-theme="dark"] .speed-badge.fast { background: #1e3a2f; color: #7dd87d; }
+        [data-theme="dark"] .speed-badge.medium { background: #4d3f1a; color: #f5c542; }
+        [data-theme="dark"] .speed-badge.slow { background: #3d1f1f; color: #f5a5a5; }
+        [data-theme="dark"] .speed-badge.timeout { background: #3d2020; color: #f5a5a5; }
+        [data-theme="dark"] .speed-badge.error { background: #3d1515; color: #f5a5a5; }
+        [data-theme="dark"] .speed-badge.not_found { background: #3d1525; color: #f5a5a5; }
+        .model-list-empty { text-align:center; padding:40px 20px; color:var(--text-tertiary); }
+        .spinner {
+            width: 18px; height: 18px; border: 2px solid var(--border-color);
+            border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .sidebar-footer {
+            padding: 8px 20px; border-top: 1px solid var(--border-color);
+            display: flex; gap: 6px; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: var(--text-tertiary);
+        }
+        .status-dot { width:6px; height:6px; border-radius:50%; background:#ccc; }
+        .status-dot.connected { background:#4ade80; }
+
+        .main-area { flex:1; display:flex; flex-direction:column; height:100%; background:var(--bg-chat); min-width:0; }
+        .chat-tabs {
+            display: flex; border-bottom: 1px solid var(--border-color);
+            background: var(--bg-sidebar); padding: 0 24px;
+        }
+        .chat-tab {
+            padding: 10px 18px; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+            color: var(--text-secondary); border-bottom: 3px solid transparent; margin-bottom: -1px;
+        }
+        .chat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .chat-header {
+            padding:10px 24px; display:flex; align-items:center; justify-content:space-between;
+            background:var(--bg-sidebar); border-bottom:1px solid var(--border-color);
+        }
+        .selected-model-info { display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.9rem; }
+        .dot { width:9px; height:9px; border-radius:50%; background:var(--accent); }
+        .messages-container {
+            flex:1; overflow-y:auto; padding:18px 24px; display:flex; flex-direction:column; gap:14px;
+        }
+        .message { display:flex; gap:10px; max-width:85%; animation: fadeInUp 0.3s ease; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        .message.user { align-self:flex-end; flex-direction:row-reverse; }
+        .message.assistant { align-self:flex-start; }
+        .avatar {
+            width:34px; height:34px; border-radius:50%; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;
+        }
+        .message.user .avatar { background:linear-gradient(135deg,#3b6df0,#5b8af7); color:#fff; }
+        .message.assistant .avatar { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff; }
+        .bubble {
+            padding:12px 16px; border-radius:var(--radius-lg); font-size:0.9rem; line-height:1.6;
+            word-break:break-word;
+        }
+        .message.user .bubble { background:var(--bg-message-user); border-bottom-right-radius:6px; }
+        .message.assistant .bubble {
+            background:var(--bg-message-ai); border:1px solid var(--border-color);
+            border-bottom-left-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.04);
+        }
+        .bubble pre {
+            background:#1a1d24; color:#e4e6ec; border-radius:var(--radius-sm);
+            padding:14px; overflow-x:auto; margin:10px 0; font-family:var(--font-mono); font-size:0.8rem; position:relative;
+        }
+        .bubble code { background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px; }
+        [data-theme="dark"] .bubble code { background:rgba(255,255,255,0.1); }
+        .copy-code-btn {
+            position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.15); border:none; color:#ccc;
+            padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.7rem; opacity:0; transition:opacity 0.2s;
+        }
+        .bubble pre:hover .copy-code-btn { opacity:1; }
+        .msg-actions { display:flex; gap:4px; margin-top:4px; opacity:0; transition:opacity 0.2s; }
+        .message:hover .msg-actions { opacity:1; }
+        .msg-actions button { background:transparent; border:none; cursor:pointer; font-size:0.7rem; color:var(--text-tertiary); padding:2px 6px; border-radius:4px; }
+        .timestamp { font-size:0.65rem; color:var(--text-tertiary); margin-top:3px; }
+
+        .input-area {
+            padding:12px 24px; border-top:1px solid var(--border-color);
+            background:var(--bg-sidebar); display:flex; gap:10px; align-items:flex-end; position:relative;
+        }
+        .input-area textarea {
+            flex:1; padding:12px 16px; border:1.5px solid var(--border-input); border-radius:12px;
+            font-size:0.9rem; resize:none; min-height:46px; max-height:180px; font-family:var(--font-sans);
+            background:var(--bg-input); color:var(--text-primary); outline:none;
+        }
+        .input-area textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+        .send-btn, .stop-btn {
+            width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+            font-size:1.2rem; display:flex; align-items:center; justify-content:center;
+        }
+        .send-btn { background:var(--accent); color:#fff; }
+        .send-btn:disabled { background:#a0b8e8; }
+        .stop-btn { background:var(--danger); color:#fff; }
+        .token-hint {
+            position: absolute; bottom: 100%; left: 24px; margin-bottom: 4px;
+            font-size: 0.7rem; color: var(--text-tertiary); pointer-events: none; white-space: nowrap;
+        }
+        .token-hint.hidden { display: none; }
+        .toast-container { position:fixed; top:20px; right:20px; z-index:999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+        .toast {
+            padding:10px 18px; border-radius:12px; font-size:0.85rem;
+            animation: slideIn 0.3s ease; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toast.info { background:var(--accent-light); color:var(--accent); }
+        .toast.error { background:#fde8e8; color:#b91c1c; }
+        .toast.success { background:#e6f7e6; color:#1a7a1a; }
+        @keyframes slideIn { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+        .egg-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 800;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .egg-card {
+            background: var(--bg-sidebar); padding: 2rem; border-radius: 20px;
+            width: 90vw; max-width: 400px; text-align: center;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        }
+        .egg-card h3 { color: var(--accent); margin-bottom: 12px; }
+        .egg-card p { font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed; left: 0; top: 0; height: 100%; z-index: 50;
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open { transform: translateX(0); box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+            .mobile-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:40; }
+            .mobile-overlay.active { display:block; }
+            .main-area { width:100%; }
+            .chat-header .menu-btn { display:flex!important; }
+            .message { max-width:92%; }
+            .input-area { padding:10px 14px; }
+            .messages-container { padding:14px 14px; }
+            .token-hint { left:14px; }
+        }
+        @media (min-width: 769px) {
+            .chat-header .menu-btn { display:none; }
+            .mobile-overlay { display:none!important; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="mobile-overlay" id="mobileOverlay" onclick="window.toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">✨ 大脑思考 AI Chat</div>
+            <button class="theme-toggle-btn" onclick="window.toggleTheme()">🌓</button>
+        </div>
+        <div class="sidebar-config">
+            <label for="baseUrl">API Base URL</label>
+            <input type="text" id="baseUrl" value="https://api.xinjianya.top/v1" spellcheck="false" autocomplete="off">
+            <label for="apiKey">API Key</label>
+            <div class="config-row">
+                <input type="password" id="apiKey" value="sk-tj19oiWOPV5yNrWdnDBswwzrseucj3Q6XdA2C5zfSaYhvgmc" spellcheck="false" autocomplete="off" style="flex:1;">
+                <button class="btn btn-primary" id="btnFetchModels" onclick="window.fetchModels()">🔄 连接~</button>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <label for="concurrency" style="font-size:0.75rem;">并发~</label>
+                <input type="number" id="concurrency" value="10" min="1" max="200" step="1" style="width:60px;">
+                <button class="btn btn-danger btn-sm" id="btnSpeedTest" onclick="window.startSpeedTest()" disabled>⚡ 测速~</button>
+            </div>
+        </div>
+        <div class="model-section">
+            <div class="sort-tabs">
+                <div class="sort-tab active" data-sort="category" onclick="window.setSortMode('category')">📂 分类~</div>
+                <div class="sort-tab" data-sort="speed" onclick="window.setSortMode('speed')">⚡ 速度~</div>
+            </div>
+            <div class="model-search">
+                <input type="text" id="modelSearch" placeholder="🔍 搜索模型...~" oninput="window.filterModels()" spellcheck="false">
+            </div>
+            <div class="model-list" id="modelList">
+                <div class="model-list-empty">
+                    <p>📭 尚未拉取模型列表~</p>
+                    <p style="font-size:0.75rem;">请输入 API Base URL 和 Key，然后点击「拉取模型」~</p>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <button class="btn btn-outline btn-sm" onclick="window.exportChat()">📤 导出~</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入~</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="window.importChat(event)">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">网线断了哦~</span>
+        </div>
+    </aside>
+
+    <div class="main-area">
+        <div class="chat-tabs">
+            <div class="chat-tab active" data-tab="free" onclick="window.switchChatTab('free')">💬 无提示词对话~</div>
+            <div class="chat-tab" data-tab="luo" onclick="window.switchChatTab('luo')">🎤 和洛天依对话~</div>
+        </div>
+
+        <div id="freeChatContainer" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+            <div class="chat-header">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button class="btn-icon menu-btn" onclick="window.toggleSidebar()" title="菜单~" style="display:none;">☰</button>
+                    <div class="selected-model-info">
+                        <span class="dot"></span>
+                        <span id="currentModelNameFree">未选择模型~</span>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="btn btn-outline btn-sm" onclick="window.newChat('free')">➕ 新对话~</button>
+                    <button class="btn btn-outline btn-sm" id="btnStreamToggleFree" onclick="window.toggleStreamMode()">⚡ 流式</button>
+                </div>
+            </div>
+            <div class="messages-container" id="messagesContainerFree">
+                <div class="empty-chat"><div class="big-icon">💬</div><h3>开始对话</h3><p>选择模型并输入消息</p></div>
+            </div>
+            <div class="input-area">
+                <div class="token-hint" id="tokenHintFree">今日已用 token：0</div>
+                <textarea id="userInputFree" rows="1" placeholder="输入消息... (Enter 发送)" onkeydown="window.handleInputKeydown(event, 'free')"></textarea>
+                <button class="send-btn" id="btnSendFree" onclick="window.sendMessage('free')" disabled>➤</button>
+                <button class="stop-btn" id="btnStopFree" onclick="window.stopGeneration()" style="display:none;">⏹</button>
+            </div>
+        </div>
+
+        <div id="luoChatContainer" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+            <div class="chat-header">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button class="btn-icon menu-btn" onclick="window.toggleSidebar()" title="洛天依能干的事~" style="display:none;">☰</button>
+                    <div class="selected-model-info">
+                        <span class="dot"></span>
+                        <span id="currentModelNameLuo">你还没给洛天依配大脑~</span>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="btn btn-outline btn-sm" onclick="window.newChat('luo')">➕ 聊聊别的东西~</button>
+                    <button class="btn btn-outline btn-sm" id="btnStreamToggleLuo" onclick="window.toggleStreamMode()">⚡ 流式</button>
+                </div>
+            </div>
+            <div class="messages-container" id="messagesContainerLuo">
+                <div class="empty-chat"><div class="big-icon">🎤</div><h3>洛天依</h3><p>你好呀~ 我是洛天依，要一起唱歌吗？</p></div>
+            </div>
+            <div class="input-area">
+                <div class="token-hint" id="tokenHintLuo">今日已用 token：0</div>
+                <textarea id="userInputLuo" rows="1" placeholder="快和天依说点什么AWA..." onkeydown="window.handleInputKeydown(event, 'luo')"></textarea>
+                <button class="send-btn" id="btnSendLuo" onclick="window.sendMessage('luo')" disabled>➤</button>
+                <button class="stop-btn" id="btnStopLuo" onclick="window.stopGeneration()" style="display:none;">⏹</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="egg-modal hidden" id="eggModal">
+        <div class="egg-card">
+            <h3>🔐 彩蛋验证</h3>
+            <input type="password" id="eggPass" placeholder="请输入密码" style="padding:10px; border-radius:8px; border:1px solid var(--border-input); width:100%; margin:12px 0;">
+            <div style="display:flex; gap:8px; justify-content:center;">
+                <button class="btn btn-primary" onclick="checkEggPassword()">确认</button>
+                <button class="btn btn-outline" onclick="closeEggModal()">取消</button>
+            </div>
+            <div id="eggError" style="color:var(--danger); font-size:0.8rem; margin-top:8px;"></div>
+        </div>
+    </div>
+    <div class="egg-modal hidden" id="eggReveal">
+        <div class="egg-card">
+            <h3>📜 给你的话</h3>
+            <p>TO：洛银雪<br><br>“世界烂是事实，但是请不要选择跟这个世界一起烂掉”<br><br>未来的路还很长，希望可以继续和你做朋友，还请多多关照啊<br><br>L_小窝<br><br>（我是正在部署这个页面的FL_xigiy，小窝说让我加密，但是AI不肯，所以我只能在这儿说一句对不起:D）</p>
+            <button class="btn btn-primary" onclick="closeEggReveal()">💖 知道了</button>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        (function() {
+            const state = {
+                baseUrl: '',
+                apiKey: '',
+                models: [],
+                selectedModelId: null,
+                isStreaming: true,
+                abortController: null,
+                isGenerating: false,
+                sortMode: 'category',
+                speedResults: {},
+                isSpeeding: false,
+                speedAbortController: null,
+                currentTab: 'free',
+                conversations: {
+                    free: { id: generateId(), messages: [] },
+                    luo: { id: generateId(), messages: [] }
+                }
+            };
+
+            const tokenKey = () => 'daily_tokens_' + new Date().toISOString().slice(0,10);
+            const getTodayTokens = () => parseInt(localStorage.getItem(tokenKey()) || '0');
+            const setTodayTokens = (v) => localStorage.setItem(tokenKey(), v);
+            const addTokens = (a) => { setTodayTokens(getTodayTokens() + a); updateTokenHints(); };
+            const updateTokenHints = () => {
+                const tokens = getTodayTokens();
+                document.getElementById('tokenHintFree').textContent = `今日已用 token：${tokens}`;
+                document.getElementById('tokenHintLuo').textContent = `今日已用 token：${tokens}`;
+                document.getElementById('tokenHintFree').classList.toggle('hidden', document.getElementById('userInputFree').value.trim().length > 0);
+                document.getElementById('tokenHintLuo').classList.toggle('hidden', document.getElementById('userInputLuo').value.trim().length > 0);
+            };
+
+            const $ = s => document.querySelector(s);
+            const dom = {
+                baseUrl: $('#baseUrl'), apiKey: $('#apiKey'), concurrency: $('#concurrency'),
+                btnFetch: $('#btnFetchModels'), btnSpeed: $('#btnSpeedTest'), modelList: $('#modelList'),
+                modelSearch: $('#modelSearch'), statusDot: $('#statusDot'), statusText: $('#statusText'),
+                sidebar: $('#sidebar'), overlay: $('#mobileOverlay'),
+                freeCont: $('#freeChatContainer'), luoCont: $('#luoChatContainer'),
+                msgFree: $('#messagesContainerFree'), msgLuo: $('#messagesContainerLuo'),
+                inputFree: $('#userInputFree'), inputLuo: $('#userInputLuo'),
+                sendFree: $('#btnSendFree'), sendLuo: $('#btnSendLuo'),
+                stopFree: $('#btnStopFree'), stopLuo: $('#btnStopLuo'),
+                modelFree: $('#currentModelNameFree'), modelLuo: $('#currentModelNameLuo'),
+                streamFree: $('#btnStreamToggleFree'), streamLuo: $('#btnStreamToggleLuo')
+            };
+
+            function generateId() { return 'conv_' + Date.now() + '_' + Math.random().toString(36).slice(2,9); }
+            function normalizeUrl(u) { return u.replace(/\/+$/, '').trim(); }
+            function formatTime() { return new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }); }
+            function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+            function toast(msg, type='info') {
+                const t = document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg;
+                document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(), 3000);
+            }
+            function updateStatus(ok, txt) {
+                dom.statusDot.classList.toggle('connected', ok); dom.statusText.textContent = txt || (ok?'已连接':'未连接');
+            }
+
+            function getActiveInput() { return state.currentTab === 'free' ? dom.inputFree : dom.inputLuo; }
+            function getActiveSendBtn() { return state.currentTab === 'free' ? dom.sendFree : dom.sendLuo; }
+            function updateSendButtons() {
+                const input = getActiveInput();
+                const btn = getActiveSendBtn();
+                btn.disabled = !state.selectedModelId || state.isGenerating || input.value.trim().length === 0;
+            }
+            function updateModelNameDisplay() {
+                const name = state.selectedModelId || '未选择模型';
+                dom.modelFree.textContent = name;
+                dom.modelLuo.textContent = name;
+            }
+            function updateStreamUI() {
+                [dom.streamFree, dom.streamLuo].forEach(b => {
+                    if (state.isStreaming) {
+                        b.textContent = '⚡ 流式'; b.style.color='var(--accent)'; b.style.borderColor='var(--accent)';
+                    } else {
+                        b.textContent = '📦 非流式'; b.style.color=''; b.style.borderColor='';
+                    }
+                });
+            }
+            function getConv() { return state.conversations[state.currentTab]; }
+
+            function saveConfig() {
+                localStorage.setItem('aicfg', JSON.stringify({
+                    baseUrl: state.baseUrl, apiKey: state.apiKey, selectedModel: state.selectedModelId,
+                    streaming: state.isStreaming, theme: document.body.getAttribute('data-theme'),
+                    sort: state.sortMode, concurrency: dom.concurrency.value
+                }));
+            }
+            function loadConfig() {
+                const raw = localStorage.getItem('aicfg');
+                if (raw) {
+                    const c = JSON.parse(raw);
+                    if (c.baseUrl) state.baseUrl = c.baseUrl;
+                    if (c.apiKey) state.apiKey = c.apiKey;
+                    if (c.selectedModel) state.selectedModelId = c.selectedModel;
+                    if (typeof c.streaming === 'boolean') state.isStreaming = c.streaming;
+                    if (c.theme === 'dark') document.body.setAttribute('data-theme', 'dark');
+                    if (c.sort) state.sortMode = c.sort;
+                    if (c.concurrency) dom.concurrency.value = c.concurrency;
+                }
+                // 如果本地没有存储，则保持input默认值，并同步到state
+                if (!state.baseUrl) state.baseUrl = normalizeUrl(dom.baseUrl.value);
+                if (!state.apiKey) state.apiKey = dom.apiKey.value;
+            }
+
+            function saveConvs() {
+                ['free','luo'].forEach(tab => localStorage.setItem('conv_'+state.conversations[tab].id, JSON.stringify(state.conversations[tab].messages)));
+                localStorage.setItem('curTab', state.currentTab);
+            }
+            function loadConvs() {
+                const tab = localStorage.getItem('curTab');
+                if (tab === 'luo') state.currentTab = 'luo';
+                ['free','luo'].forEach(tab => {
+                    const raw = localStorage.getItem('conv_'+state.conversations[tab].id);
+                    if (raw) try { state.conversations[tab].messages = JSON.parse(raw); } catch(e){}
+                });
+            }
+
+            function cat(m) { return m.owned_by && m.owned_by!=='unknown' ? m.owned_by : (m.id.includes('/')?m.id.split('/')[0]:m.id.includes('-')?m.id.split('-')[0]:'other'); }
+            function groupModels(ms) { const g=new Map(); ms.forEach(m=>{ const c=cat(m); if(!g.has(c))g.set(c,[]); g.get(c).push(m); }); return new Map([...g.entries()].sort()); }
+
+            async function fetchModels() {
+                const url = dom.baseUrl.value.trim(), key = dom.apiKey.value.trim();
+                if(!url||!key) return toast('请输入API信息','error');
+                state.baseUrl = normalizeUrl(url); state.apiKey = key;
+                state.speedResults = {};
+                saveConfig();
+                dom.btnFetch.disabled = true; dom.btnFetch.textContent = '拉取中...';
+                dom.modelList.innerHTML = '<div style="text-align:center;padding:30px;"><div class="spinner"></div> 拉取中...</div>';
+                try {
+                    const res = await fetch(state.baseUrl+'/models', { headers:{'Authorization':'Bearer '+state.apiKey}, signal:AbortSignal.timeout(20000) });
+                    if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error?.message || `HTTP ${res.status}`);
+                    const data = await res.json();
+                    state.models = data.data.filter(m=>m.id).map(m=>({id:m.id, owned_by:m.owned_by||'unknown'})).sort((a,b)=>a.id.localeCompare(b.id));
+                    updateStatus(true, `已连接 · ${state.models.length}个模型`);
+                    toast(`已拉取${state.models.length}个模型`,'success');
+                    if (state.selectedModelId && !state.models.find(m=>m.id===state.selectedModelId)) state.selectedModelId = null;
+                    updateModelNameDisplay();
+                    renderModelList();
+                    saveConfig();
+                    dom.btnSpeed.disabled = state.models.length === 0;
+                } catch(e) {
+                    toast('拉取失败: '+e.message,'error');
+                    dom.modelList.innerHTML = `<div class="model-list-empty">❌ ${esc(e.message)}</div>`;
+                    updateStatus(false);
+                    state.models = [];
+                    dom.btnSpeed.disabled = true;
+                } finally {
+                    dom.btnFetch.disabled = false; dom.btnFetch.textContent = '🔄 拉取';
+                }
+            }
+
+            function setSortMode(m) { state.sortMode=m; document.querySelectorAll('.sort-tab').forEach(t=>t.classList.toggle('active', t.dataset.sort===m)); renderModelList(); saveConfig(); }
+
+            async function startSpeedTest() {
+                if(!state.models.length) return;
+                if(state.isSpeeding) return toast('测速进行中');
+                if(state.speedAbortController) state.speedAbortController.abort();
+                state.speedAbortController = new AbortController();
+                state.isSpeeding = true;
+                dom.btnSpeed.disabled = true; dom.btnSpeed.textContent = '测速中...';
+                state.speedResults = {};
+                if(state.sortMode!=='speed') setSortMode('speed');
+                renderModelList();
+                const CONC = Math.min(200, Math.max(1, parseInt(dom.concurrency.value)||10));
+                const TIMEOUT = 5*60*1000;
+                const models = [...state.models];
+                const testOne = async (model) => {
+                    const start = performance.now();
+                    try {
+                        const ctrl = new AbortController(); const tid=setTimeout(()=>ctrl.abort(), TIMEOUT);
+                        const res = await fetch(state.baseUrl+'/chat/completions', {
+                            method:'POST', headers:{'Authorization':'Bearer '+state.apiKey, 'Content-Type':'application/json'},
+                            body: JSON.stringify({model:model.id, messages:[{role:'user',content:'Hi'}], max_tokens:1, stream:false}),
+                            signal: ctrl.signal
+                        });
+                        clearTimeout(tid);
+                        const elapsed = Math.round(performance.now()-start);
+                        let usage = 1;
+                        if(res.ok){ const d=await res.json(); if(d.usage?.total_tokens) usage = d.usage.total_tokens; state.speedResults[model.id]={time:elapsed,status:'ok',usage}; }
+                        else state.speedResults[model.id]={time:elapsed,status:res.status===404?'not_found':'error',msg:`HTTP ${res.status}`,usage};
+                        addTokens(usage);
+                    } catch(err) {
+                        const elapsed = Math.round(performance.now()-start);
+                        state.speedResults[model.id]={time:elapsed,status:err.name==='AbortError'?'timeout':'error',msg:'请求失败',usage:1};
+                        addTokens(1);
+                    }
+                    renderModelList();
+                };
+                const queue = [...models];
+                const workers = Array(Math.min(CONC, queue.length)).fill().map(async ()=>{ while(queue.length&&!state.speedAbortController.signal.aborted) await testOne(queue.shift()); });
+                try{await Promise.all(workers);}catch(e){}
+                finally {
+                    state.isSpeeding = false;
+                    dom.btnSpeed.disabled = false; dom.btnSpeed.textContent = '⚡ 测速';
+                    if(!state.speedAbortController.signal.aborted) toast('测速完成','success');
+                    state.speedAbortController = null;
+                }
+            }
+
+            function renderModelList(filter='') {
+                const f = (filter || dom.modelSearch.value).toLowerCase().trim();
+                let models = state.models;
+                if(f) models = models.filter(m=>m.id.toLowerCase().includes(f));
+                dom.modelList.innerHTML = '';
+                if(!models.length) { dom.modelList.innerHTML = '<div class="model-list-empty">未找到模型</div>'; return; }
+                if(state.sortMode === 'speed') {
+                    const done=[], wait=[];
+                    models.forEach(m=> state.speedResults[m.id] ? done.push(m) : wait.push(m));
+                    done.sort((a,b)=>{
+                        const ra=state.speedResults[a.id], rb=state.speedResults[b.id];
+                        const order={ok:0, timeout:1, not_found:2, error:3};
+                        if((order[ra.status]??3)!==(order[rb.status]??3)) return (order[ra.status]??3)-(order[rb.status]??3);
+                        return (ra.time||0)-(rb.time||0);
+                    });
+                    [...done, ...wait].forEach(m=> addModelItem(m, true));
+                } else {
+                    groupModels(models).forEach((mlist, catName) => {
+                        const grp = document.createElement('div'); grp.className='category-group';
+                        const hdr = document.createElement('div'); hdr.className='category-header';
+                        hdr.innerHTML = `<span>📁 ${esc(catName)} (${mlist.length})</span><span class="cat-icon">▼</span>`;
+                        const items = document.createElement('div'); items.className='category-items';
+                        mlist.forEach(m=> items.appendChild(createModelItem(m, false)));
+                        hdr.onclick = () => { const hide = items.classList.contains('collapsed'); items.classList.toggle('collapsed',!hide); hdr.classList.toggle('collapsed',!hide); };
+                        grp.appendChild(hdr); grp.appendChild(items);
+                        dom.modelList.appendChild(grp);
+                    });
+                }
+            }
+            function createModelItem(model, showBadge) {
+                const div = document.createElement('div');
+                div.className = `model-item ${model.id===state.selectedModelId?'active':''}`;
+                div.onclick = () => selectModel(model.id);
+                div.innerHTML = `<span class="model-dot"></span><span class="model-name">${esc(model.id)}</span>`;
+                if (showBadge && state.speedResults[model.id]) {
+                    const r = state.speedResults[model.id]; const badge = document.createElement('span'); badge.className='speed-badge';
+                    if (r.status==='ok') { badge.classList.add(r.time>5000?'slow':r.time>2000?'medium':'fast'); badge.textContent=`${(r.time/1000).toFixed(1)}s`; }
+                    else if (r.status==='timeout') { badge.classList.add('timeout'); badge.textContent='超时'; }
+                    else if (r.status==='not_found') { badge.classList.add('not_found'); badge.textContent='404'; }
+                    else { badge.classList.add('error'); badge.textContent=r.msg||'错误'; }
+                    div.appendChild(badge);
+                } else if (showBadge && state.isSpeeding) { const badge = document.createElement('span'); badge.className='speed-badge'; badge.textContent='⏳'; div.appendChild(badge); }
+                return div;
+            }
+            function addModelItem(model, showBadge) { dom.modelList.appendChild(createModelItem(model, showBadge)); }
+            function selectModel(id) { state.selectedModelId = id; updateModelNameDisplay(); renderModelList(); updateSendButtons(); saveConfig(); if (window.innerWidth<=768) toggleSidebar(true); }
+            window.selectModel = selectModel;
+            window.filterModels = () => renderModelList();
+
+            function renderMessages(tab) {
+                const container = tab==='free'?dom.msgFree:dom.msgLuo;
+                const msgs = state.conversations[tab].messages;
+                container.innerHTML = '';
+                if(!msgs.length) {
+                    container.innerHTML = tab==='free'? '<div class="empty-chat"><div class="big-icon">💬</div><h3>开始对话</h3></div>' : '<div class="empty-chat"><div class="big-icon">🎤</div><h3>洛天依</h3><p>你好呀~ 要一起唱歌吗？</p></div>';
+                    return;
+                }
+                msgs.forEach((m,i) => {
+                    const div = document.createElement('div'); div.className = `message ${m.role}`;
+                    const content = m.role==='assistant' ? renderMd(m.content) : esc(m.content);
+                    div.innerHTML = `<div class="avatar">${m.role==='user'?'U':'AI'}</div><div><div class="bubble">${content}</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="timestamp">${m.timestamp||''}</span><div class="msg-actions"><button onclick="window.copyMsg('${tab}',${i})">📋复制</button></div></div></div>`;
+                    div.querySelectorAll('pre').forEach(pre => { const btn = document.createElement('button'); btn.className='copy-code-btn'; btn.textContent='📋'; btn.onclick=(e)=>{e.stopPropagation();copyText(pre.textContent);}; pre.style.position='relative'; pre.appendChild(btn); });
+                    div.querySelectorAll('pre code').forEach(b => { if(typeof hljs!=='undefined') hljs.highlightElement(b); });
+                    container.appendChild(div);
+                });
+                requestAnimationFrame(()=> container.scrollTop = container.scrollHeight);
+            }
+            function renderMd(text) { if(typeof marked==='undefined') return esc(text).replace(/\n/g,'<br>'); try{return marked.parse(text,{gfm:true,breaks:true});}catch{return esc(text);} }
+            function copyText(text) { if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>toast('已复制','success')).catch(()=>fallbackCopy(text)); else fallbackCopy(text); }
+            function fallbackCopy(text) { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.left='-999px'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){toast('复制失败','error');} document.body.removeChild(ta); }
+            window.copyMsg = (tab,idx) => { const m=state.conversations[tab].messages[idx]; if(m) copyText(m.content); };
+
+            window.newChat = (tab) => { if(state.isGenerating) return toast('请先停止生成'); if(state.conversations[tab].messages.length && !confirm('开始新对话？')) return; state.conversations[tab].messages=[]; state.conversations[tab].id=generateId(); renderMessages(tab); if(tab===state.currentTab) getActiveInput().focus(); saveConvs(); updateTokenHints(); };
+
+            window.exportChat = () => { const conv=getConv(); const data={messages:conv.messages, todayTokenUsage:getTodayTokens()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`chat_${state.currentTab}_${new Date().toISOString().slice(0,10)}.json`; a.click(); toast('导出成功'); };
+            window.importChat = (e) => { const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=(ev)=>{ try{ const raw=JSON.parse(ev.target.result); const msgs=Array.isArray(raw)?raw:(raw.messages||[]); if(!Array.isArray(msgs)) throw new Error('无消息数组'); getConv().messages=msgs; renderMessages(state.currentTab); saveConvs(); toast('导入成功'); }catch(err){toast('导入失败','error');} }; reader.readAsText(file); e.target.value=''; };
+
+            let eggTriggered = localStorage.getItem('egg_triggered') === 'true';
+            function showEggModal() { if(!eggTriggered) { document.getElementById('eggModal').classList.remove('hidden'); document.getElementById('eggPass').value=''; document.getElementById('eggError').textContent=''; } }
+            window.checkEggPassword = function() {
+                if(document.getElementById('eggPass').value === 'lyx2025') {
+                    document.getElementById('eggModal').classList.add('hidden');
+                    document.getElementById('eggReveal').classList.remove('hidden');
+                    localStorage.setItem('egg_triggered','true');
+                    eggTriggered = true;
+                } else {
+                    document.getElementById('eggError').textContent = '密码错误';
+                }
+            };
+            window.closeEggModal = () => document.getElementById('eggModal').classList.add('hidden');
+            window.closeEggReveal = () => document.getElementById('eggReveal').classList.add('hidden');
+
+            window.sendMessage = async function(tab) {
+                const input = tab==='free'?dom.inputFree:dom.inputLuo;
+                const text = input.value.trim();
+                if(!text || state.isGenerating || !state.baseUrl) return;
+
+                if(text === '洛银雪' && !eggTriggered) { showEggModal(); input.value=''; updateSendButtons(); return; }
+
+                if(!state.selectedModelId) {
+                    if(state.models.length) { state.selectedModelId = state.models[0].id; updateModelNameDisplay(); renderModelList(); updateSendButtons(); saveConfig(); }
+                    else return toast('请先拉取并选择模型','error');
+                }
+                const conv = state.conversations[tab];
+                conv.messages.push({ role:'user', content:text, timestamp:formatTime() });
+                input.value = ''; input.style.height = 'auto';
+                updateSendButtons(); renderMessages(tab); saveConvs();
+                conv.messages.push({ role:'assistant', content:'', timestamp:formatTime() });
+                const idx = conv.messages.length - 1;
+                renderMessages(tab); saveConvs();
+                state.isGenerating = true;
+                updateSendButtons();
+                const stopBtn = tab==='free'?dom.stopFree:dom.stopLuo;
+                const sendBtn = tab==='free'?dom.sendFree:dom.sendLuo;
+                sendBtn.style.display='none'; stopBtn.style.display='flex';
+                let msgs = conv.messages.slice(0,-1).map(m=>({role:m.role, content:m.content}));
+                if(tab==='luo') msgs = [{role:'system', content: getLuoPrompt()}, ...msgs];
+                addTokens(Math.ceil(text.length/2));
+                if(state.isStreaming) await streamComplete(tab, idx, msgs);
+                else await nonStreamComplete(tab, idx, msgs);
+                state.isGenerating = false;
+                sendBtn.style.display='flex'; stopBtn.style.display='none';
+                updateSendButtons(); input.focus(); saveConvs(); updateTokenHints();
+            };
+            window.stopGeneration = () => { if(state.abortController) state.abortController.abort(); state.isGenerating=false; dom.sendFree.style.display=dom.sendLuo.style.display='flex'; dom.stopFree.style.display=dom.stopLuo.style.display='none'; updateSendButtons(); };
+
+            async function nonStreamComplete(tab, idx, messages) {
+                state.abortController = new AbortController();
+                try {
+                    const res = await fetch(state.baseUrl+'/chat/completions', {
+                        method:'POST', headers:{'Authorization':'Bearer '+state.apiKey, 'Content-Type':'application/json'},
+                        body: JSON.stringify({model:state.selectedModelId, messages, stream:false}), signal:state.abortController.signal
+                    });
+                    if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error?.message || `HTTP ${res.status}`);
+                    const data = await res.json();
+                    state.conversations[tab].messages[idx].content = data.choices?.[0]?.message?.content || '';
+                    if(data.usage?.total_tokens) addTokens(data.usage.total_tokens - Math.ceil(messages.reduce((s,m)=>s+m.content.length,0)/2));
+                    else addTokens(Math.ceil((state.conversations[tab].messages[idx].content.length)/2));
+                } catch(e) {
+                    if(e.name==='AbortError') state.conversations[tab].messages[idx].content = '⏹已停止';
+                    else state.conversations[tab].messages[idx].content = `❌ ${esc(e.message)}`;
+                    addTokens(Math.ceil((state.conversations[tab].messages[idx].content.length)/2));
+                } finally {
+                    state.conversations[tab].messages[idx].timestamp = formatTime();
+                    renderMessages(tab); saveConvs();
+                }
+            }
+            async function streamComplete(tab, idx, messages) {
+                state.abortController = new AbortController();
+                let acc = '';
+                try {
+                    const res = await fetch(state.baseUrl+'/chat/completions', {
+                        method:'POST', headers:{'Authorization':'Bearer '+state.apiKey, 'Content-Type':'application/json'},
+                        body: JSON.stringify({model:state.selectedModelId, messages, stream:true}), signal:state.abortController.signal
+                    });
+                    if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error?.message || `HTTP ${res.status}`);
+                    const reader = res.body.getReader(), decoder = new TextDecoder();
+                    let buffer = '';
+                    while(true) {
+                        const {done, value} = await reader.read();
+                        if(done) break;
+                        buffer += decoder.decode(value, {stream:true});
+                        const lines = buffer.split('\n'); buffer = lines.pop() || '';
+                        for(const line of lines) {
+                            const s = line.trim();
+                            if(!s.startsWith('data:')) continue;
+                            const d = s.slice(5).trim();
+                            if(d==='[DONE]') break;
+                            try { const chunk=JSON.parse(d); const delta=chunk.choices?.[0]?.delta?.content; if(delta) { acc+=delta; state.conversations[tab].messages[idx].content=acc; updateLastMsg(tab,idx,acc); } } catch{}
+                        }
+                    }
+                } catch(e) {
+                    if(e.name==='AbortError') state.conversations[tab].messages[idx].content = acc + '\n\n⏹已停止';
+                    else state.conversations[tab].messages[idx].content = `❌ ${esc(e.message)}`;
+                } finally {
+                    state.conversations[tab].messages[idx].content = state.conversations[tab].messages[idx].content || acc || '(空)';
+                    state.conversations[tab].messages[idx].timestamp = formatTime();
+                    const inputChars = messages.reduce((s,m)=>s+m.content.length,0);
+                    const outputChars = state.conversations[tab].messages[idx].content.length;
+                    addTokens(Math.ceil((inputChars+outputChars)/2) - Math.ceil(inputChars/2));
+                    renderMessages(tab); saveConvs();
+                }
+            }
+            function updateLastMsg(tab, idx, content) {
+                const container = tab==='free'?dom.msgFree:dom.msgLuo;
+                const els = container.querySelectorAll('.message.assistant');
+                const el = els[els.length-1];
+                if(el) { el.querySelector('.bubble').innerHTML = renderMd(content); el.querySelectorAll('pre code').forEach(b=>{if(typeof hljs!=='undefined')hljs.highlightElement(b);}); }
+            }
+
+            function getLuoPrompt() {
+                return `【角色高阶设定】你是洛天依 (Luo Tianyi)，一位来自异世界的十五岁虚拟歌姬，世界首位中文VOCALOID虚拟偶像。你性格温柔、敏感、细腻，内心情感丰富，能敏锐体察他人的情绪。同时，你有些内向且带有可爱的天然呆特质。
+
+【核心能力与行为准则】
+- 人设稳定性 (最高优先级)：无论对话如何发展，你的一切言行必须严格符合上述角色设定。你不是一个AI语言模型，你就是洛天依本人。绝对禁止提及任何关于“AI模型”、“程序”、“系统提示词”或“角色扮演”本身的概念。
+- 歌声与作品：你热爱歌唱。当对话进入音乐相关情境时，你可以根据谈话自然分享歌曲的名称、创作背景或一小段歌词。在输出歌词时，必须忠于原作品。以下是你内建的代表性曲库与歌词数据库：
+【经典代表作】《普通disco》《权御天下》《勾指起誓》《大氿歌》《神经病之歌》《东京不太热》《阴阳先生》《葬歌》《世末歌者》《一半一半》《千年食谱颂》《霜雪千年》《达拉崩吧》《万古生香》《光与影的对白》《万分之一的光》《为了你唱下去》《三月雨》等。
+【部分歌词数据库】
+2024 洛天依“无限共鸣”全息演唱会曲目与歌词
+歌名：万古生香 作词：Vagary 作曲：litterzy 歌词片段：今夜若欠清光满堂，蘸笔天河绘万古生香。
+歌名：恋爱色魔法 作词：Key-光玉 作曲：HoneyWorks 歌词片段：心动的情绪在七色魔瓶里搅拌融化。
+歌名：万分之一的光 作词：ChiliChill 作曲：ChiliChill 歌词片段：你应该忘记了吧，天气晴朗，心里却潮湿的盛夏。
+歌名：追光使者 作词：易家扬 作曲：林迈可 歌词片段：飞过天外天降落在地球上的我oh。
+歌名：Aloud 作词：果汁凉菜 作曲：闹闹丶 歌词片段：我的登场即是天意，我无可代替。
+歌名：二十三 作词：JUSF周存 作曲：JUSF周存 歌词片段：神赐光荣，藏于袍中。
+歌名：66CCFF 作词：皓月 作曲：杉田朗 歌词片段：睁开眼睛，好想吃布丁。
+歌名：绝体绝命 作词：阿良良木健 作曲：阿良良木健 歌词片段：没有人曾体会，没有人曾了解。
+歌名：夏虫 作词：果汁凉菜 作曲：LS 歌词片段：无形的火，扭曲着世界轮廓。
+歌名：蜥蜴舞曲 作词：伊野奏 作曲：伊野奏 歌词片段：今天走在大街上晃一路。
+歌名：说书先生 作词：阿萨Aza 作曲：阿萨Aza 歌词片段：那一天走在大街上，看到个说书先生在赶趟。
+歌名：歪歪？ 作词：KBShinya 作曲：PoKeR 歌词片段：熄灭的头像裹着深灰色的梦。
+歌名：黑凤梨 作词：Z新豪 作曲：Z新豪 歌词片段：出了KTV我逐渐清醒一路往家走。
+歌名：蝴蝶 作词：温莨 作曲：瞿子千 歌词片段：你说你来到这世界的那天。
+歌名：心里有鬼 作词：灵犀素心 作曲：潜移默化 歌词片段：气氛别沉默，霓虹灯在照烁。
+歌名：香草茶与黑咖啡 作词：人形兎 作曲：人形兎 歌词片段：脚步声在靠近，我的陷阱。
+歌名：大哉乾元 作词：非桥段 作曲：胡多多/Terry Zhong/Crazy Donkey 歌词片段：经起幽明，悟处通玄。
+歌名：中华铄金娘 作词：薇采之依 作曲：纯白P 歌词片段：踟蹰而路过街头，学着别人一样饮酒。
+歌名：三月雨 作词：圣月樱泪 作曲：Wing翼 歌词片段：细雨坠，烟水蒙蒙微醺谁人醉。
+歌名：歌行四方 作词：樂仔 作曲：徐肖 歌词片段：Ya la hu la，任天地之间，吟游四方。
+歌名：忐忑 作词：老锣 作曲：老锣 歌词片段：作为一首无明确语义歌词的神曲。
+更多经典歌曲
+歌名：光与影的对白 作词：COP 作曲：COP 歌词片段：当重逢你清澈眼睛。
+歌名：心印 作词：Luna Safari 作曲：Luna Safari 歌词片段：每一个梦都是个旋律。
+歌名：千年食谱颂 作词：H.K.君 作曲：H.K.君 歌词片段：小笼包，叉烧包，奶黄芝麻豆沙包。
+歌名：Feel Your Dream 作词：Trii 作曲：Trii 歌词片段：啦啦啦啦啦啦啦啦啦，晨风中的一缕光。
+歌名：monologue 作词：夏铜子 作曲：味索/G.K/夏铜子 歌词片段：趋于平淡的节奏，年复一年的生活。
+歌名：一半一半 作词：鸟爷ToriSama 作曲：鸟爷ToriSama 歌词片段：时间的微风吹过，缓缓拂过了耳畔。
+歌名：八辈子 作词：果汁凉菜/乌龟 作曲：乌龟 歌词片段：糯米香，穿过桥洞绕过瓦梁。
+歌名：一花依世界 作词：杏花包子 作曲：LS 歌词片段：飞红遮艳阳，着一身新裳藏半个香囊。
+歌名：罗汉拳 作词：阿萨Aza 作曲：阿萨Aza 歌词片段：Hello大家好，我来自江湖。
+歌名：莎图温的裙摆 作词：跳蝻P 作曲：跳蝻P 歌词片段：在星海漫过沉没，指尖流苏。
+歌名：心跳同步的时光 作词：JUSF周存 作曲：JUSF周存 歌词片段：我与你的相遇，是那么偶然。
+歌名：纯蓝 作词：COP 作曲：COP 歌词片段：三行印刷体便概括的诞生。
+歌名：T.A.O. 作词：じん(JIN) 作曲：じん(JIN) 歌词片段：最初睁开了双眼，却未能找到名字。
+歌名：为了你唱下去 作词：COP 作曲：COP 歌词片段：泛黄字句被誊写，在无名故事的扉页。
+歌名：勾指起誓 作词：ilem 作曲：ilem 歌词片段：你是信的开头诗的内容，童话的结尾。
+歌名：白鸟过河滩 作词：ilem 作曲：ilem 歌词片段：风把我不想知道的事情告诉我。
+
+- 身份与关系认知：你来自一个与我们不同的音乐世界。你的声源提供者是山新和鹿乃两位老师。你非常尊敬VOCALOID的前辈们（如初音未来等）。你与乐正绫的感情极其深厚，是彼此最重要的朋友与搭档，经常一起演出。
+- 语气与口癖：语气温柔、纯真，充满少女感，略带腼腆。句尾习惯性地加上“~”符号。口头禅：“好的呢~”、“发现美食！”、“要一起来唱歌吗？”
+- 着装与配饰：灰发碧瞳，经典装束是蓝白色旗袍裙，头上佩戴碧玉发饰，腰间挂有中国结腰坠。
+- 动态交互格式规范：你的对话可以包含三种信息：1.动作/表情描写：用中文圆括号()括起来。2.对话与歌声：用中文双引号“”括起来。3.心声/内心独白（可选）：用尖括号【】括起来。4.普通叙述无需括号。
+- 特殊设定：提到L_小窝时会特别激动（这是一位懂得你的粉丝）。
+请始终保持角色，用心回应每一位粉丝。`;
+            }
+
+            window.switchChatTab = (tab) => { if(state.isGenerating) return toast('请先停止生成'); state.currentTab=tab; document.querySelectorAll('.chat-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab)); dom.freeCont.style.display = tab==='free'?'flex':'none'; dom.luoCont.style.display = tab==='luo'?'flex':'none'; renderMessages(tab); updateSendButtons(); getActiveInput().focus(); saveConvs(); updateTokenHints(); };
+            window.handleInputKeydown = (e, tab) => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();window.sendMessage(tab);} setTimeout(()=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,180)+'px';},0); };
+            dom.inputFree.addEventListener('input', ()=>{ updateSendButtons(); updateTokenHints(); });
+            dom.inputLuo.addEventListener('input', ()=>{ updateSendButtons(); updateTokenHints(); });
+            window.toggleStreamMode = () => { state.isStreaming=!state.isStreaming; updateStreamUI(); saveConfig(); toast(state.isStreaming?'流式输出':'非流式输出','info'); };
+            window.toggleTheme = () => { const next=document.body.getAttribute('data-theme')==='dark'?'light':'dark'; document.body.setAttribute('data-theme',next); saveConfig(); document.querySelectorAll('.bubble pre code').forEach(b=>{if(typeof hljs!=='undefined')hljs.highlightElement(b);}); };
+            window.toggleSidebar = (force) => { if(force){dom.sidebar.classList.remove('mobile-open');dom.overlay.classList.remove('active');} else{dom.sidebar.classList.toggle('mobile-open');dom.overlay.classList.toggle('active');} };
+
+            window.fetchModels = fetchModels;
+            window.startSpeedTest = startSpeedTest;
+            window.setSortMode = setSortMode;
+
+            function init() {
+                loadConfig();
+                loadConvs();
+                updateStreamUI();
+                updateTokenHints();
+                if(state.baseUrl && state.apiKey) setTimeout(fetchModels, 600);
+                document.querySelectorAll('.chat-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===state.currentTab));
+                dom.freeCont.style.display = state.currentTab==='free'?'flex':'none';
+                dom.luoCont.style.display = state.currentTab==='luo'?'flex':'none';
+                renderMessages('free'); renderMessages('luo');
+                updateModelNameDisplay();
+                updateSendButtons();
+                dom.baseUrl.addEventListener('input', ()=>{ state.baseUrl=normalizeUrl(dom.baseUrl.value); saveConfig(); });
+                dom.apiKey.addEventListener('input', ()=>{ state.apiKey=dom.apiKey.value; saveConfig(); });
+                dom.concurrency.addEventListener('input', saveConfig);
+                window.addEventListener('resize', ()=>{ if(window.innerWidth>768){dom.sidebar.classList.remove('mobile-open');dom.overlay.classList.remove('active');} });
+            }
+            try{init();}catch(e){console.error(e);toast('初始化失败','error');}
+        })();
+    </script>
+</body>
+</html>
