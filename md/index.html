@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>马克当编辑器</title>
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.2/markdown-it.min.js" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+:root{--color-bg-main:#000;--color-bg-panel:#111;--color-bg-card:#222;--color-bg-hover:#581C87;--color-bg-danger:#771F1F;--color-bg-secondary:#333;--color-text-primary:#fff;--color-text-secondary:#aaa;--color-text-danger:#f55;--border-standard:2px solid #fff;--border-thin:1px solid #333;--height-btn-desktop:44px;--height-btn-mobile:50px;--font-main:"BoutiqueBitmap9x9",monospace;}
+*{margin:0;padding:0;box-sizing:border-box;border-radius:0!important;scrollbar-width:thin;-webkit-tap-highlight-color:transparent;transform:translateZ(0);}
+body{background:var(--color-bg-main);color:var(--color-text-primary);font-family:var(--font-main)!important;font-weight:normal;font-size:18px;min-height:100vh;min-height:100dvh;overflow:hidden;padding:0;}
+input,button,select,textarea,option{font-family:var(--font-main)!important;font-weight:normal;pointer-events:auto;}
+/* 编辑容器 */
+.editor-container{display:flex;width:100vw;height:100vh;height:100dvh;overflow:hidden;}
+/* 行号栏 */
+.line-number-column{flex:0 0 60px;background:var(--color-bg-card);border-right:var(--border-thin);overflow:hidden;padding:8px 0;text-align:right;padding-right:8px;color:var(--color-text-secondary);user-select:none;white-space:pre;line-height:1.5;font-size:18px;font-family:var(--font-main)!important;}
+/* 输入区域 */
+.editor-textarea{flex:1;background:var(--color-bg-main);color:var(--color-text-primary);border:none;padding:8px 10px;font-size:18px;line-height:1.5;resize:none;outline:none;overflow-y:auto;overflow-x:hidden;white-space:pre;wrap:off;font-family:var(--font-main)!important;}
+.editor-textarea:focus{outline:none;}
+/* 预览悬浮按钮 */
+.preview-toggle-btn{position:fixed;bottom:20px;right:20px;background:var(--color-bg-hover);color:var(--color-text-primary);border:var(--border-standard);padding:10px 16px;min-height:var(--height-btn-desktop);cursor:pointer;z-index:10000;font-size:16px;}
+.preview-toggle-btn:active{opacity:0.8;}
+/* 预览覆盖层 */
+.preview-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;background:rgba(0,0,0,0.85);display:none;flex-direction:column;z-index:9999;}
+.preview-overlay.show{display:flex;}
+.preview-header{background:var(--color-bg-panel);border-bottom:var(--border-standard);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+.preview-title{font-size:20px;}
+.preview-actions{display:flex;gap:10px;}
+.preview-close{background:var(--color-bg-danger);color:var(--color-text-primary);border:var(--border-standard);padding:6px 12px;min-height:var(--height-btn-desktop);cursor:pointer;}
+.preview-export{background:var(--color-bg-secondary);color:var(--color-text-primary);border:var(--border-standard);padding:6px 12px;min-height:var(--height-btn-desktop);cursor:pointer;}
+.preview-content{flex:1;overflow-y:auto;padding:20px;color:var(--color-text-primary);font-size:18px;line-height:1.6;font-family:var(--font-main)!important;}
+.preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4,.preview-content h5,.preview-content h6{border-bottom:var(--border-thin);padding-bottom:4px;margin:16px 0 8px;}
+.preview-content p{margin:8px 0;}
+.preview-content ul,.preview-content ol{margin:8px 0;padding-left:24px;}
+.preview-content li{margin:4px 0;}
+.preview-content blockquote{border-left:var(--border-standard);padding-left:12px;margin:8px 0;color:var(--color-text-secondary);}
+.preview-content code{background:var(--color-bg-card);padding:2px 4px;font-size:16px;font-family:var(--font-main)!important;}
+.preview-content pre{background:var(--color-bg-card);border:var(--border-thin);padding:10px;overflow-x:auto;margin:8px 0;}
+.preview-content pre code{background:transparent;padding:0;font-size:16px;font-family:var(--font-main)!important;}
+.preview-content table{border-collapse:collapse;width:100%;margin:8px 0;}
+.preview-content th,.preview-content td{border:var(--border-thin);padding:6px;text-align:left;}
+.preview-content img{max-width:100%;height:auto;}
+/* 滚动条样式 */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:var(--color-bg-main);}
+::-webkit-scrollbar-thumb{background:var(--color-bg-secondary);border:1px solid var(--color-text-primary);}
+::-webkit-scrollbar-thumb:hover{background:var(--color-bg-hover);}
+/* 移动端适配 */
+@media screen and (max-width:767px){
+.editor-textarea{font-size:16px;line-height:1.6;}
+.line-number-column{flex:0 0 48px;font-size:16px;padding-right:4px;}
+.preview-toggle-btn{min-height:var(--height-btn-mobile);bottom:16px;right:16px;padding:8px 12px;}
+.preview-content{font-size:16px;padding:16px;}
+.preview-header{padding:10px 12px;}
+.preview-close,.preview-export{padding:4px 8px;min-height:var(--height-btn-mobile);}
+}
+</style>
+</head>
+<body>
+<div class="editor-container">
+  <div class="line-number-column" id="lineNumbers"></div>
+  <textarea class="editor-textarea" id="editor" placeholder="在此输入 Markdown 内容..." spellcheck="false"></textarea>
+</div>
+<button class="preview-toggle-btn" id="togglePreview">预览</button>
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-header">
+    <div class="preview-title">实时预览</div>
+    <div class="preview-actions">
+      <button class="preview-export" id="exportImage">导出图片</button>
+      <button class="preview-close" id="closePreview">关闭</button>
+    </div>
+  </div>
+  <div class="preview-content" id="previewContent"></div>
+</div>
+<script>
+(() => {
+  const editor = document.getElementById('editor');
+  const lineNumbers = document.getElementById('lineNumbers');
+  const toggleBtn = document.getElementById('togglePreview');
+  const overlay = document.getElementById('previewOverlay');
+  const closeBtn = document.getElementById('closePreview');
+  const exportBtn = document.getElementById('exportImage');
+  const previewContent = document.getElementById('previewContent');
+  
+  // 初始化 markdown-it
+  const md = window.markdownit({
+    html: true,
+    linkify: true,
+    typographer: true,
+    breaks: true
+  });
+  
+  // 检查 markdown-it 是否加载
+  if (typeof md === 'undefined' || typeof md.render !== 'function') {
+    console.error('markdown-it 未能正确加载');
+    if (previewContent) {
+      previewContent.innerHTML = '<p style="color:var(--color-text-danger)">错误：Markdown 解析库未加载或不可用。</p>';
+    }
+  }
+  
+  // 设置行号
+  const updateLineNumbers = () => {
+    const lines = editor.value.split('\n').length;
+    const numbers = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+    lineNumbers.textContent = numbers;
+  };
+  
+  // 同步滚动
+  const syncScroll = () => {
+    lineNumbers.scrollTop = editor.scrollTop;
+  };
+  
+  // 初始行号
+  updateLineNumbers();
+  
+  // 监听输入
+  editor.addEventListener('input', () => {
+    updateLineNumbers();
+    if (overlay.classList.contains('show')) {
+      renderPreview();
+    }
+  });
+  
+  // 监听滚动
+  editor.addEventListener('scroll', syncScroll);
+  
+  // 渲染预览
+  const renderPreview = () => {
+    if (typeof md === 'undefined' || typeof md.render !== 'function') {
+      previewContent.innerHTML = '<p style="color:var(--color-text-danger)">错误：Markdown 解析库未加载。</p>';
+      return;
+    }
+    try {
+      previewContent.innerHTML = md.render(editor.value);
+    } catch (e) {
+      console.error('Markdown 解析失败:', e);
+      previewContent.innerHTML = '<p style="color:var(--color-text-danger)">Markdown 解析出错，请检查语法。</p>';
+    }
+  };
+  
+  // 打开/关闭预览
+  toggleBtn.addEventListener('click', () => {
+    overlay.classList.add('show');
+    renderPreview();
+  });
+  
+  closeBtn.addEventListener('click', () => {
+    overlay.classList.remove('show');
+  });
+  
+  // ESC 关闭预览
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) {
+      overlay.classList.remove('show');
+    }
+  });
+  
+  // 导出图片功能
+  exportBtn.addEventListener('click', async () => {
+    if (typeof html2canvas === 'undefined') {
+      alert('导出功能依赖 html2canvas，请检查网络连接。');
+      return;
+    }
+    
+    exportBtn.disabled = true;
+    exportBtn.textContent = '导出中...';
+    
+    try {
+      // 临时显示整个预览内容，确保截取完整
+      const content = previewContent;
+      const originalOverflow = content.style.overflow;
+      content.style.overflow = 'visible';
+      
+      // 等待一帧确保样式生效
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      
+      const canvas = await html2canvas(content, {
+        backgroundColor: '#000',
+        scale: 2, // 提高清晰度
+        useCORS: true,
+        logging: false,
+        windowWidth: content.scrollWidth,
+        windowHeight: content.scrollHeight
+      });
+      
+      // 恢复原始 overflow
+      content.style.overflow = originalOverflow;
+      
+      // 创建下载链接
+      const link = document.createElement('a');
+      link.download = `markdown-export-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      exportBtn.textContent = '导出完成!';
+      setTimeout(() => {
+        exportBtn.disabled = false;
+        exportBtn.textContent = '导出图片';
+      }, 1500);
+      
+    } catch (error) {
+      console.error('导出失败:', error);
+      alert('导出图片失败，请重试。');
+      exportBtn.disabled = false;
+      exportBtn.textContent = '导出图片';
+    }
+  });
+  
+  // 初始化示例内容
+  editor.value = `# 像素风格 Markdown 编辑器
+
+欢迎使用这个极简的编辑器。
+
+## 功能特点
+- 黑色背景，白色字体
+- 像素字体显示
+- 左侧行号
+- 实时预览
+- 全屏悬浮预览窗口
+- 导出为图片
+
+### 代码示例
+
+\`\`\`javascript
+function hello() {
+  console.log("Hello, world!");
+}
+\`\`\`
+
+> 这是一个引用块。
+
+| 表头1 | 表头2 |
+|-------|-------|
+| 内容1 | 内容2 |
+
+开始编辑吧！`;
+  
+  // 初始渲染
+  updateLineNumbers();
+})();
+</script>
+</body>
+</html>
