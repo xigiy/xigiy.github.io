@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>会馆小站 · 执行者试炼</title>
+<!-- 引入 NaikaiFont -->
+<link href="https://fontsapi.zeoseven.com/701/main/result.css" onload="this.rel='stylesheet'" rel="preload" as="style" crossorigin />
+<noscript><link rel="stylesheet" href="https://fontsapi.zeoseven.com/701/main/result.css" /></noscript>
+<!-- 引入 html2canvas -->
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root{
+    /* 基础（草绿模式） */
+    --bg-grad:radial-gradient(circle at top, #eef6e6 0%, #d3e5c4 100%);
+    --card-bg:#fffdf8;
+    --card-shadow:0 24px 48px rgba(64,100,48,.12), 0 2px 12px rgba(64,100,48,.06);
+    --text-main:#26361e;
+    --text-muted:#74866a;
+    --theme:#5d8f4a;
+    --theme-hover:#4a753a;
+    --theme-bg:rgba(93,143,74,.1);
+    --opt-bg:#f5f9f1;
+    --opt-hover:#eaf2e3;
+    --line:#e1ecd8;
+    --danger:#c0695f;
+    --timer-track:#f0f5ec;
+    --banner-grad:linear-gradient(135deg, #e3f0d9 0%, #cfe4be 100%);
+    --stream-color1: rgba(93,143,74,0.4);
+    --stream-color2: transparent;
+  }
+
+  /* 红色高压模式 (常规) */
+  body.red-theme{
+    --bg-grad:radial-gradient(circle at top, #3a1212 0%, #180707 100%);
+    --card-bg:#1f1111;
+    --card-shadow:0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,91,75,.1);
+    --text-main:#f7e8e8;
+    --text-muted:#b88888;
+    --theme:#e25e4e;
+    --theme-hover:#f06c5c;
+    --theme-bg:rgba(226,94,78,.15);
+    --opt-bg:#2a1717;
+    --opt-hover:#361d1d;
+    --line:#422222;
+    --danger:#ff5b4b;
+    --timer-track:#3d1f1f;
+    --banner-grad:linear-gradient(135deg, #451818 0%, #220a0a 100%);
+    --stream-color1: rgba(226,94,78,0.5);
+    --stream-color2: transparent;
+  }
+
+  /* 青色锁血模式 (Retribution) */
+  body.blue-theme{
+    --bg-grad:radial-gradient(circle at top, #0a1f24 0%, #030a0d 100%);
+    --card-bg:#08171c;
+    --card-shadow:0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(0,229,255,.15);
+    --text-main:#d0f0f5;
+    --text-muted:#6e999e;
+    --theme:#00e5ff;
+    --theme-hover:#33ebff;
+    --theme-bg:rgba(0,229,255,.15);
+    --opt-bg:#10252b;
+    --opt-hover:#16333b;
+    --line:#1a3d47;
+    --danger:#00e5ff;
+    --timer-track:#0e2227;
+    --banner-grad:linear-gradient(135deg, #0d2a33 0%, #051419 100%);
+    --stream-color1: rgba(0,229,255,0.5);
+    --stream-color2: transparent;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{height:100%}
+  body {
+    font-family: "NaikaiFont", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:var(--bg-grad);
+    color:var(--text-main);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:40px 16px; overflow-x:hidden; position:relative;
+    -webkit-text-size-adjust:100%;
+    transition:background .5s, color .3s;
+  }
+
+  body.quiz-active {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* 白屏闪光 */
+  #flashOverlay {
+    position:fixed; inset:0; background:#fff; z-index:9999;
+    pointer-events:none; opacity:0; display:none;
+  }
+  #flashOverlay.flash {
+    display:block; animation:flashAnim 0.3s ease-out forwards;
+  }
+  @keyframes flashAnim {
+    0% { opacity:1; }
+    50% { opacity:1; }
+    100% { opacity:0; }
+  }
+
+  /* 死亡特效 */
+  #deathOverlay {
+    position:fixed; inset:0; z-index:10000;
+    pointer-events:none; opacity:0; display:none;
+  }
+  #deathOverlay.flash-red {
+    display:block; background:#ff0000; animation:redFlash 0.4s forwards;
+  }
+  #deathOverlay.blackout {
+    display:block; background:#000; opacity:1;
+  }
+  @keyframes redFlash {
+    0% { opacity:0; background:#ff5b4b; }
+    20% { opacity:1; background:#ff5b4b; }
+    80% { opacity:1; background:#8a0000; }
+    100% { opacity:1; background:#000; }
+  }
+
+  /* 动态背景 */
+  .dyn-bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .6s;overflow:hidden}
+  body.red-theme .dyn-bg, body.blue-theme .dyn-bg { opacity:1; }
+  .breathe-bar{
+    position:absolute; top:50%; left:-50%; width:200%; height:150px;
+    transform:translateY(-50%) rotate(-12deg);
+    animation:breatheGlow 2.5s ease-in-out infinite alternate;
+    transition: background .5s;
+  }
+  body.red-theme .breathe-bar { background:linear-gradient(90deg, transparent, rgba(226,94,78,.22), transparent); }
+  body.blue-theme .breathe-bar { background:linear-gradient(90deg, transparent, rgba(0,229,255,.18), transparent); }
+  .breathe-bar:nth-child(2){ top:20%; height:60px; animation-duration:2s; animation-delay:0.4s; }
+  body.red-theme .breathe-bar:nth-child(2) { background:linear-gradient(90deg, transparent, rgba(255,91,75,.15), transparent); }
+  body.blue-theme .breathe-bar:nth-child(2) { background:linear-gradient(90deg, transparent, rgba(0,229,255,.1), transparent); }
+  .breathe-bar:nth-child(3){ top:80%; height:100px; animation-duration:3s; animation-delay:0.8s; }
+  body.red-theme .breathe-bar:nth-child(3) { background:linear-gradient(90deg, transparent, rgba(160,30,20,.2), transparent); }
+  body.blue-theme .breathe-bar:nth-child(3) { background:linear-gradient(90deg, transparent, rgba(0,150,180,.15), transparent); }
+  @keyframes breatheGlow{
+    0%{opacity:0.3; transform:translateY(-50%) rotate(-12deg) scaleY(0.85);}
+    100%{opacity:1; transform:translateY(-50%) rotate(-12deg) scaleY(1.15);}
+  }
+
+  /* 信封卡片 */
+  .envelope-wrap{position:relative; z-index:1; width:100%; max-width:580px; margin-top:24px;}
+  .envelope {
+    position:relative; background:var(--card-bg); border-radius:24px;
+    box-shadow:var(--card-shadow); padding:64px 36px 36px;
+    transition:background .4s, box-shadow .4s;
+    overflow: hidden;
+  }
+  body.quiz-active.red-theme .envelope { animation: rhythmShake 0.5s infinite; }
+  body.quiz-active.blue-theme .envelope { animation: none; }
+  @keyframes rhythmShake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    20% { transform: translate(1.8px, -1.2px) rotate(0.35deg); }
+    40% { transform: translate(-1.2px, 1.8px) rotate(-0.25deg); }
+    60% { transform: translate(1.2px, 1.2px) rotate(0.15deg); }
+    80% { transform: translate(-1.8px, -0.8px) rotate(-0.35deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+  }
+  .envelope::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:80px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.025) 0%, transparent 100%);
+    clip-path:polygon(0 0,100% 0,50% 100%);
+    border-radius:24px 24px 0 0; pointer-events:none; z-index:6;
+  }
+  .envelope section { position: relative; z-index: 10; }
+
+  /* 血条蒙板 */
+  .hp-mask-wrap {
+    position: absolute; inset: 0; display: flex; justify-content: center;
+    pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.3s; overflow: hidden;
+  }
+  .hp-mask {
+    height: 100%; width: 100%; transform: skewX(-15deg);
+    transition: width 0.15s linear;
+    background-size: 28px 100%;
+    animation: slideMask 1s linear infinite;
+  }
+  /* 常规模式灰色 */
+  body.red-theme .hp-mask {
+    background-color: rgba(255, 255, 255, 0.02);
+    background-image: repeating-linear-gradient(
+      90deg, rgba(200, 200, 200, 0.25) 0px, rgba(200, 200, 200, 0.25) 10px,
+      transparent 10px, transparent 14px
+    );
+  }
+  /* 低血量淡红色 (< 20) */
+  body.red-theme.low-hp .hp-mask {
+    background-color: rgba(255, 100, 100, 0.04);
+    background-image: repeating-linear-gradient(
+      90deg, rgba(255, 130, 130, 0.45) 0px, rgba(255, 130, 130, 0.45) 10px,
+      transparent 10px, transparent 14px
+    );
+  }
+  /* 锁血模式青色 */
+  body.blue-theme .hp-mask {
+    background-color: rgba(0, 229, 255, 0.05);
+    background-image: repeating-linear-gradient(
+      90deg, rgba(0, 229, 255, 0.35) 0px, rgba(0, 229, 255, 0.35) 10px,
+      transparent 10px, transparent 14px
+    );
+  }
+  @keyframes slideMask {
+    0% { background-position: 0 0; }
+    100% { background-position: -28px 0; }
+  }
+
+  /* 倒计时徽章 */
+  .floating-badge{
+    position:absolute; top:-32px; left:50%; transform:translateX(-50%);
+    width:80px; height:80px; border-radius:50%; background:var(--card-bg);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 28px rgba(0,0,0,.08);
+    z-index:20; transition:all .3s;
+  }
+  body.red-theme .floating-badge, body.blue-theme .floating-badge {
+    box-shadow:0 10px 28px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05)
+  }
+  .timer-inner{
+    width:66px; height:66px; border-radius:50%; background:var(--card-bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:24px; font-weight:900; color:var(--theme);
+    font-variant-numeric:tabular-nums; z-index:2;
+  }
+  .timer-inner span{font-size:10px; font-weight:600; color:var(--text-muted); letter-spacing:1px; margin-bottom:-1px}
+  .timer-svg{position:absolute; top:0; left:0; width:80px; height:80px; transform:rotate(-90deg); z-index:1;}
+  .timer-circle-bg{fill:none;stroke:var(--timer-track);stroke-width:4}
+  .timer-circle-fill{
+    fill:none; stroke:var(--theme); stroke-width:4; stroke-linecap:round;
+    transition:stroke-dashoffset .1s linear, stroke .3s;
+  }
+  .timer-inner.warn{color:var(--danger)}
+  .timer-inner.warn + .timer-svg .timer-circle-fill{stroke:var(--danger)}
+
+  /* 主页美化 */
+  .text-center{text-align:center}
+  .title{font-size:28px; font-weight:900; letter-spacing:3px; margin-bottom:8px; color:var(--theme);}
+  .taunt-text{
+    font-size:18px; font-weight:900; color:var(--danger);
+    margin-bottom:28px; letter-spacing:1.5px; animation: pulseTaunt 2s infinite;
+  }
+  @keyframes pulseTaunt {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(0.98); }
+  }
+  .banner{
+    width:100%; height:110px; border-radius:20px; margin-bottom:28px;
+    background:var(--banner-grad);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    border:1px solid var(--line); box-shadow:inset 0 2px 10px rgba(255,255,255,.2);
+  }
+  .banner-text { font-size:16px; font-weight:800; color:var(--theme); letter-spacing:4px; }
+
+  .info-modules{
+    background:var(--opt-bg); border-radius:16px; padding:18px 22px;
+    margin-bottom:28px; display:flex; flex-direction:column; gap:14px;
+  }
+  .info-row{
+    display:flex; align-items:center; gap:12px;
+    font-size:13px; color:var(--text-muted); font-weight:600; line-height:1.5;
+  }
+  .info-row .dot{width:6px; height:6px; border-radius:50%; background:var(--theme); flex-shrink:0}
+
+  .btn{
+    display:flex; align-items:center; justify-content:center;
+    width:100%; padding:16px 0; border-radius:999px; border:none;
+    font-size:16px; font-weight:900; font-family:inherit; letter-spacing:2px;
+    cursor:pointer; transition:all .2s; background:var(--theme); color:#fff;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:hover{background:var(--theme-hover); transform:translateY(-2px); box-shadow:0 8px 20px var(--theme-bg)}
+  .btn:active{transform:translateY(0)}
+  .btn:disabled{background:var(--text-muted); opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none}
+  .btn-ghost{background:transparent; color:var(--text-muted); border:1px solid var(--line); margin-top:12px;}
+  .btn-ghost:hover{background:var(--opt-bg); color:var(--text-main); box-shadow:none}
+
+  /* 独立导出按钮，不随主题变色 */
+  .btn-export {
+    background: #e25e4e !important;
+    border-color: #e25e4e !important;
+    color: #fff !important;
+  }
+  .btn-export:hover { background: #f06c5c !important; }
+
+  .mode-cards{display:flex; flex-direction:column; gap:14px; margin-bottom:24px}
+  .mode-card{
+    display:flex; flex-direction:column; gap:8px; width:100%;
+    padding:22px; border-radius:18px; background:var(--opt-bg);
+    border:2px solid transparent; position:relative; overflow:hidden;
+    text-align:left; font-family:inherit; cursor:pointer; transition:all .2s;
+  }
+  .mode-card:hover{border-color:var(--theme); background:var(--opt-hover); transform:translateX(4px)}
+  .mode-card .mc-title{font-size:17px; font-weight:900; color:var(--text-main); letter-spacing:1px}
+  .mode-card .mc-desc{font-size:12px; color:var(--text-muted); line-height:1.6; font-weight:500}
+  .mode-card:disabled{opacity:.5; cursor:not-allowed; border-color:transparent; transform:none}
+
+  /* 底部流光卡片 */
+  .stream-card {
+    margin-top: 28px; width: 100%; height: 60px; border-radius: 12px;
+    background: var(--card-bg); position: relative; overflow: hidden;
+    border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
+    font-size: 13px; letter-spacing: 2px; color: var(--text-muted); font-weight: 700;
+  }
+  .stream-card::after {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--stream-color1), transparent);
+    animation: streamFlow 3s infinite linear;
+  }
+  @keyframes streamFlow {
+    0% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  /* 答题界面 */
+  .quiz-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px}
+  .q-meta-left { display:flex; align-items:center; gap:10px; }
+  .q-index{font-size:13px; font-weight:800; color:var(--theme); letter-spacing:1px}
+  
+  .diff-tag {
+    font-size:10px; font-weight:900; padding:3px 8px; border-radius:6px; letter-spacing:1px;
+    background:var(--theme-bg); color:var(--theme); border:1px solid var(--theme);
+  }
+
+  .taunt-bubble {
+    font-size: 13px; font-weight: 800; color: var(--danger);
+    margin-bottom: 12px; padding-left: 8px; border-left: 3px solid var(--danger);
+  }
+
+  .stem{
+    font-size:18px; font-weight:800; line-height:1.65; margin-bottom:12px;
+    color:var(--text-main);
+  }
+  
+  .author-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:600; color:var(--text-muted); background:var(--opt-bg);
+    padding:4px 10px; border-radius:6px; margin-bottom:24px;
+  }
+  .author-tag i{width:4px; height:4px; border-radius:50%; background:var(--theme)}
+
+  .options{display:flex; flex-direction:column; gap:12px}
+  .opt{
+    display:flex; align-items:center; gap:16px; width:100%;
+    padding:16px 20px; border-radius:16px; border:1px solid transparent;
+    background:var(--opt-bg); text-align:left;
+    font-family:inherit; font-size:15px; line-height:1.5; font-weight:500;
+    color:var(--text-main); cursor:pointer; transition:all .2s;
+  }
+  .opt:hover{background:var(--opt-hover); transform:translateX(3px)}
+  .opt.picked{background:var(--theme-bg); border-color:var(--theme); color:var(--theme); font-weight:700}
+  .opt .key{
+    flex:0 0 28px; height:28px; border-radius:50%;
+    background:var(--card-bg); display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:900; color:var(--text-muted);
+  }
+  .opt.picked .key{background:var(--theme); color:#fff;}
+
+  /* 结算页 */
+  .score-big{
+    font-size:76px; font-weight:900; line-height:1; color:var(--theme);
+    margin-bottom:12px; font-variant-numeric:tabular-nums;
+  }
+  .score-sub{font-size:14px; color:var(--text-muted); margin-bottom:26px; font-weight:500}
+  .stat-row{
+    display:flex; justify-content:space-around; padding:18px 0;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:26px;
+  }
+  .stat{display:flex; flex-direction:column; align-items:center; gap:4px}
+  .stat b{font-size:22px; font-variant-numeric:tabular-nums; color:var(--text-main)}
+  .stat small{font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:1px}
+
+  .history-box{
+    background:var(--opt-bg); border-radius:16px; padding:18px 22px; margin-bottom:26px;
+    text-align: center;
+  }
+  .history-title{font-size:13px; letter-spacing:2px; color:var(--theme); font-weight:900;}
+
+  .hidden{display:none!important}
+  .btn-group { display: flex; gap: 10px; }
+  .btn-group .btn { flex: 1; padding: 14px 0; font-size: 15px; }
+  
+  .restart-btn-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .restart-btn-wrap .btn {
+    width: 100%;
+  }
+
+  /* ================= 扫盘弹窗 (右下角滑入，不阻挡答题) ================= */
+  #aceOverlay {
+    position: fixed; bottom: 24px; right: 24px; z-index: 20000;
+    opacity: 0; transform: translateX(120%); pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  #aceOverlay.show { 
+    opacity: 1; transform: translateX(0); pointer-events: auto; 
+  }
+  
+  .ace-container {
+    position: relative; width: 320px;
+  }
+  
+  /* 底层纯色深蓝 */
+  .ace-layer-back {
+    position: absolute;
+    top: 10px; left: 10px; width: 100%; height: 100%;
+    background: #0b1a3a; border-radius: 6px;
+  }
+  
+  /* 顶层纯色主蓝 */
+  .ace-layer-front {
+    position: relative;
+    background: #194c9c; border-radius: 6px;
+    padding: 16px; color: #fff;
+    font-family: "Microsoft YaHei", sans-serif;
+  }
+  
+  .ace-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; position: relative;
+  }
+  
+  .ace-logo {
+    font-size: 20px; font-weight: 900; letter-spacing: -0.5px;
+    color: #8ab6ff; font-style: italic;
+  }
+  
+  .ace-title { font-size: 14px; font-weight: 600; color: #e0ebff; }
+  
+  .ace-infinity {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    font-size: 20px; color: #4a7cd1; font-weight: bold;
+  }
+  
+  .ace-content {
+    font-size: 13px; color: #b0cdf8; line-height: 1.5; padding-right: 24px;
+  }
+  
+  .ace-close {
+    position: absolute; bottom: 10px; right: 10px; cursor: pointer;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #7a9cd6; transition: color 0.2s;
+  }
+  .ace-close:hover { color: #fff; }
+
+  /* ================= 成绩导出卡片设计 ================= */
+  #exportModal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+    z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  #exportModal.show { opacity: 1; pointer-events: auto; }
+  
+  .export-actions { display: flex; gap: 16px; margin-top: 24px; }
+  .export-btn {
+    padding: 12px 30px; border-radius: 30px; border: none; font-family: inherit;
+    font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+  }
+  .export-btn.download { background: #e25e4e; color: #fff; }
+  .export-btn.download:hover { filter: brightness(1.1); }
+  .export-btn.cancel { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+  .export-btn.cancel:hover { background: rgba(255,255,255,0.1); }
+
+  /* 实际的成绩单图片内容 */
+  #scoreCard {
+    width: 340px; 
+    background: linear-gradient(160deg, #14161a 0%, #0a0b0f 100%);
+    border-radius: 16px; border: 1px solid #2e3542;
+    padding: 30px; color: #e8eaed; position: relative; overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8); box-sizing: border-box;
+  }
+  #scoreCard::before {
+    content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(226,94,78,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  #scoreCard::after {
+    content: ''; position: absolute; bottom: -50px; left: -50px; width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  
+  .sc-header {
+    font-size: 12px; letter-spacing: 4px; color: #798599; font-weight: 800;
+    text-align: center; margin-bottom: 20px; text-transform: uppercase;
+  }
+  .sc-score {
+    font-size: 80px; font-weight: 900; text-align: center; line-height: 1;
+    color: #e25e4e; margin-bottom: 8px; text-shadow: 0 0 20px rgba(226,94,78,0.4);
+    font-family: "NaikaiFont", sans-serif;
+  }
+  .sc-score.fail { color: #5d8f4a; text-shadow: 0 0 20px rgba(93,143,74,0.4); }
+  .sc-score.blue { color: #00e5ff; text-shadow: 0 0 20px rgba(0,229,255,0.4); }
+  
+  .sc-verdict {
+    font-size: 14px; font-weight: 600; text-align: center; color: #b0b8c4;
+    margin-bottom: 30px; letter-spacing: 1px;
+  }
+  
+  .sc-stats {
+    display: flex; justify-content: space-between; padding: 16px 0;
+    border-top: 1px solid #2e3542; border-bottom: 1px solid #2e3542; margin-bottom: 24px;
+  }
+  .sc-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .sc-stat b { font-size: 20px; color: #fff; }
+  .sc-stat small { font-size: 11px; color: #798599; }
+  
+  .sc-footer {
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .sc-info { font-size: 11px; color: #57606a; line-height: 1.6; }
+  .sc-stamp {
+    font-size: 10px; font-weight: 900; color: #2e3542;
+    border: 2px solid #2e3542; padding: 4px 8px; border-radius: 4px; transform: rotate(-15deg);
+  }
+  
+  @media (max-width:480px){
+    body{padding:30px 12px}
+    .envelope{padding:56px 20px 28px; border-radius:20px}
+    .floating-badge{width:70px; height:70px; top:-28px}
+    .timer-inner{width:58px; height:58px; font-size:22px}
+    .timer-svg{width:70px; height:70px}
+    .title{font-size:24px}
+    .taunt-text{font-size:16px}
+    .banner{height:90px}
+    .stem{font-size:16px; margin-bottom:10px}
+    .opt{padding:15px 16px; font-size:14px; gap:12px}
+    .opt .key{width:26px; height:26px; flex-basis:26px; font-size:12px}
+    .score-big{font-size:64px}
+    
+    #aceOverlay { bottom: 16px; right: 16px; }
+    .ace-container { width: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="flashOverlay"></div>
+<div id="deathOverlay" class="hidden"></div>
+
+<!-- VoidWave 扫盘弹窗 -->
+<div id="aceOverlay">
+  <div class="ace-container">
+    <div class="ace-layer-back"></div>
+    <div class="ace-layer-front">
+      <div class="ace-header">
+        <div class="ace-logo">VoidWave</div>
+        <div class="ace-title">答题防护</div>
+        <div class="ace-infinity">∞</div>
+      </div>
+      <div class="ace-content">
+        请勿使用外挂等作弊方式，以免造成损失
+      </div>
+      <div class="ace-close" id="aceCloseBtn">×</div>
+    </div>
+  </div>
+</div>
+
+<!-- 导出成绩单模态框 -->
+<div id="exportModal">
+  <div id="scoreCard">
+    <div class="sc-header">GUILD TEST · 联合考核</div>
+    <div class="sc-score" id="scScore">0</div>
+    <div class="sc-verdict" id="scVerdict">未达到认可线</div>
+    <div class="sc-stats">
+      <div class="sc-stat"><b id="scCorrect">0</b><small>答对</small></div>
+      <div class="sc-stat"><b id="scWrong">0</b><small>答错</small></div>
+      <div class="sc-stat" id="scHpBox" style="display:none;"><b id="scHp">0%</b><small>最终HP</small></div>
+    </div>
+    <div class="sc-footer">
+      <div class="sc-info">
+        模式：<span id="scMode">地狱高压</span><br>
+        时间：<span id="scDate">2026-11-14</span><br>
+        <span id="scRetri" style="color:#00e5ff; display:none;">[ Retribution 激活 ]</span>
+      </div>
+      <div class="sc-stamp">VERIFIED</div>
+    </div>
+  </div>
+  <div class="export-actions">
+    <button class="export-btn cancel" id="expCancelBtn">取消</button>
+    <button class="export-btn download" id="expDownloadBtn">保存图片</button>
+  </div>
+</div>
+
+<div class="dyn-bg">
+  <div class="breathe-bar"></div>
+  <div class="breathe-bar"></div>
+  <div class="breathe-bar"></div>
+</div>
+
+<div class="envelope-wrap">
+  <div class="floating-badge hidden" id="timerBadge">
+    <div class="timer-inner" id="timerText">--<span>倒计时</span></div>
+    <svg class="timer-svg" viewBox="0 0 80 80">
+      <circle class="timer-circle-bg" cx="40" cy="40" r="36"></circle>
+      <circle class="timer-circle-fill" id="timerRing" cx="40" cy="40" r="36" stroke-dasharray="226.2" stroke-dashoffset="0"></circle>
+    </svg>
+  </div>
+
+  <div class="envelope">
+    <div class="hp-mask-wrap" id="hpMaskWrap">
+      <div class="hp-mask" id="hpMask"></div>
+    </div>
+
+    <!-- 开始屏 -->
+    <section id="screenStart">
+      <div class="banner">
+        <div class="banner-text">执行者日常试炼</div>
+      </div>
+      <div class="title text-center">会馆联合考核</div>
+      <div class="taunt-text text-center">不会吧？不会吧？你还觉得不够难？</div>
+      
+      <div class="info-modules">
+        <div class="info-row"><span class="dot"></span> 模式一：抽取5题 · 每题5秒</div>
+        <div class="info-row"><span class="dot"></span> 模式二：抽取10题 · 初始100%HP</div>
+        <div class="info-row"><span class="dot"></span> 每日固定 3 次挑战机会</div>
+      </div>
+
+      <div class="mode-cards">
+        <button class="mode-card" id="modeA">
+          <span class="mc-title">模式一 · 常规考据</span>
+          <span class="mc-desc">随机5题 ｜ 每题5秒 ｜ 平和试炼</span>
+        </button>
+        <button class="mode-card" id="modeB">
+          <span class="mc-title">模式二 · 地狱高压</span>
+          <span class="mc-desc">随机10题 ｜ 答错扣50%HP ｜ 节奏试炼</span>
+        </button>
+      </div>
+      
+      <div class="stream-card" id="streamStatus">
+        等待接入
+      </div>
+    </section>
+
+    <!-- 答题屏 -->
+    <section id="screenQuiz" class="hidden">
+      <div class="quiz-header">
+        <div class="q-meta-left">
+          <span class="q-index" id="qIndex">1 / 5</span>
+          <span class="diff-tag" id="qDiff">困难</span>
+        </div>
+      </div>
+      
+      <div class="taunt-bubble" id="tauntBubble">快点选，别磨蹭。</div>
+      
+      <div class="stem" id="stem"></div>
+      <div class="author-tag" id="qAuthor"><i></i> 出题人: 加载中</div>
+      
+      <div class="options" id="options"></div>
+    </section>
+
+    <!-- 结算屏 -->
+    <section id="screenResult" class="hidden">
+      <div class="text-center">
+        <div class="score-big" id="scoreBig">0</div>
+        <div class="score-sub" id="scoreSub"></div>
+      </div>
+      
+      <div class="stat-row">
+        <div class="stat"><b id="statCorrect">0</b><small>答对</small></div>
+        <div class="stat"><b id="statWrong">0</b><small>答错</small></div>
+        <div class="stat"><b id="statTotal">5</b><small>总题数</small></div>
+        <div class="stat" id="hpStatBox" style="display:none;">
+          <b id="finalHpStat" style="color:var(--theme)">0%</b><small>最终HP</small>
+        </div>
+      </div>
+
+      <div class="history-box" id="historyBox"></div>
+
+      <div class="btn-group">
+        <button class="btn btn-ghost" id="btnBack">返回主页</button>
+        <button class="btn btn-export" id="btnExport">导出成绩</button>
+      </div>
+      <div class="restart-btn-wrap">
+        <button class="btn btn-ghost" id="btnRestart">再次试炼</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* ================= 题库 ================= */
+const BANK = [
+  { id:'h1', author:'human', difficulty:'hard', stem:'《罗小黑战记妖灵簿》的停服时间是什么时候？', options:['2018年9月20日12时','2018年8月20日12时','2018年7月20日12时','2018年9月20日0时'], answer:0, taunt:'这都记不住？回去把公告抄一百遍。' },
+  { id:'h2', author:'human', difficulty:'hard', stem:'《剑圣无限》的原名是什么？', options:['《神圣传说》','《圣灵传说》','《神谕传说》','《圣剑传说》'], answer:0, taunt:'连老底子都不知道，算哪门子粉丝。' },
+  { id:'h3', author:'human', difficulty:'hard', stem:'罗小黑在《蓝溪镇》中第一次出现是在什么时候？', options:['第六话页尾彩蛋','第六话正文','第七话页尾彩蛋','第五话正文'], answer:0, taunt:'细节全漏，你看书是用脚翻的吗？' },
+  { id:'h4', author:'human', difficulty:'hard', stem:'《罗小黑的清晨》于什么时候上映？', options:['2022年2月19日','2022年1月15日','2022年6月24日','2022年2月1日'], answer:0, taunt:'连上映时间都记错，退群吧。' },
+  { id:'h5', author:'human', difficulty:'hard', stem:'玄离在TV剧情中首次出场于哪一集？', options:['Cat.9','Cat.5','Cat.8','Cat.10'], answer:0, taunt:'集数都能搞错，建议去重修。' },
+  { id:'h6', author:'human', difficulty:'hard', stem:'清泉的武器是什么？', options:['紫色双刀','紫色双剑','流石双刀','青锋双刀'], answer:0, taunt:'这都能选错，基础常识堪忧。' },
+  { id:'h7', author:'human', difficulty:'hard', stem:'云层菇的用途是什么？', options:['坚硬如铁，用于打造器具','坚硬如铁，用于炼制丹药','触之喷粉，可致腹泻不止','味极鲜美，可作珍稀食材'], answer:0, taunt:'设定都没背熟，也好意思来答题？' },
+  { id:'h8', author:'human', difficulty:'hard', stem:'粉末在Cat.15的配音演员是谁？', options:['洛如菲','伟大的安妮','山新','常蓉珊'], answer:0, taunt:'耳朵不用可以捐给有需要的人。' },
+  { id:'h9', author:'human', difficulty:'hard', stem:'Cat.17的标题是什么？标题卡出现在什么位置？', options:['“风平浪静”；小白吐槽爷爷后出现在天空中','“风平浪静”；阿根与水妖交手后出现','“波澜不惊”；小白吐槽爷爷后出现在天空中','“风平浪静”；小黑变身之后出现'], answer:0, taunt:'脑子不平静，看啥都白搭。' },
+  { id:'h10', author:'human', difficulty:'hard', stem:'2026年元宵贺图中的试卷分数是多少？', options:['96','95','98','100'], answer:0, taunt:'罚你回去把原图放大看十遍。' },
+  { id:'f1', author:'fish', difficulty:'hard', stem:'漫画单行本第一册中，新增的番外《爷爷与玄离的初遇》位于第几页？', options:['P208','P180','P220','P150'], answer:0, taunt:'连实体书在哪页都不知道？别说是考据党。' },
+  { id:'f2', author:'fish', difficulty:'hard', stem:'电影中，小黑在森林里奔跑时，背后坠落的东西是什么？', options:['俄罗斯方块','积木','砖头','陨石'], answer:0, taunt:'那么大个东西掉下来，你眼睛是装饰品吗？' },
+  { id:'f3', author:'fish', difficulty:'hard', stem:'在《蓝溪镇》实体书的彩蛋中，玄离受重伤在深山疗养时，是谁帮他换的药？', options:['路过的小药童（爷爷小时候）','老君','谛听','清凝'], answer:0, taunt:'这种细节都看不出来，你白看了。' },
+  { id:'f4', author:'fish', difficulty:'hard', stem:'《妖灵簿》中，QTE系统根据点击行为可以将特效分为几个档次？', options:['4个','3个','5个','2个'], answer:0, taunt:'连手游的QTE系统都记不住？闭眼玩的吗？' },
+  { id:'f5', author:'fish', difficulty:'hard', stem:'无限“年号大人”这个称呼的由来是什么？', options:['平定天下后新王将他的名字用作年号','他活了很久','他是会馆的创始人','他喜欢收集年号'], answer:0, taunt:'无知大人，这都不知道？' },
+  { id:'f6', author:'fish', difficulty:'hard', stem:'谛听在TV版中曾对小黑等人说“老君是你想见就见的？”，在《蓝溪镇》中，谛听对谁说了类似的话后被玄离揍了一顿？', options:['老君','小黑','无限','清凝'], answer:0, taunt:'前后呼应的彩蛋都找不出来，显微镜呢？' },
+  { id:'f7', author:'fish', difficulty:'hard', stem:'电影中，无限掏剑的那一帧，墙上有一个什么符号？', options:['←LXH','→LXH','LXH↑','↓LXH'], answer:0, taunt:'逐帧看番都不会？建议去挂个眼科。' },
+  { id:'f8', author:'fish', difficulty:'hard', stem:'电影中，无限的小电驴没油被收进空间时，旁边停车位上的两个数字是什么？', options:['2011 和 0317','0910 和 0706','2019 和 0907','2011 和 0318'], answer:0, taunt:'时间胶囊都注意不到，二刷看空气呢？' },
+  { id:'f9', author:'fish', difficulty:'easy', stem:'电影中无限用来抵押饭钱的玉佩上刻了什么字？', options:['“值钱”','“无限”','“会馆”','“MTJJ”'], answer:0, taunt:'反差萌细节记不住，建议退群。' },
+  { id:'f10', author:'fish', difficulty:'easy', stem:'电影中哪吒衣服上印的英文拼写是什么？', options:['naza','nezha','na zha','nazha'], answer:0, taunt:'动动脑子，别被表面现象骗了。' },
+  { id:'f11', author:'fish', difficulty:'hard', stem:'电影片尾字幕中出现的“4023”代表什么？', options:['众筹制作时的支持者总数','电影的总镜头数','导演的生日数字组合','会馆执行者的编号'], answer:0, taunt:'连这个都不知道，还好意思叫老粉？' },
+  { id:'f12', author:'fish', difficulty:'hard', stem:'电影中，小黑流浪的废弃天台，与TV版的哪个场景是同一个地方？', options:['TV版第一集的场景','TV版CAT.5阿根家的屋顶','TV版CAT.10老君阁的入口','TV版CAT.17的天空'], answer:0, taunt:'把光阴藏进每一帧都没看出来？重刷一百遍！' },
+  { id:'f13', author:'fish', difficulty:'hard', stem:'电影中无限的小毛驴（小电驴）被收进空间后，他用什么方式推动木筏前进？', options:['控制金属片贴在木筏尾端移动','用空间系直接传送木筏','让小黑用领域带着飞','用风息的风力推动'], answer:0, taunt:'连战斗方式都说不清，你真的看过吗？' },
+  { id:'f14', author:'fish', difficulty:'hard', stem:'电影中无限最初问小黑要不要学控制金属，小黑追问原因时，无限小声说的那句话是什么？', options:['“当作补偿。”','“因为你很有天赋。”','“这是会馆的安排。”','“你欠我的。”'], answer:0, taunt:'被官方发刀子发傻了吧？' },
+  { id:'f15', author:'fish', difficulty:'hard', stem:'TV版CAT.10中出现的“借火岩”记录的是谁和谁的相遇？', options:['老君与清凝仙子','老君与玄离','阿根与玄离','无限与小黑'], answer:0, taunt:'纯爱战神都不认识，白看了。' },
+  { id:'f16', author:'fish', difficulty:'easy', stem:'《蓝溪镇》单行本中文版由哪家出版社出版？', options:['江苏凤凰文艺出版社','KADOKAWA','磨铁图书','中信出版集团'], answer:0, taunt:'连出版社都分不清，买错版本了吧。' },
+  { id:'f17', author:'fish', difficulty:'easy', stem:'《蓝溪镇》的别名叫什么？', options:['《罗小黑战记·君清篇》','《罗小黑战记·玄离篇》','《罗小黑战记·会馆篇》','《罗小黑战记·清凝篇》'], answer:0, taunt:'连别名都记不住，就这？' },
+  { id:'f18', author:'fish', difficulty:'hard', stem:'那伽初登场时，打碎了老君的哪件防御法宝？', options:['琼圆盾','方寸盒','定心镜','蓝玉盘'], answer:0, taunt:'四个法宝分不清，家底抄十遍。' },
+  { id:'f19', author:'fish', difficulty:'easy', stem:'妖灵会馆的三位创始人是谁？', options:['老君、明王、哪吒','老君、无限、风息','老君、那伽、炎帝','明王、哪吒、无限'], answer:0, taunt:'连创会元老都不知道，去罚站。' },
+  { id:'f20', author:'fish', difficulty:'hard', stem:'妖灵会馆总会馆“苍南会馆”坐落在什么里面？', options:['一个巨大的上古无主空间','老君的蓝溪镇内部','龙游市的地下','哪吒的灵质空间'], answer:0, taunt:'空间关系搞混，地图白看了。' },
+  { id:'f21', author:'fish', difficulty:'hard', stem:'明王（阎明）在妖灵会馆中主要拥有哪些系别能力？', options:['御灵系-火，生灵系','御灵系-冰，空间系','心灵系，锁御系','造物系，生灵系'], answer:0, taunt:'三创始之一的能力都记不住？' },
+  { id:'f22', author:'fish', difficulty:'hard', stem:'“双灵质空间”和“双空间系”的区别，以下哪种表述是正确的？', options:['小黑是双灵质空间+双空间系；玄离是双灵质空间+冰火双系','小黑和玄离都是双灵质空间+双空间系','小黑是单灵质空间+双空间系；玄离是双灵质空间+冰火双系','小黑和玄离都是双灵质空间+冰火双系'], answer:0, taunt:'概念混淆，妄想通过试炼？' },
+  { id:'f23', author:'fish', difficulty:'easy', stem:'灵质空间的形状是什么？', options:['球形','立方体','不规则多边形','平面圆形'], answer:0, taunt:'基础设定都能错，重修去吧。' },
+  { id:'f24', author:'fish', difficulty:'easy', stem:'以下哪一项不属于罗小黑世界观的“六大系”？', options:['治愈系','御灵系','锁御系','生灵系'], answer:0, taunt:'体系边界都分不清，用脚指头答题？' },
+  { id:'f25', author:'fish', difficulty:'hard', stem:'阿根进入《众生之门》时，系统询问是否添加“附属账号”，这主要暗示了什么？', options:['阿根与玄离是一体双魂','阿根有两个游戏角色','阿根想开小号','玄离是游戏管理员'], answer:0, taunt:'连伏笔都看不出来，白看了。' },
+  { id:'f26', author:'fish', difficulty:'hard', stem:'TV版中，除了阿根与玄离，还有哪一组角色涉及“一体双魂”？', options:['七果与木落仙人','小黑与嘿咻','小白与山新','老君与谛听'], answer:0, taunt:'同类设定的实例都不知道？再看十遍。' },
+  { id:'f27', author:'fish', difficulty:'hard', stem:'老君的灵质空间主体部分叫什么？', options:['蓝溪镇','苍南会馆','老君阁','星夜湖'], answer:0, taunt:'这几个概念分不清，建议重开。' },
+  { id:'f28', author:'fish', difficulty:'hard', stem:'老君的“蓝玉盘”在设定中属于什么类型的法宝？', options:['空间系顶级法宝','御灵系火属性法宝','锁御系防御法宝','造物系傀儡法宝'], answer:0, taunt:'老君的法宝都认不全，退群吧。' },
+  { id:'f29', author:'fish', difficulty:'hard', stem:'电影2中，无限师门的“随身金属”通常是什么颜色？', options:['靛蓝色','银白色','赤红色','墨绿色'], answer:0, taunt:'师姐的金属颜色都不知道，补考吧。' },
+  { id:'f30', author:'fish', difficulty:'hard', stem:'电影2中，鹿野的随身金属最终刺穿了什么？', options:['流石盾','琼圆盾','方寸盒','定心镜'], answer:0, taunt:'最终战逐帧看一遍去吧。' },
+  { id:'f31', author:'fish', difficulty:'easy', stem:'TV版第一季豆瓣评分（截至常见统计口径）最接近以下哪个数字？', options:['9.5','8.0','9.9','8.8'], answer:0, taunt:'数据题都能错，下不为例。' },
+  { id:'f32', author:'fish', difficulty:'hard', stem:'电影中，风息夺取能力后，小黑的头发发生了什么变化？', options:['变白','变长','变卷','脱落'], answer:0, taunt:'前后呼应台词都不记得，看特效呢？' },
+  { id:'f33', author:'fish', difficulty:'hard', stem:'电影中，小黑在龙游市地铁上看到的海报里，有个蓝发帅哥神似哪个角色？', options:['敖丙','哪吒','大圣','姜子牙'], answer:0, taunt:'细节都没发现，没带眼睛出门？' },
+  { id:'f34', author:'fish', difficulty:'hard', stem:'TV版CAT.13中，无限以什么方式首次在TV版中“出现”？', options:['剪影和声音','正面全身镜头','只有背影没有声音','通过小黑转述'], answer:0, taunt:'无限粉丝看到你这样会生气的。' },
+  { id:'f35', author:'fish', difficulty:'hard', stem:'电影中，无限带小黑逃亡时播放的新闻叫什么？', options:['木头新闻','会馆新闻','龙游新闻','妖精快讯'], answer:0, taunt:'导演的自恋彩蛋都不知道？面壁去。' },
+  { id:'f36', author:'fish', difficulty:'hard', stem:'电影中，天虎踩在车上时，旁边的银行叫什么？', options:['木头银行','会馆银行','妖精银行','罗小黑银行'], answer:0, taunt:'又是彩蛋，退群吧。' },
+  { id:'f37', author:'fish', difficulty:'hard', stem:'电影中，小黑在废弃天台遇到风息前，看到天空中飞过了什么？', options:['一只巨大的风筝','一群鸟','一架飞机','一个气球'], answer:0, taunt:'这都没看清，你告诉我你看过电影？' },
+  { id:'f38', author:'fish', difficulty:'hard', stem:'电影中，无限在海上推木筏时，使用的是哪种能力？', options:['金系','空间系','御灵系','造物系'], answer:0, taunt:'战斗方式说不清，别看了。' },
+  { id:'f39', author:'fish', difficulty:'hard', stem:'TV版中，老君让小黑去偷什么，以此作为见面的条件？', options:['天明珠','蓝玉盘','琼圆盾','方寸盒'], answer:0, taunt:'看了个寂寞吧？重刷去吧。' },
+  { id:'f40', author:'fish', difficulty:'hard', stem:'电影中，小黑最初对无限的态度是怎样的？', options:['充满敌意与防备','一见如故，十分信任','漠不关心','盲目崇拜'], answer:0, taunt:'你以为你看懂角色了？太天真了。' }
+];
+
+/* ================= 引擎 ================= */
+const PASS = 80;
+const MAX_ATTEMPTS_PER_DAY = 3;
+const STORE_KEY = 'guildtest_v13';
+
+const MODE_A = { key:'A', label:'常规考据', bank:BANK, pick:5, perQuestion:5000 };
+const MODE_B = {
+  key:'B', label:'地狱高压',
+  bank:BANK.filter(q => q.author === 'human' || BANK.filter(f => f.author === 'fish').slice(0, 15).some(f => f.id === q.id)),
+  pick:10, perQuestion:null, hp:100
+};
+
+const $ = id => document.getElementById(id);
+
+let currentMode = null;
+let pool = [], idx = 0, answers = [], locked = false;
+let timerId = null, timeLeft = 0;
+let currentHp = 100, finalHp = 100, hpTimer = null;
+let isQuizActive = false;
+let isLockedBlue = false; 
+let questionStartTime = 0;
+let fastCombo = 0;
+let aceTimeout = null;
+
+const CIRCLE_LEN = 226.2;
+
+function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function buildRound(mode){
+  const picked = shuffleArr([...mode.bank]).slice(0, mode.pick);
+  return picked.map(q=>{
+    const opts = q.options.map((text,i)=>({text, correct:i===q.answer}));
+    shuffleArr(opts);
+    return { ...q, options:opts.map(o=>o.text), answer:opts.findIndex(o=>o.correct) };
+  });
+}
+
+/* ---------- 存储：每日三次 ---------- */
+function getTodayAttempts() {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const data = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (data && data.date === today) return data.count;
+  } catch(e) {}
+  return 0;
+}
+
+function addTodayAttempt() {
+  const today = new Date().toISOString().split('T')[0];
+  let count = getTodayAttempts() + 1;
+  localStorage.setItem(STORE_KEY, JSON.stringify({ date: today, count }));
+  return count;
+}
+
+/* ---------- 开始屏 ---------- */
+function renderStartAttempts(){
+  const count = getTodayAttempts();
+  const left = MAX_ATTEMPTS_PER_DAY - count;
+  const streamBox = $('streamStatus');
+  
+  if (left <= 0) {
+    $('modeA').disabled = true;
+    $('modeB').disabled = true;
+    streamBox.textContent = '今日次数已耗尽';
+    streamBox.style.color = 'var(--danger)';
+  } else {
+    $('modeA').disabled = false;
+    $('modeB').disabled = false;
+    streamBox.textContent = `今日剩余挑战次数：${left}`;
+    streamBox.style.color = 'var(--text-main)';
+  }
+}
+
+/* ---------- 开始答题 ---------- */
+function startMode(mode){
+  if (getTodayAttempts() >= MAX_ATTEMPTS_PER_DAY) return;
+
+  // 核心修改：点击就扣次数
+  addTodayAttempt();
+  renderStartAttempts();
+
+  const flash = $('flashOverlay');
+  if (mode.key === 'B') {
+    flash.classList.remove('flash');
+    void flash.offsetWidth;
+    flash.classList.add('flash');
+  }
+
+  setTimeout(() => {
+    currentMode = mode;
+    pool = buildRound(mode);
+    idx = 0; answers = new Array(mode.pick).fill(-1); locked = false;
+    isQuizActive = true;
+    isLockedBlue = false;
+    finalHp = 100;
+    fastCombo = 0;
+
+    $('screenStart').classList.add('hidden');
+    $('screenResult').classList.add('hidden');
+    $('screenQuiz').classList.remove('hidden');
+    $('timerBadge').classList.remove('hidden');
+    
+    document.body.classList.add('quiz-active');
+    document.body.classList.remove('blue-theme', 'low-hp');
+    document.body.classList.toggle('red-theme', mode.key === 'B');
+
+    const hpMaskWrap = $('hpMaskWrap');
+    const hpMask = $('hpMask');
+    if(mode.key === 'B'){
+      currentHp = 100;
+      $('timerText').innerHTML = `100<span>HP</span>`;
+      hpMaskWrap.style.opacity = '1';
+      hpMask.style.width = '100%';
+      startHpTimer();
+    } else {
+      hpMaskWrap.style.opacity = '0';
+      $('timerText').innerHTML = `5<span>倒计时</span>`;
+    }
+
+    beginQuestion();
+  }, mode.key === 'B' ? 120 : 0); 
+}
+
+/* ---------- 血条机制 (加快流失速度) ---------- */
+function startHpTimer() {
+  clearInterval(hpTimer);
+  updateHpDisplay();
+  // 流失速度加快：0.15秒扣1%
+  hpTimer = setInterval(() => {
+    currentHp -= 1;
+    if (currentHp < 0) currentHp = 0;
+    updateHpDisplay();
+    if (currentHp <= 0) triggerDeath();
+  }, 150);
+}
+
+function updateHpDisplay() {
+  const hpMask = $('hpMask');
+  hpMask.style.width = Math.max(0, currentHp) + '%';
+  $('timerText').innerHTML = `${Math.round(currentHp)}<span>HP</span>`;
+  $('timerText').classList.toggle('warn', currentHp <= 30);
+  
+  // 低血量变淡红色
+  if (currentMode.key === 'B' && !isLockedBlue) {
+    document.body.classList.toggle('low-hp', currentHp <= 20 && currentHp > 0);
+  } else {
+    document.body.classList.remove('low-hp');
+  }
+
+  const offset = CIRCLE_LEN - (currentHp / 100) * CIRCLE_LEN;
+  $('timerRing').style.strokeDashoffset = offset;
+  $('timerRing').style.stroke = currentHp <= 30 ? 'var(--danger)' : 'var(--theme)';
+}
+
+function updatePerQuestionDisplay(){
+  const sec = Math.ceil(timeLeft / 1000);
+  $('timerText').innerHTML = `${sec}<span>倒计时</span>`;
+  $('timerText').classList.toggle('warn', sec <= 2);
+  
+  const offset = CIRCLE_LEN - (timeLeft / currentMode.perQuestion) * CIRCLE_LEN;
+  $('timerRing').style.strokeDashoffset = offset;
+  $('timerRing').style.stroke = sec <= 2 ? 'var(--danger)' : 'var(--theme)';
+}
+
+/* ---------- 答题逻辑 ---------- */
+function beginQuestion(){
+  clearInterval(timerId);
+  locked = false;
+  questionStartTime = Date.now();
+
+  // 锁血触发条件：进入题目时，血量 ≤ 10 且 > 0
+  if (currentMode.key === 'B' && currentHp <= 10 && currentHp > 0 && !isLockedBlue) {
+    triggerBlueLock();
+  }
+
+  const q = pool[idx];
+  $('qIndex').textContent = `${idx+1} / ${pool.length}`;
+  $('stem').textContent = q.stem;
+  $('tauntBubble').textContent = q.taunt || '快点选，别磨蹭。';
+  
+  let authorStr = q.author === 'human' ? 'Stech_FL_xigiy' : '大肥鱼';
+  $('qAuthor').innerHTML = `<i></i> 出题人: ${authorStr}`;
+
+  const diffTag = $('qDiff');
+  if(q.difficulty === 'easy') {
+    diffTag.textContent = '简单';
+  } else {
+    diffTag.textContent = '困难';
+  }
+
+  const box = $('options');
+  box.innerHTML = '';
+  q.options.forEach((text,i)=>{
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'opt';
+    const key = document.createElement('span');
+    key.className = 'key'; key.textContent = 'ABCD'[i];
+    const txt = document.createElement('span');
+    txt.className = 'txt'; txt.textContent = text;
+    btn.appendChild(key); btn.appendChild(txt);
+    btn.addEventListener('click', ()=>submitAnswer(i));
+    box.appendChild(btn);
+  });
+
+  if(currentMode.perQuestion){
+    timeLeft = currentMode.perQuestion;
+    updatePerQuestionDisplay();
+
+    timerId = setInterval(()=>{
+      timeLeft -= 50;
+      if(timeLeft < 0) timeLeft = 0;
+      updatePerQuestionDisplay();
+      if(timeLeft <= 0){
+        clearInterval(timerId);
+        submitAnswer(-1);
+      }
+    }, 50);
+  }
+}
+
+function submitAnswer(choice){
+  if(locked) return;
+  locked = true;
+  clearInterval(timerId);
+  answers[idx] = choice;
+
+  const q = pool[idx];
+  const isCorrect = (choice === q.answer);
+  const timeSpent = Date.now() - questionStartTime;
+
+  // 扫盘连击判断
+  if (currentMode.key === 'B' && isQuizActive) {
+    if (isCorrect && timeSpent < 3000) {
+      fastCombo++;
+      if (fastCombo >= 3) {
+        triggerAntiCheatScan();
+        fastCombo = 0; 
+      }
+    } else {
+      fastCombo = 0; 
+    }
+  }
+
+  if (currentMode.key === 'B' && isQuizActive && !isLockedBlue) {
+    if (choice === -1) {
+      currentHp -= 50;
+    } else if (isCorrect) {
+      currentHp = Math.min(100, currentHp + 10);
+    } else {
+      currentHp -= 50;
+    }
+    
+    if (currentHp < 0) currentHp = 0;
+    finalHp = currentHp;
+    updateHpDisplay();
+    
+    if (currentHp <= 0) {
+      triggerDeath();
+      return;
+    } else if (currentHp <= 10) {
+      // 如果是答错掉血导致进入 10 以内，也立刻触发锁血
+      triggerBlueLock();
+    }
+  }
+
+  const opts = $('options').querySelectorAll('.opt');
+  if(choice >= 0 && opts[choice]) opts[choice].classList.add('picked');
+
+  setTimeout(()=>{
+    idx++;
+    if(idx >= pool.length) finishQuiz(false);
+    else beginQuestion();
+  }, 200);
+}
+
+/* ---------- 扫盘模拟 (纯视觉干扰) ---------- */
+function triggerAntiCheatScan() {
+  $('aceOverlay').classList.add('show');
+  if(aceTimeout) clearTimeout(aceTimeout);
+  aceTimeout = setTimeout(() => {
+    $('aceOverlay').classList.remove('show');
+  }, 5000);
+}
+
+$('aceCloseBtn').addEventListener('click', () => {
+  $('aceOverlay').classList.remove('show');
+  if(aceTimeout) clearTimeout(aceTimeout);
+});
+
+/* ---------- 锁血机制 ---------- */
+function triggerBlueLock() {
+  isLockedBlue = true;
+  clearInterval(hpTimer);
+  document.body.classList.remove('low-hp'); // 移除低血量状态
+  
+  const flash = $('flashOverlay');
+  flash.classList.remove('flash');
+  void flash.offsetWidth;
+  flash.classList.add('flash');
+  
+  document.body.classList.remove('red-theme');
+  document.body.classList.add('blue-theme');
+}
+
+/* ---------- 死亡动画 ---------- */
+function triggerDeath() {
+  clearInterval(timerId);
+  clearInterval(hpTimer);
+  isQuizActive = false;
+  locked = true;
+  finalHp = 0;
+
+  $('hpMaskWrap').style.opacity = '0';
+  document.body.classList.remove('quiz-active');
+
+  const death = $('deathOverlay');
+  death.classList.remove('hidden', 'blackout');
+  void death.offsetWidth;
+  death.classList.add('flash-red');
+
+  setTimeout(() => {
+    death.classList.remove('flash-red');
+    death.classList.add('blackout');
+    setTimeout(() => {
+      death.classList.remove('blackout');
+      death.classList.add('hidden');
+      finishQuiz(true);
+    }, 1000);
+  }, 400);
+}
+
+/* ---------- 结算 ---------- */
+function finishQuiz(timeout){
+  clearInterval(timerId);
+  clearInterval(hpTimer);
+  isQuizActive = false;
+
+  $('screenQuiz').classList.add('hidden');
+  $('screenResult').classList.remove('hidden');
+  $('timerBadge').classList.add('hidden');
+  $('hpMaskWrap').style.opacity = '0';
+  
+  document.body.classList.remove('quiz-active', 'low-hp');
+  
+  if (currentMode.key === 'B') {
+    if (isLockedBlue) {
+      document.body.classList.add('blue-theme');
+      document.body.classList.remove('red-theme');
+    } else {
+      document.body.classList.add('red-theme');
+      document.body.classList.remove('blue-theme');
+    }
+    $('hpStatBox').style.display = 'flex';
+    $('finalHpStat').textContent = Math.round(finalHp) + '%';
+  } else {
+    document.body.classList.remove('red-theme', 'blue-theme');
+    $('hpStatBox').style.display = 'none';
+  }
+
+  window.scrollTo({ top: 0, behavior: 'auto' });
+
+  let correct = 0;
+  pool.forEach((q,i)=>{ 
+    if(answers[i] === q.answer) correct++; 
+  });
+  
+  const per = 100 / pool.length;
+  const score = Math.round(correct * per);
+  const pass = score >= PASS;
+
+  $('scoreBig').textContent = score;
+  $('scoreBig').classList.toggle('fail', !pass);
+  
+  let subText = pass 
+    ? `达到认可线（<b>${PASS}</b> / 100），考据通过。`
+    : `未达到认可线（<b>${PASS}</b> / 100）。就这？就这？就这？`;
+  
+  if (timeout && currentMode.key === 'B') {
+    subText = `血量归零，试炼中断！连血条都保不住，回去再练练吧！`;
+  } else if (timeout) {
+    subText = `时间耗尽，未达到认可线（<b>${PASS}</b> / 100）。就这？`;
+  }
+
+  if (isLockedBlue) {
+    subText += `<br><span style="color:var(--theme); font-weight:900; margin-top:8px; display:inline-block; letter-spacing:1px;">[ Retribution 模式激活 ]</span>`;
+  }
+
+  $('scoreSub').innerHTML = subText;
+
+  $('statCorrect').textContent = correct;
+  $('statWrong').textContent = pool.length - correct;
+  $('statTotal').textContent = pool.length;
+
+  const restartBtn = $('btnRestart');
+  if (getTodayAttempts() >= MAX_ATTEMPTS_PER_DAY) {
+    restartBtn.disabled = true;
+    restartBtn.textContent = '今日次数已耗尽';
+  } else {
+    restartBtn.disabled = false;
+    restartBtn.textContent = '再次试炼';
+  }
+  
+  $('historyBox').innerHTML = `<div class="history-title">今日剩余次数：${MAX_ATTEMPTS_PER_DAY - getTodayAttempts()}</div>`;
+
+  window.lastScoreData = {
+    score, pass, correct, wrong: pool.length - correct, 
+    isBlue: isLockedBlue, mode: currentMode.label, finalHp
+  };
+}
+
+/* ---------- 导出成绩单 ---------- */
+$('btnExport').addEventListener('click', () => {
+  const data = window.lastScoreData;
+  if(!data) return;
+
+  const scScore = $('scScore');
+  scScore.textContent = data.score;
+  scScore.className = 'sc-score';
+  if (!data.pass) scScore.classList.add('fail');
+  if (data.isBlue) scScore.className = 'sc-score blue';
+
+  $('scVerdict').textContent = data.pass ? '达到认可线 · 考据通过' : '未达到认可线 · 细节不够';
+  $('scCorrect').textContent = data.correct;
+  $('scWrong').textContent = data.wrong;
+  
+  if (currentMode.key === 'B') {
+    $('scHpBox').style.display = 'flex';
+    $('scHp').textContent = Math.round(data.finalHp) + '%';
+  } else {
+    $('scHpBox').style.display = 'none';
+  }
+
+  $('scMode').textContent = data.mode;
+  
+  const d = new Date();
+  $('scDate').textContent = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  
+  $('scRetri').style.display = data.isBlue ? 'inline' : 'none';
+
+  $('exportModal').classList.add('show');
+});
+
+$('expCancelBtn').addEventListener('click', () => {
+  $('exportModal').classList.remove('show');
+});
+
+$('expDownloadBtn').addEventListener('click', () => {
+  const card = $('scoreCard');
+  
+  html2canvas(card, {
+    scale: 3, 
+    backgroundColor: '#0a0b0f',
+    useCORS: true,
+    logging: false
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `GuildTest_${new Date().getTime()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    $('exportModal').classList.remove('show');
+  }).catch(err => {
+    alert('导出失败，请重试');
+    console.error(err);
+  });
+});
+
+/* ---------- 返回主页 ---------- */
+function goHome(){
+  clearInterval(timerId);
+  clearInterval(hpTimer);
+  isQuizActive = false;
+  document.body.classList.remove('quiz-active', 'red-theme', 'blue-theme', 'low-hp');
+  $('hpMaskWrap').style.opacity = '0';
+  $('screenQuiz').classList.add('hidden');
+  $('screenResult').classList.add('hidden');
+  $('timerBadge').classList.add('hidden');
+  $('screenStart').classList.remove('hidden');
+  renderStartAttempts();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+/* ---------- 防作弊系统 ---------- */
+document.addEventListener('contextmenu', e => { if (isQuizActive) e.preventDefault(); });
+document.addEventListener('copy', e => { if (isQuizActive) e.preventDefault(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && isQuizActive) {
+    $('antiCheatMask').classList.remove('hidden');
+  } else {
+    $('antiCheatMask').classList.add('hidden');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (!isQuizActive) return;
+  if (
+    e.key === 'PrintScreen' || 
+    (e.ctrlKey && ['p','P','c','C','s','S'].includes(e.key)) ||
+    e.key === 'F12'
+  ) {
+    e.preventDefault();
+    if(e.key === 'PrintScreen' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText('禁止截图作弊！').catch(()=>{});
+    }
+  }
+});
+
+/* ---------- 事件 ---------- */
+$('modeA').addEventListener('click', ()=>startMode(MODE_A));
+$('modeB').addEventListener('click', ()=>startMode(MODE_B));
+$('btnBack').addEventListener('click', goHome);
+$('btnRestart').addEventListener('click', ()=>{ if(currentMode) startMode(currentMode); });
+
+renderStartAttempts();
+</script>
+</body>
+</html>
+
