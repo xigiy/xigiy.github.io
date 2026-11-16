@@ -1,922 +1,2223 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ds生成的终端</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            image-rendering: crisp-edges;
-            image-rendering: pixelated;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>VoidWaveOS · Starfield Technology</title>
+<link rel="preconnect" href="https://fontsapi.zeoseven.com">
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/296/main/result.css">
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css">
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/701/main/result.css">
+<link rel="stylesheet" href="https://fontsapi.zeoseven.com/382/main/result.css">
+<style>
+/* ================= 全局变量与主题 ================= */
+:root {
+  --font-family: "NanoPyongHanHei", -apple-system, sans-serif;
+  --radius: 0px;
+  --bg: #fafafa; --ink: #111111; --muted: #71717a; --line: #111111;
+  --border-style: solid; --border-width: 1px;
+  --card-bg: #ffffff; --card-hover-bg: #111111; --card-hover-ink: #ffffff;
+  --filter-bg: #ffffff; --filter-ink: #111111; --filter-active-bg: #111111; --filter-active-ink: #ffffff;
+  --bg-image: 
+    linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+  --bg-size: 24px 24px; --bg-shift: 24px; --bg-speed: 3s;
+  --pattern-opacity: 0.05;
+  --pattern-image: linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);
+  --pattern-size: 8px 8px;
+}
 
-        body {
-            min-height: 100vh;
-            background: #000000;
-            overflow-x: hidden;
-        }
+body[data-theme="v/s"] {
+  --font-family: "BoutiqueBitmap9x9", sans-serif;
+  --bg: #000000; --ink: #ffffff; --muted: #a1a1aa; --line: #ffffff;
+  --card-bg: #000000; --card-hover-bg: #ffffff; --card-hover-ink: #000000;
+  --filter-bg: #000000; --filter-ink: #ffffff; --filter-active-bg: #ffffff; --filter-active-ink: #000000;
+  --bg-image: linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+  --pattern-opacity: 0.1;
+  --pattern-image: repeating-linear-gradient(-45deg, #fff 0, #fff 1px, transparent 1px, transparent 6px);
+  --pattern-size: auto;
+}
 
-        /* ========== CRT 屏幕效果容器 ========== */
-        .crt-container {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-            background: #000000;
-            overflow: hidden;
-        }
+body[data-theme="LXH"] {
+  --font-family: "NaikaiFont", sans-serif;
+  --radius: 10px;
+  --bg: #F4F6F0; --ink: #2C3520; --muted: #6A7A58; --line: #9EB26A; --border-width: 3px;
+  --card-bg: #ffffff; --card-hover-bg: #9EB26A; --card-hover-ink: #F4F6F0;
+  --filter-bg: #F4F6F0; --filter-ink: #2C3520; --filter-active-bg: #9EB26A; --filter-active-ink: #F4F6F0;
+  --bg-image: radial-gradient(rgba(158,178,106,0.3) 1.5px, transparent 1.5px);
+  --bg-size: 20px 20px; --bg-shift: 20px; --bg-speed: 6s;
+  --pattern-opacity: 0.15;
+  --pattern-image: radial-gradient(currentColor 1px, transparent 1px);
+  --pattern-size: 12px 12px;
+}
 
-        /* CRT 屏幕拉伸和扭曲效果 */
-        .crt-screen {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-            transform: scaleX(1.02) scaleY(1.01);
-            transform-origin: center center;
-            animation: crt-shake 8s infinite ease-in-out;
-        }
+body[data-theme="中V"] {
+  --font-family: "MaokenAssortedSans", sans-serif;
+  --bg: #f0f9ff; --ink: #0c4a6e; --muted: #0369a1; --line: #38bdf8; --border-width: 1px;
+  --card-bg: #e0f2fe; --card-hover-bg: #0284c7; --card-hover-ink: #ffffff;
+  --filter-bg: #f0f9ff; --filter-ink: #0c4a6e; --filter-active-bg: #0ea5e9; --filter-active-ink: #ffffff;
+  --bg-image: linear-gradient(to right, rgba(14,165,233,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(14,165,233,0.08) 1px, transparent 1px);
+  --pattern-opacity: 0.08;
+  --pattern-image: linear-gradient(90deg, currentColor 2px, transparent 2px), linear-gradient(0deg, currentColor 2px, transparent 2px);
+  --pattern-size: 16px 16px;
+}
 
-        @keyframes crt-shake {
-            0%, 100% { transform: scaleX(1.02) scaleY(1.01) translate(0, 0); }
-            25% { transform: scaleX(1.021) scaleY(1.011) translate(0.5px, 0.2px); }
-            75% { transform: scaleX(1.019) scaleY(1.009) translate(-0.3px, -0.1px); }
-        }
+/* ================= 基础 ================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* 主内容区域 - 应用 CRT 模糊和辉光 */
-        .crt-content {
-            position: relative;
-            z-index: 2;
-            filter: blur(0.3px) brightness(1.05) contrast(1.2);
-            text-shadow: 0 0 3px #00ff00, 0 0 1px #00ff00;
-        }
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg);
+  background-image: var(--bg-image);
+  background-size: var(--bg-size);
+  animation: scrollGrid var(--bg-speed) linear infinite;
+  color: var(--ink);
+  line-height: 1.7;
+  padding: 72px 24px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
-        /* 加强版 CRT 扫描线 - 更明显 */
-        .crt-scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 998;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 255, 0, 0.15) 0px,
-                rgba(0, 255, 0, 0.15) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            opacity: 0.9;
-            animation: scanline-move 0.5s linear infinite;
-        }
+@keyframes scrollGrid {
+  from { background-position: 0 0; }
+  to   { background-position: var(--bg-shift) var(--bg-shift); }
+}
 
-        @keyframes scanline-move {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(2px); }
-        }
+/* ================= 圈层背景装饰层 ================= */
+#bg-decorations {
+  position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden;
+}
+.deco { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; }
 
-        /* CRT 荧光溢出效果 */
-        .crt-glow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 997;
-            background: radial-gradient(circle at center, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
-            mix-blend-mode: overlay;
-        }
+.deco-vs {
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+}
+body[data-theme=""] .deco-vs,
+body[data-theme="v/s"] .deco-vs { opacity: 1; }
 
-        /* 胶片颗粒 + 色差 */
-        .crt-grain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 996;
-            background-image: repeating-radial-gradient(circle at 20% 30%, rgba(0, 255, 0, 0.2) 0px, rgba(0, 255, 0, 0.2) 1px, transparent 1px, transparent 2px);
-            opacity: 0.4;
-            animation: grain-flicker 0.2s steps(2) infinite;
-        }
+.deco-zhongv {
+  background: 
+    radial-gradient(circle at 15% 20%, rgba(102, 204, 255, 0.15) 0%, transparent 25%),
+    radial-gradient(circle at 85% 80%, rgba(102, 204, 255, 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
+}
+.deco-zhongv::before {
+  content: ""; position: absolute; bottom: -5vh; left: -10vw; right: -10vw; height: 35vh;
+  background: 
+    radial-gradient(circle at 25% 100%, rgba(102, 204, 255, 0.2) 0%, transparent 20%),
+    radial-gradient(circle at 75% 100%, rgba(102, 204, 255, 0.15) 0%, transparent 25%);
+  filter: blur(30px);
+}
+body[data-theme="中V"] .deco-zhongv { opacity: 1; }
 
-        @keyframes grain-flicker {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.6; }
-        }
+.deco-lxh {
+  background: 
+    radial-gradient(circle at 10% 15%, rgba(255,255,255,0.6) 1px, transparent 1px),
+    radial-gradient(circle at 85% 25%, rgba(255,255,255,0.5) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 40% 60%, rgba(255,255,255,0.4) 1px, transparent 1px),
+    radial-gradient(circle at 70% 10%, rgba(255,255,255,0.7) 1.2px, transparent 1.2px),
+    radial-gradient(circle at 25% 45%, rgba(255,255,255,0.5) 0.8px, transparent 0.8px);
+  background-size: 120px 120px, 180px 180px, 100px 100px, 200px 200px, 150px 150px;
+}
+.deco-lxh::before {
+  content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 18vh;
+  background: linear-gradient(to top, rgba(44, 53, 32, 0.12), transparent);
+  clip-path: polygon(0 100%, 0 55%, 12% 25%, 28% 60%, 45% 15%, 62% 55%, 78% 30%, 100% 65%, 100% 100%);
+}
+.deco-lxh::after {
+  content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 8vh;
+  background: linear-gradient(to top, rgba(44, 53, 32, 0.08), transparent);
+}
+body[data-theme="LXH"] .deco-lxh { opacity: 1; }
 
-        /* 色彩溢出效果 - 模拟 CRT 的红色/绿色溢出 */
-        .crt-chroma {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 995;
-            mix-blend-mode: screen;
-        }
-        .crt-chroma::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -2px;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 0, 0, 0.08);
-            filter: blur(2px);
-        }
-        .crt-chroma::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 2px;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 255, 0, 0.08);
-            filter: blur(2px);
-        }
+#three-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: -1; pointer-events: none; opacity: 0.65;
+  transition: opacity 0.5s ease;
+}
 
-        /* 屏幕曲率效果 - CRT 球面 */
-        .crt-curve {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 994;
-            background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
-        }
+/* ================= 启动画面（重构） ================= */
+#boot {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0a0a0a; color: #ffffff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  transition: opacity .6s ease;
+  overflow: hidden;
+}
+#boot.done { opacity: 0; pointer-events: none; }
 
-        /* 闪烁效果 - 模拟 CRT 刷新 */
-        .crt-flicker {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 993;
-            background: rgba(0, 255, 0, 0.02);
-            animation: flicker 0.15s infinite;
-        }
+.boot-terminal {
+  width: 100%; max-width: 600px; padding: 24px;
+  display: flex; flex-direction: column; height: 60vh;
+  position: relative;
+}
 
-        @keyframes flicker {
-            0%, 100% { opacity: 0.3; }
-            25% { opacity: 0.5; }
-            50% { opacity: 0.2; }
-            75% { opacity: 0.4; }
-        }
+/* 日志：左下角缩小变灰作为背景 */
+.boot-log {
+  position: absolute; bottom: 24px; left: 24px;
+  font-size: 0.7rem; line-height: 1.5;
+  color: #555; max-width: 280px;
+  pointer-events: none;
+}
+.boot-log .log-line { margin-bottom: 1px; word-break: break-all; opacity: 0.8; }
+.boot-log .log-ok { color: #2e7d32; }
+.boot-log .log-warn { color: #b28704; }
+.boot-log .log-err { color: #c62828; }
+.boot-log .log-time { color: #444; margin-right: 6px; }
 
-        /* 字体 - 使用本地字体 */
-        @font-face {
-            font-family: 'PixelLocal';
-            src: url('fonts/PixelMplus10-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
+/* 中央内容容器 */
+.boot-center {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; margin-top: -5vh; /* 微调视觉中心 */
+}
 
-        @font-face {
-            font-family: 'PixelFallback';
-            src: url('fonts/04B03.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
+/* 进度条：移到文字上方，全白 */
+.boot-progress-wrap {
+  width: 200px; height: 2px; background: #222;
+  margin-bottom: 20px; overflow: hidden; border-radius: 1px;
+}
+.boot-progress-bar {
+  width: 100%; height: 100%; background: #ffffff;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.2s ease;
+}
 
-        /* 切换按钮 */
-        .toggle-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
+/* 主文字：纯白 */
+.boot-title {
+  font-size: 1.4rem; font-weight: bold; letter-spacing: .3em; text-indent: .3em;
+  color: #ffffff; text-transform: uppercase; margin-bottom: 12px;
+}
 
-        .toggle-btn {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #00ff00;
-            color: #00ff00;
-            font-family: 'PixelLocal', 'Courier New', monospace;
-            font-size: 11px;
-            padding: 6px 12px;
-            cursor: pointer;
-            transition: all 0.1s steps(2);
-            backdrop-filter: blur(2px);
-        }
+/* 版本号：在文字下方，缩小变灰 */
+.boot-version {
+  font-size: 0.65rem; color: #777; letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 
-        .toggle-btn:hover, .toggle-btn.active {
-            background: #00ff00;
-            color: #000000;
-            box-shadow: 0 0 5px #00ff00;
-        }
+/* 隐藏原有的底部状态栏（因为进度条上移了） */
+.boot-footer { display: none; }
 
-        /* ========== PC: 复古终端风格 ========== */
-        .pc-layout {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: transparent;
-            padding: 40px;
-        }
-        .terminal-window {
-            max-width: 1100px;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid #00ff00;
-            font-family: 'PixelLocal', 'Courier New', monospace;
-            backdrop-filter: blur(1px);
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-        }
-        .title-bar {
-            background: rgba(0, 0, 0, 0.9);
-            padding: 10px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #00ff00;
-            font-weight: bold;
-            font-size: 14px;
-            border-bottom: 1px solid #00ff00;
-            letter-spacing: 2px;
-        }
-        .title-bar-buttons {
-            display: flex;
-            gap: 6px;
-        }
-        .title-btn {
-            background: transparent;
-            width: 24px;
-            height: 22px;
-            text-align: center;
-            line-height: 20px;
-            font-weight: bold;
-            border: 1px solid #00ff00;
-            font-size: 14px;
-            cursor: pointer;
-            color: #00ff00;
-        }
-        .title-btn:hover {
-            background: #00ff00;
-            color: #000000;
-            box-shadow: 0 0 5px #00ff00;
-        }
-        .menu-bar {
-            background: rgba(0, 0, 0, 0.9);
-            padding: 6px 14px;
-            display: flex;
-            gap: 24px;
-            border-bottom: 1px solid #00ff00;
-            font-size: 12px;
-            flex-wrap: wrap;
-        }
-        .menu-item {
-            cursor: pointer;
-            padding: 2px 8px;
-            color: #00ff00;
-        }
-        .menu-item:hover {
-            background: #00ff00;
-            color: #000000;
-            text-shadow: none;
-        }
-        .window-content {
-            padding: 24px;
-            background: rgba(0, 0, 0, 0.8);
-        }
+/* ================= 页面内容 ================= */
+#offline-banner {
+  display: none; background: #eab308; color: #000; text-align: center;
+  padding: 8px; font-size: 0.8rem; font-weight: bold; position: sticky; top: 0; z-index: 9998;
+}
+body.is-offline #offline-banner { display: block; }
 
-        /* Linux 终端模拟器 - 增强 CRT 风格 */
-        .linux-terminal {
-            background: rgba(0, 0, 0, 0.95);
-            color: #00ff00;
-            padding: 16px;
-            font-family: 'PixelLocal', monospace;
-            font-size: 13px;
-            border: 1px solid #00ff00;
-            margin-bottom: 24px;
-            height: 380px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.1);
-        }
-        .terminal-output {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 12px;
-            font-family: 'PixelLocal', monospace;
-        }
-        .terminal-line {
-            margin-bottom: 6px;
-            white-space: pre-wrap;
-            word-break: break-all;
-            letter-spacing: 0.5px;
-        }
-        .terminal-input-line {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            border-top: 1px solid #00ff00;
-            padding-top: 10px;
-        }
-        .terminal-prompt {
-            color: #00ff00;
-            white-space: nowrap;
-            font-weight: bold;
-        }
-        .terminal-input {
-            background: transparent;
-            border: none;
-            color: #00ff00;
-            font-family: 'PixelLocal', monospace;
-            font-size: 13px;
-            flex: 1;
-            outline: none;
-        }
-        .cursor-block {
-            display: inline-block;
-            width: 10px;
-            height: 16px;
-            background-color: #00ff00;
-            animation: crt-blink 0.8s step-end infinite;
-            margin-left: 4px;
-            box-shadow: 0 0 5px #00ff00;
-        }
-        @keyframes crt-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
+.wrap { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
 
-        .link-grid-pc {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 16px;
-            margin: 20px 0;
-        }
-        .terminal-card {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #00ff00;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: #00ff00;
-            transition: all 0.1s steps(2);
-        }
-        .terminal-card:hover {
-            background: #00ff00;
-            color: #000000;
-            box-shadow: 0 0 8px #00ff00;
-            transform: scale(1.01);
-        }
+header {
+  padding-bottom: 28px;
+  border-bottom: var(--border-width) var(--border-style) var(--line);
+  margin-bottom: 30px;
+  transition: border-color 0.3s ease, border-width 0.3s ease;
+}
+header h1 { font-size: clamp(1.9rem, 4.6vw, 2.9rem); line-height: 1.15; margin-bottom: 12px; }
+header .tagline { font-size: .95rem; color: var(--muted); max-width: 560px; }
+header nav { margin-top: 26px; display: flex; gap: 0; flex-wrap: wrap; border-radius: var(--radius); overflow: hidden; }
+header nav a, header nav button.nav-btn {
+  font-size: .82rem; color: var(--ink); text-decoration: none; padding: 6px 16px;
+  border: var(--border-width) var(--border-style) var(--line);
+  margin-left: calc(-1 * var(--border-width));
+  transition: background 0.15s, color 0.15s, border-color 0.3s, border-width 0.3s;
+  background: transparent; cursor: pointer; font-family: inherit;
+}
+header nav a:first-child { margin-left: 0; }
+header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); color: var(--bg); }
 
-        /* ========== 手机：CRT 功能机风格 ========== */
-        .mobile-layout {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: transparent;
-            padding: 16px;
-        }
-        .crt-phone {
-            max-width: 420px;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 12px;
-            border: 2px solid #00ff00;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-        }
-        .phone-screen {
-            background: rgba(0, 0, 0, 0.95);
-            padding: 16px;
-            min-height: 520px;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #00ff00;
-            font-family: 'PixelLocal', monospace;
-        }
-        .signal-battery {
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            color: #00ff00;
-            border-bottom: 1px solid #00ff00;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .phone-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 13px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ff00;
-            padding: 8px;
-            margin-bottom: 12px;
-            border: 1px solid #00ff00;
-            letter-spacing: 2px;
-        }
-        .mobile-terminal {
-            background: rgba(0, 0, 0, 0.9);
-            color: #00ff00;
-            padding: 10px;
-            font-family: 'PixelLocal', monospace;
-            font-size: 10px;
-            border: 1px solid #00ff00;
-            margin: 12px 0;
-            height: 200px;
-            overflow-y: auto;
-        }
-        .dpad-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 12px 0;
-        }
-        .funclink {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #00ff00;
-            padding: 10px;
-            text-decoration: none;
-            color: #00ff00;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 12px;
-            transition: all 0.05s linear;
-        }
-        .funclink:active {
-            background: #00ff00;
-            color: #000000;
-            box-shadow: 0 0 5px #00ff00;
-        }
-        .phone-keys {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .phone-key {
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ff00;
-            text-align: center;
-            padding: 8px 4px;
-            border: 1px solid #00ff00;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: monospace;
-        }
-        .phone-key:active {
-            background: #00ff00;
-            color: #000000;
-        }
-        .nav-dpad {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .dpad-btn {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #00ff00;
-            padding: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            color: #00ff00;
-            text-align: center;
-        }
-        .dpad-btn:active {
-            background: #00ff00;
-            color: #000000;
-        }
-        .clock-ticker {
-            font-size: 10px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.8);
-            margin-top: 12px;
-            padding: 8px;
-            border: 1px solid #00ff00;
-            color: #00ff00;
-        }
+.section-title { display: flex; align-items: center; gap: 12px; font-size: .72rem; letter-spacing: .28em; text-transform: uppercase; margin-bottom: 18px; }
+.section-title::after { content: ""; flex: 1; height: var(--border-width); background: var(--line); transition: 0.3s; }
 
-        .hidden {
-            display: none !important;
-        }
-    </style>
+.toolbar { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; }
+
+/* 分类栏 */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.filter-btn {
+  padding: 8px 18px;
+  background: var(--filter-bg); color: var(--filter-ink);
+  border: var(--border-width) var(--border-style) var(--line);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: .8rem; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.filter-btn:hover, .filter-btn.active {
+  background: var(--filter-active-bg); color: var(--filter-active-ink);
+}
+
+.tools-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.search-box, .icon-btn {
+  height: 44px; padding: 0 12px;
+  background: var(--filter-bg); color: var(--filter-ink);
+  border: var(--border-width) var(--border-style) var(--line);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: .75rem; outline: none;
+  transition: all 0.3s ease;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.search-box::placeholder { color: var(--muted); }
+.icon-btn { cursor: pointer; width: 44px; padding: 0; font-weight: bold; }
+.icon-btn:hover { background: var(--filter-active-bg); color: var(--filter-active-ink); }
+.tool-count { font-size: 0.7rem; color: var(--muted); width: 100%; text-align: right; margin-top: 4px; margin-bottom: 12px; }
+
+.search-history { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; font-size: 0.7rem; color: var(--muted); }
+.search-history span { cursor: pointer; padding: 4px 10px; border: 1px solid var(--line); border-radius: 4px; }
+.search-history span:hover { background: var(--ink); color: var(--bg); }
+
+.recent-section { margin-bottom: 32px; }
+.recent-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+.recent-card {
+  flex: 1; min-width: 200px; padding: 16px; min-height: 44px;
+  border: var(--border-width) var(--border-style) var(--line);
+  background: var(--card-bg); border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--ink);
+  transition: all 0.15s;
+}
+.recent-card:hover { background: var(--card-hover-bg); color: var(--card-hover-ink); }
+.recent-card h4 { font-size: 0.85rem; font-weight: normal; margin: 0; }
+.recent-card span { font-size: 0.65rem; opacity: 0.8; }
+
+.group-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.75rem; font-weight: bold; letter-spacing: 0.15em;
+  color: var(--ink); margin-top: 32px; margin-bottom: 16px;
+}
+.group-title::after { content: ""; flex: 1; height: 1px; background: var(--line); opacity: 0.3; }
+
+.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.list-view { display: flex; flex-direction: column; gap: 8px; }
+.grid-view.animating .work { opacity: 0; animation: cardIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.work {
+  display: flex; flex-direction: column;
+  border: var(--border-width) var(--border-style) var(--line);
+  background: var(--card-bg); color: var(--ink);
+  text-decoration: none; border-radius: var(--radius); overflow: hidden;
+  transition: background 0.15s, color 0.15s, border-color 0.3s, border-width 0.3s, border-radius 0.3s, transform 0.15s;
+  outline: none; position: relative; cursor: pointer;
+}
+.list-view .work { flex-direction: row; align-items: center; padding: 16px; gap: 16px; }
+.list-view .cover { display: none; }
+.list-view .body { padding: 0; flex-direction: row; align-items: center; gap: 16px; width: 100%; }
+.list-view .body h3 { margin-bottom: 0; width: 160px; flex-shrink: 0; }
+.list-view .body p { margin-bottom: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-view .meta { margin-top: 0; padding-top: 0; border-top: none; width: 120px; justify-content: flex-end; }
+
+.work:hover, .work:focus-visible { background: var(--card-hover-bg); color: var(--card-hover-ink); transform: translateY(-2px); }
+.work:focus-visible { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink); }
+.work:hover .cover, .work:focus-visible .cover { border-color: var(--card-hover-ink); }
+
+.cover {
+  position: relative; aspect-ratio: 16 / 9;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: var(--border-width) var(--border-style) var(--line);
+  font-size: 1.15rem; letter-spacing: .08em; transition: border-color 0.15s, border-width 0.3s;
+  overflow: hidden;
+}
+.cover::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: var(--pattern-image); background-size: var(--pattern-size);
+  opacity: var(--pattern-opacity); transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+.work:hover .cover::before, .work:focus-visible .cover::before { transform: scale(1.05); opacity: calc(var(--pattern-opacity) * 1.5); }
+
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.status-online { background: #22c55e; }
+.status-maintenance { background: #eab308; }
+.status-offline { background: #ef4444; }
+.status-inline { background: #8b5cf6; }
+.status-external { background: #3b82f6; }
+.status-placeholder { background: #71717a; }
+
+.body { padding: 12px 14px 13px; display: flex; flex-direction: column; flex: 1; }
+.body h3 { display: flex; align-items: center; gap: 6px; font-size: .84rem; font-weight: normal; margin-bottom: 5px; flex-wrap: wrap; }
+.badge {
+  font-size: .56rem; letter-spacing: .1em; text-transform: uppercase;
+  padding: 0 6px; border: 1px solid currentColor; white-space: nowrap; line-height: 1.6;
+  border-radius: calc(var(--radius) * 0.8);
+}
+.badge.needs-net { border-color: #eab308; color: #eab308; }
+.badge.placeholder { border-color: #a1a1aa; color: #a1a1aa; }
+.body p { font-size: .72rem; line-height: 1.55; color: var(--muted); transition: color 0.15s; }
+.work:hover p, .work:focus-visible p { color: var(--card-hover-ink); }
+.meta {
+  margin-top: 10px; padding-top: 8px;
+  border-top: var(--border-width) var(--border-style) var(--line);
+  font-size: .62rem; display: flex; gap: 10px; flex-wrap: wrap; color: var(--muted);
+  transition: color 0.15s, border-color 0.3s, border-width 0.3s;
+}
+.work:hover .meta, .work:focus-visible .meta { color: var(--card-hover-ink); }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: var(--card-bg); color: var(--ink);
+  border: var(--border-width) var(--border-style) var(--line);
+  border-radius: var(--radius);
+  max-width: 520px; width: 100%; padding: 24px;
+  transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative; max-height: 90vh; overflow-y: auto;
+}
+.modal-overlay.active .modal-box { transform: translateY(0); }
+
+@media (max-width: 768px) {
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-box {
+    max-width: 100%; width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+  }
+  .modal-overlay.active .modal-box { transform: translateY(0); }
+  .modal-box::before {
+    content: ""; display: block; width: 40px; height: 4px; border-radius: 2px;
+    background: var(--muted); margin: -12px auto 16px; opacity: 0.5;
+  }
+}
+
+.modal-close { position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: inherit; font-family: inherit; font-size: 1.5rem; cursor: pointer; opacity: 0.6; padding: 8px; }
+.modal-close:hover { opacity: 1; }
+.modal-box h2 { font-size: 1.2rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.modal-box .modal-tagline { font-size: 0.85rem; color: var(--muted); margin-bottom: 16px; }
+.modal-box .modal-desc { font-size: 0.85rem; margin-bottom: 24px; border-left: 2px solid var(--line); padding-left: 12px; }
+.modal-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.inline-tool-area { margin-bottom: 16px; }
+.inline-input {
+  width: 100%; padding: 12px; font-family: inherit; font-size: 0.85rem;
+  background: var(--bg); color: var(--ink); border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 0.5); outline: none; margin-bottom: 8px;
+}
+.inline-btn-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.inline-output {
+  padding: 12px; font-family: monospace; font-size: 0.8rem;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: calc(var(--radius) * 0.5); word-break: break-all; min-height: 36px;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 18px; min-height: 44px; font-family: inherit; font-size: 0.85rem; cursor: pointer;
+  background: var(--ink); color: var(--bg); text-decoration: none;
+  border: 1px solid var(--ink); border-radius: calc(var(--radius) * 0.6);
+  transition: opacity 0.2s, background 0.2s;
+}
+.btn:hover { opacity: 0.8; }
+.btn-outline { background: transparent; color: var(--ink); }
+.btn-outline:hover { background: var(--ink); color: var(--bg); }
+.btn-sm { padding: 6px 12px; min-height: 32px; font-size: 0.75rem; }
+.btn:disabled, .btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+.copy-btn {
+  background: transparent; border: 1px solid var(--muted); color: var(--muted);
+  padding: 4px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;
+  transition: all 0.2s;
+}
+.copy-btn:hover { background: var(--muted); color: var(--bg); }
+
+.regex-highlight { background: #eab308; color: #000; border-radius: 2px; }
+.regex-count { font-size: 0.75rem; color: var(--muted); margin-bottom: 8px; display: block; }
+.text-toolbar { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.text-toolbar button { flex: 1; min-width: 80px; }
+.text-stats { font-size: 0.7rem; color: var(--muted); margin-top: 4px; display: flex; gap: 12px; }
+
+.drop-zone {
+  border: 2px dashed var(--line); border-radius: calc(var(--radius) * 0.5);
+  padding: 24px; text-align: center; cursor: pointer; transition: background 0.2s;
+  margin-bottom: 12px;
+}
+.drop-zone.dragover { background: rgba(0,0,0,0.05); }
+body[data-theme="v/s"] .drop-zone.dragover { background: rgba(255,255,255,0.1); }
+.img-compare { display: flex; gap: 8px; margin-top: 12px; }
+.img-compare > div { flex: 1; text-align: center; font-size: 0.75rem; }
+.img-compare img { width: 100%; border: 1px solid var(--line); border-radius: 4px; }
+.grid-9 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-height: 300px; overflow-y: auto; padding: 4px; }
+.grid-9 img { width: 100%; display: block; border: 1px solid var(--line); cursor: pointer; }
+
+.timer-display { font-size: 3rem; font-family: monospace; text-align: center; font-weight: bold; margin-bottom: 16px; color: var(--ink); }
+.timer-progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+.timer-progress-bar { height: 100%; background: #22c55e; width: 100%; transform-origin: left; transition: transform 0.1s linear; }
+
+.danmaku-overlay { position: fixed; inset: 0; z-index: 99999; background: #000; display: none; overflow: hidden; align-items: center; }
+.danmaku-overlay.active { display: flex; }
+.danmaku-text { white-space: nowrap; font-size: 10vh; font-weight: bold; color: #fff; animation: scrollDanmaku 8s linear infinite; padding-left: 100%; }
+@keyframes scrollDanmaku { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+.danmaku-close { position: absolute; top: 20px; right: 20px; z-index: 100000; background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 10px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; }
+
+.todo-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.todo-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--bg); border: 1px solid var(--line); border-radius: calc(var(--radius) * 0.5); }
+.todo-item.done span { text-decoration: line-through; opacity: 0.5; }
+.todo-item button { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; }
+
+.decision-result { font-size: 1.5rem; text-align: center; font-weight: bold; min-height: 60px; display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--line); margin-bottom: 12px; word-break: break-all; padding: 12px; border-radius: calc(var(--radius) * 0.5); }
+
+.habit-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
+.habit-cell { aspect-ratio: 1; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; cursor: pointer; user-select: none; }
+.habit-cell.done { background: #22c55e; color: #fff; border-color: #22c55e; }
+
+.totp-display { font-size: 2.4rem; font-family: monospace; text-align: center; padding: 16px; background: var(--bg); border: 1px solid var(--line); font-weight: bold; margin-bottom: 8px; border-radius: calc(var(--radius) * 0.5); cursor: pointer; position: relative; }
+.totp-display:hover::after { content: '点击复制'; position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-family: var(--font-family); border-radius: calc(var(--radius) * 0.5); }
+.totp-timer { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+.totp-timer-bar { height: 100%; background: #22c55e; width: 100%; transform-origin: left; transition: transform 1s linear; }
+.totp-label { font-size: 0.75rem; color: var(--muted); text-align: center; margin-bottom: 8px; }
+
+.html-preview-tool textarea { height: 120px; font-family: monospace; }
+.html-preview-tool iframe { width: 100%; height: 200px; border: 1px solid var(--line); background: #fff; border-radius: calc(var(--radius) * 0.5); }
+.console-log { height: 100px; overflow-y: auto; padding: 8px; background: #1a1a1a; color: #e5e5e5; font-family: monospace; font-size: 0.7rem; border: 1px solid var(--line); border-radius: calc(var(--radius) * 0.5); margin-top: 8px; }
+.console-log .log-error { color: #ef4444; }
+.console-log .log-warn { color: #eab308; }
+
+#toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 4px; font-size: 0.8rem; opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) var(--border-style) var(--line); font-size: .72rem; letter-spacing: .12em; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.sys-status { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.status-dot-sys { display: inline-block; width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.sys-sig { font-family: monospace; letter-spacing: 0; }
+
+.shortcut-popup { position: fixed; bottom: 24px; right: 24px; z-index: 10000; background: var(--card-bg); color: var(--ink); border: var(--border-width) var(--border-style) var(--line); border-radius: var(--radius); padding: 16px; font-size: 0.8rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+.shortcut-popup.active { display: block; opacity: 1; transform: translateY(0); }
+.shortcut-popup h4 { margin-bottom: 8px; font-size: 0.9rem; }
+.shortcut-row { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 4px; }
+.shortcut-row kbd { background: var(--bg); border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; font-family: monospace; }
+
+@media (max-width: 560px) {
+  body { padding: 40px 16px; }
+  .grid-view { gap: 10px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .list-view .work { flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; }
+  .list-view .body { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .list-view .body h3 { width: auto; }
+  .list-view .meta { width: auto; justify-content: flex-start; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .filters { width: 100%; justify-content: center; }
+  .tools-group { width: 100%; justify-content: space-between; }
+  .search-box { flex: 1; }
+  #three-canvas { opacity: 0.3; }
+  footer { flex-direction: column; align-items: center; text-align: center; }
+  .shortcut-popup { bottom: 10px; left: 10px; right: 10px; }
+}
+</style>
 </head>
 <body>
-<div class="crt-container">
-    <div class="crt-screen">
-        <div class="crt-content">
-            <!-- CRT 效果层 -->
-            <div class="crt-scanlines"></div>
-            <div class="crt-glow"></div>
-            <div class="crt-grain"></div>
-            <div class="crt-chroma"></div>
-            <div class="crt-curve"></div>
-            <div class="crt-flicker"></div>
 
-            <div class="toggle-container">
-                <button class="toggle-btn" id="autoToggleBtn">🔄 AUTO</button>
-                <button class="toggle-btn" id="pcToggleBtn">💻 TERMINAL</button>
-                <button class="toggle-btn" id="mobileToggleBtn">📱 CRT-PHONE</button>
-            </div>
+<div id="offline-banner">当前处于离线模式 · 部分联网工具已禁用</div>
 
-            <!-- PC 布局 -->
-            <div id="pcContainer" class="pc-layout">
-                <div class="terminal-window">
-                    <div class="title-bar">
-                        <span>CRT_TERMINAL v2.0 - [LINUX MODE]</span>
-                        <div class="title-bar-buttons">
-                            <div class="title-btn">—</div>
-                            <div class="title-btn">□</div>
-                            <div class="title-btn">✕</div>
-                        </div>
-                    </div>
-                    <div class="menu-bar">
-                        <div class="menu-item">FILE</div>
-                        <div class="menu-item">EDIT</div>
-                        <div class="menu-item">VIEW</div>
-                        <div class="menu-item">TERMINAL</div>
-                        <div class="menu-item">HELP</div>
-                    </div>
-                    <div class="window-content">
-                        <div class="linux-terminal">
-                            <div class="terminal-output" id="terminalOutput">
-                                <div class="terminal-line">[CRT] Linux pixel-os 5.10.0-crt #1 SMP PREEMPT</div>
-                                <div class="terminal-line">[SYSTEM] CRT 终端模拟器 v2.0 已启动</div>
-                                <div class="terminal-line">[SCAN] 扫描线频率: 60Hz | 荧光效果: 启用</div>
-                                <div class="terminal-line">[READY] 输入 'help' 查看命令列表</div>
-                                <div class="terminal-line">---</div>
-                            </div>
-                            <div class="terminal-input-line">
-                                <span class="terminal-prompt">crt@pixel:~$</span>
-                                <input type="text" class="terminal-input" id="terminalInput" autocomplete="off">
-                                <span class="cursor-block"></span>
-                            </div>
-                        </div>
-                        <div class="link-grid-pc" id="pcLinks"></div>
-                        <div style="font-size:9px; margin-top:12px; border-top:1px solid #00ff00; padding-top:8px; color:#00ff00; opacity:0.7;">
-                            ⚡ CRT MODE | help | ls | echo | date | clear | neofetch | whoami | pwd | uname
-                        </div>
-                    </div>
-                    <div class="title-bar" style="border-top:1px solid #00ff00; border-bottom:none;">
-                        <span>READY</span>
-                        <span id="win95Time">00:00:00</span>
-                    </div>
-                </div>
-            </div>
+<!-- 圈层背景装饰层 -->
+<div id="bg-decorations">
+  <div class="deco deco-vs"></div>
+  <div class="deco deco-lxh"></div>
+  <div class="deco deco-zhongv"></div>
+</div>
 
-            <!-- 手机布局 -->
-            <div id="mobileContainer" class="mobile-layout hidden">
-                <div class="crt-phone">
-                    <div class="phone-screen">
-                        <div class="signal-battery">
-                            <span>📡 CRT SIGNAL</span>
-                            <span>🔋 100%</span>
-                        </div>
-                        <div class="phone-title">
-                            █ CRT TERMINAL █
-                        </div>
-                        <div class="mobile-terminal" id="mobileTerminalOutput">
-                            <div>> crt@pixel:~$</div>
-                            <div>> CRT MODE ACTIVE</div>
-                            <div>> scanlines: 60Hz</div>
-                        </div>
-                        <div class="dpad-menu" id="mobileLinks"></div>
-                        <div class="phone-keys" id="phoneKeys"></div>
-                        <div class="nav-dpad" id="navDpad"></div>
-                        <div class="clock-ticker" id="mobileClock">00:00:00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<canvas id="three-canvas"></canvas>
+
+<!-- 启动画面（重构） -->
+<div id="boot" aria-hidden="true">
+  <div class="boot-terminal">
+    <div class="boot-log" id="boot-log"></div>
+    <div class="boot-center">
+      <div class="boot-progress-wrap">
+        <div class="boot-progress-bar" id="boot-bar"></div>
+      </div>
+      <div class="boot-title">VoidWaveOS</div>
+      <div class="boot-version" id="sys-ver">4.0.10 - 000010 - NET.ver</div>
     </div>
+  </div>
+</div>
+
+<div id="danmaku-overlay" class="danmaku-overlay">
+  <button class="danmaku-close" onclick="document.getElementById('danmaku-overlay').classList.remove('active')">×</button>
+  <div id="danmaku-text-el" class="danmaku-text">HELLO</div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="wrap">
+  <header>
+    <h1>Starfield Technology</h1>
+    <p class="tagline">ProjectStarfield — 将孤立的世界观连接，创造交融与创造性的叙事网络。在这里，你可以看到不同世界观之间的边界变得模糊，彼此渗透、交织，孕育出无法在单一宇宙中存在的新事物。</p>
+    <nav>
+      <a href="https://github.com/xigiy" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:xigiyzxx@163.com">联系</a>
+      <button type="button" id="about-btn" class="nav-btn">关于</button>
+    </nav>
+  </header>
+
+  <section class="recent-section" id="recent-section" style="display:none;">
+    <div class="section-title">最近使用 / Recent</div>
+    <div class="recent-grid" id="recent-grid"></div>
+  </section>
+
+  <p class="section-title">全部作品 / Products</p>
+
+  <div class="toolbar">
+    <div id="filters" class="filters"></div>
+    <div class="tools-group">
+      <input type="text" id="search" class="search-box" placeholder="搜索工具... ( / )" autocomplete="off">
+      <button type="button" id="view-btn" class="icon-btn" title="切换视图">网格</button>
+      <button type="button" id="sort-btn" class="icon-btn" title="切换排序"><span id="sort-text">↓</span></button>
+      <button type="button" id="help-btn" class="icon-btn" title="快捷键">?</button>
+    </div>
+  </div>
+  
+  <div id="search-history" class="search-history"></div>
+  <div id="tool-count" class="tool-count">共 26 个工具</div>
+
+  <main id="grid" class="grid-view"></main>
+
+  <footer>
+    <div class="sys-status">
+      <span><span class="status-dot-sys"></span> <span id="sys-state">VoidWaveOS.ONLINE</span></span>
+      <span id="clock">00:00:00</span>
+      <span id="sys-sig" class="sys-sig">// VOIDWAVE_READY</span>
+    </div>
+    <span style="cursor:pointer; text-decoration:underline;" id="disclaimer-btn">免责声明</span>
+    <span>© 2026 Starfield Technology</span>
+  </footer>
+</div>
+
+<div id="modal" class="modal-overlay">
+  <div class="modal-box">
+    <button id="modal-close" class="modal-close">×</button>
+    <h2 id="m-title">Title <span id="m-badge" class="badge"></span></h2>
+    <div id="m-tagline" class="modal-tagline">Tagline</div>
+    
+    <div id="m-desc" class="modal-desc">Long description...</div>
+    
+    <div id="m-inline-tool" class="inline-tool-area" style="display:none;"></div>
+
+    <div class="modal-actions" id="m-actions">
+      <a href="#" id="m-link" class="btn" target="_blank">前往使用 →</a>
+      <button id="m-copy-link" class="btn btn-outline">复制链接</button>
+      <button id="m-copy-name" class="btn btn-outline">复制名称</button>
+    </div>
+  </div>
+</div>
+
+<div id="about-modal" class="modal-overlay">
+  <div class="modal-box about-card">
+    <button id="about-close" class="modal-close">×</button>
+    <h2>About / 关于</h2>
+    <div class="about-line">
+      <strong>ProjectStarfield / VoidWave</strong><br>
+      ProjectStarfield 是一个致力于“世界观交融”的企划。它的核心目标是将原本孤立的世界观连接起来，创造一个充满创造性与可能性的叙事网络。在这里，A 世界观的角色与概念可以出现在 B 世界观中，而 B 世界观也可能拥有其他宇宙中都不曾存在的事物。VoidWave 及相关产品，均归属于这一企划。
+    </div>
+    <div class="about-line" style="margin-top: 16px;">
+      <strong>v/s (vivid/stasis)</strong><br>
+      节奏与悬疑交织的叙事宇宙，涉及组织、失踪与第四维度的探索。
+    </div>
+    <div class="about-line">
+      <strong>LXH (罗小黑)</strong><br>
+      治愈、妖怪与森林的日常。老君山、星夜湖与蓝溪镇，是灵质空间中永恒的记忆。
+    </div>
+    <div class="about-line">
+      <strong>中V (VOCALOID)</strong><br>
+      虚拟与创作交织的声音。中文虚拟歌手文化，由 P 主与听众共同构筑的创作生态。
+    </div>
+  </div>
+</div>
+
+<div id="disclaimer-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('disclaimer-modal').classList.remove('active')">×</button>
+    <h2>免责声明</h2>
+    <div class="modal-desc" style="border-left:none; padding-left:0; font-size:0.85rem; line-height:1.8;">
+      <p style="margin-bottom:10px;">1. 本站提供的所有外链工具与内置小工具，其代码均为作者个人编写或代发，仅供交流学习与个人使用。</p>
+      <p style="margin-bottom:10px;">2. 本站部分内容为同人衍生作品（如涉及 v/s、LXH、中V 等圈子），相关版权归属原作者所有。本站不承担任何因使用、分享、修改这些内容而产生的直接或间接责任。</p>
+      <p style="margin-bottom:10px;">3. 带有“代发”或“外链”标记的工具，由第三方提供。作者不对其代码安全性、内容准确性及后续维护负任何责任。请在使用时自行甄别。</p>
+      <p>4. 对于占位/未完成工具，请勿在生产环境中进行测试或依赖。</p>
+    </div>
+  </div>
+</div>
+
+<div id="shortcut-popup" class="shortcut-popup">
+  <h4>快捷键 / Shortcuts</h4>
+  <div class="shortcut-row"><span>搜索</span> <kbd>/</kbd></div>
+  <div class="shortcut-row"><span>卡片导航</span> <kbd>← ↑ → ↓</kbd></div>
+  <div class="shortcut-row"><span>呼出详情</span> <kbd>Enter</kbd></div>
+  <div class="shortcut-row"><span>清空 / 关闭</span> <kbd>Esc</kbd></div>
+  <div class="shortcut-row"><span>开关此面板</span> <kbd>?</kbd></div>
 </div>
 
 <script>
-    // ==================== Linux 终端模拟器 ====================
-    class CRTTerminal {
-        constructor(outputElement, inputElement = null) {
-            this.output = outputElement;
-            this.input = inputElement;
-            this.history = [];
-            this.historyIndex = -1;
-            
-            if (this.input) {
-                this.input.addEventListener('keydown', (e) => this.handleKey(e));
-            }
-        }
-        
-        getPrompt() {
-            return 'crt@pixel:~$ ';
-        }
-        
-        printLine(text) {
-            const line = document.createElement('div');
-            line.className = 'terminal-line';
-            line.textContent = text;
-            this.output.appendChild(line);
-            this.output.scrollTop = this.output.scrollHeight;
-        }
-        
-        printCommand(cmd) {
-            const line = document.createElement('div');
-            line.className = 'terminal-line';
-            line.innerHTML = `<span style="color:#00ff00; font-weight:bold;">${this.getPrompt()}</span>${cmd}`;
-            this.output.appendChild(line);
-            this.output.scrollTop = this.output.scrollHeight;
-        }
-        
-        execute(command) {
-            const cmd = command.trim().toLowerCase();
-            if (!cmd) return;
-            
-            this.printCommand(command);
-            
-            const parts = cmd.split(/\s+/);
-            const mainCmd = parts[0];
-            const args = parts.slice(1);
-            
-            switch(mainCmd) {
-                case 'help':
-                    this.printLine('[可用命令]');
-                    this.printLine('  help      - 显示此帮助');
-                    this.printLine('  ls        - 列出目录');
-                    this.printLine('  echo      - 输出文本');
-                    this.printLine('  date      - 显示日期时间');
-                    this.printLine('  clear     - 清屏');
-                    this.printLine('  neofetch  - 系统信息');
-                    this.printLine('  whoami    - 当前用户');
-                    this.printLine('  pwd       - 当前路径');
-                    this.printLine('  uname     - 内核信息');
-                    this.printLine('  crtinfo   - CRT 状态');
-                    break;
-                case 'ls':
-                    this.printLine('boot/  dev/  etc/  home/  lib/  proc/  root/  tmp/  usr/  var/');
-                    this.printLine('crt_config.cfg  terminal.log  pixel_os.img  scanlines.dat');
-                    break;
-                case 'echo':
-                    this.printLine(args.join(' ') || '');
-                    break;
-                case 'date':
-                    this.printLine(new Date().toString());
-                    break;
-                case 'clear':
-                    this.output.innerHTML = '';
-                    break;
-                case 'neofetch':
-                    this.printLine('      .-.-.   crt@pixel-os');
-                    this.printLine('     (^._.^)  -----------------');
-                    this.printLine('      /\\___/\\  OS: CRT Linux v2.0');
-                    this.printLine('     /       \\ Kernel: 5.10.0-crt');
-                    this.printLine('    / /     \\ \\ Shell: crt-term 1.0');
-                    this.printLine('   / /       \\ \\ CRT: 60Hz | Scanlines ON');
-                    this.printLine('  /_/         \\_\\ RAM: 64MB/128MB');
-                    break;
-                case 'whoami':
-                    this.printLine('crt_user');
-                    break;
-                case 'pwd':
-                    this.printLine('/home/crt_user/');
-                    break;
-                case 'uname':
-                    if (args[0] === '-a') {
-                        this.printLine('Linux crt-pixel 5.10.0-crt #1 SMP PREEMPT x86_64 CRT/GNU Linux');
-                    } else {
-                        this.printLine('CRT Linux');
-                    }
-                    break;
-                case 'crtinfo':
-                    this.printLine('[CRT 终端信息]');
-                    this.printLine('  扫描线: 启用 (60Hz)');
-                    this.printLine('  荧光效果: 启用');
-                    this.printLine('  色彩溢出: 模拟中');
-                    this.printLine('  屏幕曲率: 球面模拟');
-                    this.printLine('  闪烁模拟: 15Hz 脉冲');
-                    break;
-                default:
-                    this.printLine(`bash: ${cmd}: 命令未找到 (输入 'help' 查看可用命令)`);
-            }
-            
-            if (command.trim()) {
-                this.history.push(command);
-                this.historyIndex = this.history.length;
-            }
-        }
-        
-        handleKey(e) {
-            if (e.key === 'Enter') {
-                const cmd = this.input.value;
-                this.execute(cmd);
-                this.input.value = '';
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (this.historyIndex > 0) {
-                    this.historyIndex--;
-                    this.input.value = this.history[this.historyIndex];
-                }
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (this.historyIndex < this.history.length - 1) {
-                    this.historyIndex++;
-                    this.input.value = this.history[this.historyIndex];
-                } else {
-                    this.historyIndex = this.history.length;
-                    this.input.value = '';
-                }
-            }
-        }
-        
-        mobileExecute(cmd) {
-            const command = cmd.trim().toLowerCase();
-            if (!command) return;
-            
-            const outputDiv = this.output;
-            outputDiv.innerHTML = outputDiv.innerHTML + `<div>> crt@pixel:~$ ${cmd}</div>`;
-            
-            let response = '';
-            switch(command) {
-                case 'help': response = 'help, ls, echo, date, clear, neofetch, crtinfo'; break;
-                case 'ls': response = 'boot/ home/ etc/ usr/ crt_config.cfg'; break;
-                case 'date': response = new Date().toString(); break;
-                case 'clear': outputDiv.innerHTML = '<div>> CRT 终端已清空</div>'; response = ''; break;
-                case 'neofetch': response = 'CRT Linux v2.0 | Kernel 5.10.0-crt | 60Hz Scanlines'; break;
-                case 'crtinfo': response = '扫描线: 60Hz | 荧光: ON | 曲率: 球面'; break;
-                default: response = `命令未找到: ${command}`;
-            }
-            if (response) outputDiv.innerHTML = outputDiv.innerHTML + '<div>> ' + response + '</div>';
-            outputDiv.scrollTop = outputDiv.scrollHeight;
-        }
+document.addEventListener('DOMContentLoaded', () => {
+  const isMobile = window.innerWidth < 768;
+  const pixelCap = isMobile ? 2 : 2;
+
+  function showToast(msg, type='info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    if (type === 'error') toast.style.color = '#ef4444';
+    else if (type === 'success') toast.style.color = '#22c55e';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => showToast('已复制', 'success')).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
     }
-    
-    // ==================== 链接配置 ====================
-    const LINKS = {
-        pc: [
-            { icon: '📂', name: 'GitHub 主页', url: 'https://github.com/你的用户名', desc: 'github.com/你的用户名' },
-            { icon: '🕹️', name: '像素实验室', url: 'https://github.com/你的用户名/像素项目', desc: 'pixel-lab' },
-            { icon: '⚙️', name: '系统内核', url: 'https://github.com/你的用户名/vivid-stasis', desc: 'vivid-stasis' },
-            { icon: '📜', name: '终端日志', url: 'https://你的博客地址', desc: 'blog' },
-            { icon: '🔶', name: 'duskaibox', url: 'https://xigiy.github.io/duskaibox', desc: 'ai' },
-            { icon: '📚', name: '学习笔记', url: 'https://你的笔记地址', desc: 'notes' }
-        ],
-        mobile: [
-            { icon: '🗂️', name: 'GitHub', url: 'https://github.com/你的用户名' },
-            { icon: '🎮', name: '像素实验室', url: 'https://github.com/你的用户名/像素项目' },
-            { icon: '💾', name: '系统内核', url: '' },
-            { icon: '📟', name: 'CRT终端', url: '' }
-        ]
-    };
-    
-    function renderLinks() {
-        const pcContainer = document.getElementById('pcLinks');
-        const mobileContainer = document.getElementById('mobileLinks');
-        
-        if (pcContainer) {
-            pcContainer.innerHTML = LINKS.pc.map(link => `
-                <a href="${link.url}" class="terminal-card" target="_blank" rel="noopener noreferrer">
-                    <span style="font-size:24px;">${link.icon}</span>
-                    <div>
-                        <strong>${link.name}</strong><br>
-                        <span style="font-size:9px; opacity:0.8;">${link.desc || link.url.replace('https://', '')}</span>
-                    </div>
-                </a>
-            `).join('');
+  }
+  function fallbackCopy(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    try { document.execCommand('copy'); showToast('已复制', 'success'); } catch (err) { showToast('复制失败', 'error'); }
+    textArea.remove();
+  }
+
+  let isOffline = !navigator.onLine;
+  function updateOfflineState() {
+    isOffline = !navigator.onLine;
+    document.body.classList.toggle('is-offline', isOffline);
+    const sysState = document.getElementById('sys-state');
+    if (sysState) sysState.textContent = isOffline ? 'VoidWaveOS.OFFLINE' : 'VoidWaveOS.ONLINE';
+  }
+  window.addEventListener('online', updateOfflineState);
+  window.addEventListener('offline', updateOfflineState);
+  updateOfflineState();
+
+  const bootLog = document.getElementById('boot-log');
+  const bootBar = document.getElementById('boot-bar');
+  const bootPercent = document.getElementById('boot-percent');
+  const bootStatus = document.getElementById('boot-status');
+  const bootEl = document.getElementById('boot');
+
+  function printLog(msg, type = 'info') {
+    const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const div = document.createElement('div');
+    div.className = `log-line log-${type}`;
+    div.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+    bootLog.appendChild(div);
+    bootLog.scrollTop = bootLog.scrollHeight;
+  }
+
+  printLog("VoidWaveOS boot sequence initiated.", "info");
+
+  const LIBRARIES = [
+    { key: 'gsap', label: 'GSAP', url: 'https://cdn.staticfile.net/gsap/3.12.5/gsap.min.js' },
+    { key: 'Howl', label: 'Howler', url: 'https://cdn.staticfile.net/howler/2.2.4/howler.min.js' },
+    { key: 'Lenis', label: 'Lenis', url: 'https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js' },
+    { key: 'THREE', label: 'Three.js', url: 'https://cdn.staticfile.net/three.js/0.160.0/three.min.js' },
+    { key: 'jsQR', label: 'jsQR', url: 'https://cdn.staticfile.net/jsqr/1.4.0/jsQR.min.js' },
+    { key: 'QRCode', label: 'QRCode', url: 'https://cdn.staticfile.net/qrcodejs/1.0.0/qrcode.min.js' },
+    { key: 'JsBarcode', label: 'JsBarcode', url: 'https://cdn.staticfile.net/jsbarcode/3.11.3/JsBarcode.all.min.js' }
+  ];
+
+  let loadedLibs = 0;
+  const totalLibs = LIBRARIES.length;
+
+  function updateProgress() {
+    bootBar.style.transform = `scaleX(${loadedLibs / totalLibs})`;
+  }
+
+  function loadLibWithCache(url) {
+    return new Promise((resolve, reject) => {
+      const cacheKey = 'os_lib_' + btoa(url).replace(/[^a-zA-Z0-9]/g, '');
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        try {
+          const script = document.createElement('script');
+          script.text = cached;
+          document.head.appendChild(script);
+          resolve(true);
+          return;
+        } catch (e) {
+          console.warn("Cache parse failed, falling back to network");
         }
-        
-        if (mobileContainer) {
-            mobileContainer.innerHTML = LINKS.mobile.map(link => `
-                <a href="${link.url}" class="funclink" target="_blank" rel="noopener noreferrer">
-                    <span>${link.icon}</span> ${link.name}
-                </a>
-            `).join('');
-        }
-    }
-    
-    function renderPhoneKeys() {
-        const keysContainer = document.getElementById('phoneKeys');
-        if (!keysContainer) return;
-        const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
-        keysContainer.innerHTML = keys.map(key => `<div class="phone-key" data-key="${key}">${key}</div>`).join('');
-    }
-    
-    function renderNavDpad() {
-        const dpadContainer = document.getElementById('navDpad');
-        if (!dpadContainer) return;
-        dpadContainer.innerHTML = `
-            <div class="dpad-btn">▲</div><div class="dpad-btn">●</div><div class="dpad-btn">■</div>
-            <div class="dpad-btn">◀</div><div class="dpad-btn">OK</div><div class="dpad-btn">▶</div>
-            <div class="dpad-btn">▼</div><div class="dpad-btn">MENU</div><div class="dpad-btn">BACK</div>
-        `;
-    }
-    
-    // ==================== 模式切换 ====================
-    let currentMode = 'auto';
-    
-    function detectMobile() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    }
-    
-    const pcDiv = document.getElementById('pcContainer');
-    const mobileDiv = document.getElementById('mobileContainer');
-    const autoBtn = document.getElementById('autoToggleBtn');
-    const pcBtn = document.getElementById('pcToggleBtn');
-    const mobileBtn = document.getElementById('mobileToggleBtn');
-    
-    let pcTerminal, mobileTerminal;
-    
-    function updateLayout() {
-        let showPC = false;
-        if (currentMode === 'auto') showPC = !detectMobile();
-        else if (currentMode === 'pc') showPC = true;
-        else showPC = false;
-        
-        if (showPC) {
-            pcDiv.classList.remove('hidden');
-            mobileDiv.classList.add('hidden');
-            autoBtn.classList.remove('active');
-            pcBtn.classList.add('active');
-            mobileBtn.classList.remove('active');
-            if (!pcTerminal) {
-                const output = document.getElementById('terminalOutput');
-                const input = document.getElementById('terminalInput');
-                pcTerminal = new CRTTerminal(output, input);
-            }
+      }
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onload = function() {
+        if (this.status >= 200 && this.status < 300) {
+          const code = this.responseText;
+          try {
+            localStorage.setItem(cacheKey, code);
+          } catch (e) { console.warn("Cache limit exceeded"); }
+          
+          const script = document.createElement('script');
+          script.text = code;
+          document.head.appendChild(script);
+          resolve(true);
         } else {
-            pcDiv.classList.add('hidden');
-            mobileDiv.classList.remove('hidden');
-            autoBtn.classList.remove('active');
-            pcBtn.classList.remove('active');
-            mobileBtn.classList.add('active');
-            if (!mobileTerminal) {
-                const mobileOutput = document.getElementById('mobileTerminalOutput');
-                mobileTerminal = new CRTTerminal(mobileOutput, null);
-                mobileTerminal.mobileExecute = function(cmd) {
-                    const command = cmd.trim().toLowerCase();
-                    if (!command) return;
-                    const outputDiv = this.output;
-                    outputDiv.innerHTML = outputDiv.innerHTML + `<div>> crt@pixel:~$ ${cmd}</div>`;
-                    let response = '';
-                    switch(command) {
-                        case 'help': response = 'help, ls, echo, date, clear, neofetch, crtinfo'; break;
-                        case 'ls': response = 'boot/ home/ etc/ usr/'; break;
-                        case 'date': response = new Date().toString(); break;
-                        case 'clear': outputDiv.innerHTML = '<div>> CRT 终端就绪</div>'; response = ''; break;
-                        case 'neofetch': response = 'CRT Linux v2.0 | 60Hz Scanlines'; break;
-                        case 'crtinfo': response = '扫描线:60Hz 荧光:ON 曲率:球面'; break;
-                        default: response = `命令未找到: ${command}`;
-                    }
-                    if (response) outputDiv.innerHTML = outputDiv.innerHTML + '<div>> ' + response + '</div>';
-                    outputDiv.scrollTop = outputDiv.scrollHeight;
-                };
-            }
+          const script = document.createElement('script');
+          script.src = url;
+          script.onload = () => resolve(true);
+          script.onerror = () => reject(new Error('Script load failed'));
+          document.head.appendChild(script);
         }
+      };
+      xhr.onerror = function() {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => resolve(true);
+        script.onerror = () => reject(new Error('Script load failed'));
+        document.head.appendChild(script);
+      };
+      xhr.send();
+    });
+  }
+
+  async function loadAllLibs() {
+    for (const lib of LIBRARIES) {
+      try {
+        if (!window[lib.key]) {
+          await loadLibWithCache(lib.url);
+        }
+        loadedLibs++;
+        printLog(`Loaded ${lib.label}`, "ok");
+        updateProgress();
+      } catch (e) {
+        printLog(`Failed to load ${lib.label}`, "err");
+        loadedLibs++;
+        updateProgress();
+      }
     }
-    
-    function setMode(mode) {
-        currentMode = mode;
-        localStorage.setItem('displayMode', mode);
-        updateLayout();
+    finishBoot();
+  }
+
+  loadAllLibs();
+
+  function finishBoot() {
+    bootBar.style.transform = `scaleX(1)`;
+    setTimeout(() => {
+      bootEl.classList.add('done');
+      setTimeout(() => {
+        bootEl.remove();
+        document.body.style.overflow = '';
+        initMainSite();
+      }, 600);
+    }, 500);
+  }
+
+  document.body.style.overflow = 'hidden';
+
+  let threeApp = null;
+  function initThreeScene() {
+    if (typeof THREE === 'undefined') return;
+    const canvas = document.getElementById('three-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelCap));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
+    camera.position.set(0, 35, 60);
+    camera.lookAt(0, 0, 0);
+
+    const SEG = isMobile ? 40 : 80;
+    const SEPARATION = 4;
+    const AMOUNT = SEG * SEG;
+    const positions = new Float32Array(AMOUNT * 3);
+    const initialPositions = new Float32Array(AMOUNT * 3);
+
+    let i = 0;
+    for (let ix = 0; ix < SEG; ix++) {
+      for (let iy = 0; iy < SEG; iy++) {
+        const x = ix * SEPARATION - (SEG * SEPARATION) / 2;
+        const z = iy * SEPARATION - (SEG * SEPARATION) / 2;
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = z;
+        initialPositions[i * 3] = x;
+        initialPositions[i * 3 + 1] = 0;
+        initialPositions[i * 3 + 2] = z;
+        i++;
+      }
     }
-    
-    autoBtn.addEventListener('click', () => setMode('auto'));
-    pcBtn.addEventListener('click', () => setMode('pc'));
-    mobileBtn.addEventListener('click', () => setMode('mobile'));
-    
-    function updateClocks() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const timeStr = `${hours}:${minutes}:${seconds}`;
-        const win95Time = document.getElementById('win95Time');
-        if (win95Time) win95Time.innerText = timeStr;
-        const mobileClock = document.getElementById('mobileClock');
-        if (mobileClock) mobileClock.innerText = timeStr;
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: isMobile ? 0.4 : 0.7,
+      color: 0x3b82f6, transparent: true, opacity: 0.8, sizeAttenuation: true
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    const posAttr = geometry.attributes.position;
+    const clock = new THREE.Clock();
+
+    let currentSpeed = 1.0;
+    let currentColor = new THREE.Color(0x3b82f6);
+    let targetColor = new THREE.Color(0x3b82f6);
+    let currentAmplitude = 3.0;
+
+    function setTheme(theme) {
+      if (theme === 'v/s') {
+        targetColor.setHex(0xffffff); currentSpeed = 3.0; currentAmplitude = 1.0;
+      } else if (theme === 'LXH') {
+        targetColor.setHex(0x9EB26A); currentSpeed = 0.3; currentAmplitude = 2.0;
+      } else if (theme === '中V') {
+        targetColor.setHex(0x38bdf8); currentSpeed = 1.5; currentAmplitude = 4.5;
+      } else {
+        targetColor.setHex(0x3b82f6); currentSpeed = 0.8; currentAmplitude = 3.0;
+      }
     }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+      const p = posAttr.array;
+      currentColor.lerp(targetColor, 0.05);
+      material.color.copy(currentColor);
+
+      for (let i = 0; i < AMOUNT; i++) {
+        const initX = initialPositions[i * 3];
+        const initZ = initialPositions[i * 3 + 2];
+        let y = 0;
+        if (currentSpeed > 2.0) {
+          y = Math.sin(initZ * 0.1 + t * currentSpeed) * currentAmplitude;
+        } else if (currentSpeed < 0.5) {
+          y = Math.sin(initX * 0.05 + t * currentSpeed) * currentAmplitude + Math.cos(initZ * 0.05 + t * currentSpeed) * currentAmplitude;
+        } else {
+          y = Math.sin(initX * 0.06 + t * currentSpeed) * currentAmplitude + Math.cos(initZ * 0.06 + t * currentSpeed * 0.8) * currentAmplitude;
+        }
+        p[i * 3 + 1] = y;
+      }
+      posAttr.needsUpdate = true;
+      points.rotation.y += 0.001;
+      renderer.render(scene, camera);
+    }
+
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelCap));
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      camera.position.z = w / h < 0.8 ? 85 : 60;
+    }
+
+    window.addEventListener('resize', resize);
+    resize(); animate();
+    return { setTheme };
+  }
+
+  function initMainSite() {
+    threeApp = initThreeScene();
+
+    const clickStore = JSON.parse(localStorage.getItem('stech_clicks') || "{}");
+    function recordClick(name) {
+      clickStore[name] = (clickStore[name] || 0) + 1;
+      localStorage.setItem('stech_clicks', JSON.stringify(clickStore));
+    }
+    function getHotTools() {
+      return Object.entries(clickStore).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([name]) => name);
+    }
+
+    const WORKS = [
+      { name: "SHA-256 哈希", tagline: "本地生成 SHA-256 哈希值。", longDesc: "使用 Web Crypto API 在浏览器本地计算。", url: "#", mark: "SHA", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "sha256", needsNet: false },
+      { name: "正则测试器", tagline: "实时测试正则表达式并高亮匹配结果。", longDesc: "输入正则表达式和测试文本，即时查看匹配结果。", url: "#", mark: "REGEX", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "regex", needsNet: false },
+      { name: "JSON 格式化", tagline: "美化、压缩并校验 JSON 格式。", longDesc: "纯浏览器本地运行。支持格式化美化与单行压缩。", url: "#", mark: "JSON", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "json", needsNet: false },
+      { name: "HTML 预览", tagline: "粘贴 HTML 代码实时预览，支持全屏。", longDesc: "渲染 HTML 并捕获 console 输出，支持全屏预览。", url: "#", mark: "HTML", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "html-preview", needsNet: false },
+      { name: "UUID 生成器", tagline: "本地密码学安全 UUID 与短 ID 批量生成。", longDesc: "基于 Web Crypto API 生成不可预测的唯一标识。", url: "#", mark: "UUID", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "uuid", needsNet: false },
+      { name: "文本工具箱", tagline: "Base64、URL编码、大小写、字数统计等集合。", longDesc: "整合了常见的文本处理功能，一键完成复杂转换。", url: "#", mark: "TXT", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "text-tools", needsNet: false },
+      { name: "进制转换器", tagline: "支持 2 ~ 36 进制任意互转。", longDesc: "输入数字并选择进制，实时输出其他进制结果。", url: "#", mark: "BASE", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "base-conv", needsNet: false },
+      { name: "时间戳转换", tagline: "Unix 时间戳与日期互转。", longDesc: "无需打开新页面即可快速转换。", url: "#", mark: "TS", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "timestamp", needsNet: false },
+      
+      { name: "二维码生成器", tagline: "生成标准二维码、太阳码风格与条形码。", longDesc: "支持 QR Code 与条形码。依赖 CDN 库。", url: "#", mark: "QR", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "qrcode", needsNet: true },
+      { name: "图片压缩", tagline: "纯本地 Canvas 图片压缩。", longDesc: "调整质量后立即压缩下载，不上传。", url: "#", mark: "IMG", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "image-compress", needsNet: false },
+      { name: "九宫格切图", tagline: "一键将图片切为 9 块，适配社交媒体。", longDesc: "纯前端 Canvas 切割，生成 9 张下载图片。", url: "#", mark: "9X", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "grid9", needsNet: false },
+      { name: "图片拼图器", tagline: "将两张图片横向或纵向拼接。", longDesc: "纯前端处理两张图片，可自由选择拼接方向并下载。", url: "#", mark: "STITCH", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "image-stitch", needsNet: false },
+      { name: "图片隐私清洗", tagline: "一键剥离图片中的 GPS 与设备信息。", longDesc: "用 Canvas 重绘剥离 EXIF 元数据。", url: "#", mark: "EXIF", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "exif", needsNet: false },
+      { name: "手持弹幕", tagline: "全屏滚动显示自定义文字。", longDesc: "演唱会、接机、社交媒体装 X 必备。", url: "#", mark: "TXT", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "danmaku", needsNet: false },
+      
+      { name: "全屏时钟/倒计时", tagline: "极简大屏时钟，支持倒计时。", longDesc: "全屏黑底白字，考研、自习必备。", url: "#", mark: "TIME", badge: "内置", category: "通用工具", group: "时间与生活", platform: ["Web"], year: "2026", status: "inline", inlineType: "clock-timer", needsNet: false },
+      { name: "番茄时钟", tagline: "极简专注计时器。", longDesc: "25分钟工作，5分钟休息的番茄工作法。", url: "#", mark: "25", badge: "内置", category: "通用工具", group: "时间与生活", platform: ["Web"], year: "2026", status: "inline", inlineType: "pomodoro", needsNet: false },
+      { name: "待办清单", tagline: "本地存储的极简 Todo List。", longDesc: "纯前端 LocalStorage 保存待办事项。", url: "#", mark: "TODO", badge: "内置", category: "通用工具", group: "时间与生活", platform: ["Web"], year: "2026", status: "inline", inlineType: "todo", needsNet: false },
+      { name: "习惯打卡", tagline: "本地存储的习惯追踪格子。", longDesc: "每天点击打卡，绿色记录你的坚持。", url: "#", mark: "HABIT", badge: "内置", category: "通用工具", group: "时间与生活", platform: ["Web"], year: "2026", status: "inline", inlineType: "habit", needsNet: false },
+      { name: "随机抽奖机", tagline: "输入选项，随机抽取。", longDesc: "带滚动抽奖特效，支持多人/多选项。", url: "#", mark: "DICE", badge: "内置", category: "通用工具", group: "时间与生活", platform: ["Web"], year: "2026", status: "inline", inlineType: "random-picker", needsNet: false },
+      { name: "2FA 识别器", tagline: "输入 otpauth 链接或上传二维码。", longDesc: "纯前端 TOTP 生成器。", url: "#", mark: "2FA", badge: "内置", category: "通用工具", group: "时间与生活", platform: ["Web"], year: "2026", status: "inline", inlineType: "totp", needsNet: true },
+      
+      { name: "duskaibox", tagline: "模仿游戏内剧情风格的AIchatUI。", longDesc: "v/s 圈层专属，高度还原游戏内对话体验的 AI 聊天界面。", url: "https://xigiy.github.io/duskaibox", mark: "DUSK", badge: "外链", category: "v/s", platform: ["Web"], year: "2026", status: "external", needsNet: true },
+      { name: "v/s谱面模拟器", tagline: "模拟游戏内谱面展示与打击效果。", longDesc: "v/s 圈层专属测试工具，可在网页端预览谱面运行。", url: "https://xigiy.github.io/linkdislink", mark: "SPECT", badge: "Test", category: "v/s", platform: ["Web"], year: "2026", status: "external", needsNet: true },
+      
+      { name: "还有第三关?", tagline: "一些难度较高的剧情理解测试题。", longDesc: "LXH 圈层，原暂定名 test3。", url: "https://xigiy.github.io/app/lxh/test3/", mark: "TEST", badge: "外链", category: "LXH", platform: ["Web"], year: "2026", status: "external", needsNet: true },
+      { name: "妖生重开模拟器", tagline: "文字流放置游戏。", longDesc: "LXH 圈层。", url: "#", mark: "GAME", badge: "占位", category: "LXH", platform: ["Web"], year: "2026", status: "placeholder", needsNet: false },
+      { name: "救出冬冬", tagline: "根据剧情改编的小型 3D 游戏。", longDesc: "LXH 圈层。", url: "#", mark: "3D", badge: "占位", category: "LXH", platform: ["Web"], year: "2026", status: "placeholder", needsNet: false },
+      
+      { name: "洛天依AiUI", tagline: "内置人设的 AI 聊天 UI。", longDesc: "中V 圈层。代发，不对代码负任何责任。", url: "https://xigiy.github.io/brainthinking", mark: "AI", badge: "代发", category: "中V", platform: ["Web"], year: "2026", status: "external", needsNet: true }
+    ];
+
+    let currentCategory = '全部';
+    let currentQuery = '';
+    let currentSort = 'desc';
+    let currentView = 'grid';
+    let searchHistory = JSON.parse(localStorage.getItem('stech_search_history') || "[]");
+
+    const gridEl = document.getElementById("grid");
+    const filtersEl = document.getElementById("filters");
+    const searchEl = document.getElementById("search");
+    const sortBtn = document.getElementById("sort-btn");
+    const sortText = document.getElementById("sort-text");
+    const viewBtn = document.getElementById("view-btn");
+    const countEl = document.getElementById("tool-count");
+    const sysSig = document.getElementById("sys-sig");
+    const shortcutPopup = document.getElementById("shortcut-popup");
+    const recentSection = document.getElementById("recent-section");
+    const recentGrid = document.getElementById("recent-grid");
+    const searchHistoryEl = document.getElementById("search-history");
+
+    const signatures = {
+      '全部': '// VOIDWAVE_READY',
+      '通用工具': '// UTILS_READY',
+      'v/s': '//TVO_Client_Running',
+      'LXH': '//Guild_Safety_Guarding',
+      '中V': '// 中文VOCALOID_调教中'
+    };
+
+    function applyTheme(cat) {
+      if (cat === '全部' || cat === '通用工具') document.body.removeAttribute("data-theme");
+      else document.body.setAttribute("data-theme", cat);
+      
+      if (sysSig) sysSig.textContent = signatures[cat] || '// UNKNOWN';
+      
+      if (threeApp) threeApp.setTheme(cat);
+    }
+
+    function renderRecent() {
+      const hotNames = getHotTools();
+      if (hotNames.length === 0) { recentSection.style.display = 'none'; return; }
+      const hotWorks = WORKS.filter(w => hotNames.includes(w.name));
+      if (hotWorks.length === 0) { recentSection.style.display = 'none'; return; }
+      recentSection.style.display = 'block';
+      recentGrid.innerHTML = hotWorks.map(w => `
+        <a class="recent-card" href="javascript:void(0);" onclick="window.openToolByName('${w.name}')">
+          <h4>${w.name}</h4><span>常用</span>
+        </a>
+      `).join('');
+    }
+
+    function renderSearchHistory() {
+      if (searchHistory.length === 0) { searchHistoryEl.style.display = 'none'; return; }
+      searchHistoryEl.style.display = 'flex';
+      searchHistoryEl.innerHTML = searchHistory.map(q => `<span onclick="window.applySearchHistory('${q}')">${q}</span>`).join('');
+    }
+
+    window.applySearchHistory = function(q) {
+      searchEl.value = q;
+      currentQuery = q;
+      renderGridData();
+      addSearchHistory(q);
+    };
+
+    window.openToolByName = function(name) {
+      const tool = WORKS.find(w => w.name === name);
+      if (tool) openToolModal(tool);
+    };
+
+    function addSearchHistory(q) {
+      if (!q || q.trim() === '') return;
+      q = q.trim();
+      searchHistory = searchHistory.filter(item => item !== q);
+      searchHistory.unshift(q); searchHistory = searchHistory.slice(0, 5);
+      localStorage.setItem('stech_search_history', JSON.stringify(searchHistory));
+      renderSearchHistory();
+    }
+
+    function renderGridData() {
+      let list = WORKS.filter(w => {
+        const matchCat = currentCategory === '全部' || w.category === currentCategory;
+        const matchSearch = !currentQuery || w.name.toLowerCase().includes(currentQuery.toLowerCase()) || w.tagline.toLowerCase().includes(currentQuery.toLowerCase());
+        return matchCat && matchSearch;
+      });
+
+      list.sort((a, b) => {
+        const ya = parseInt(a.year || "0"), yb = parseInt(b.year || "0");
+        return currentSort === 'desc' ? yb - ya : ya - yb;
+      });
+
+      countEl.textContent = `共 ${list.length} 个工具`;
+      document.title = currentQuery ? `搜索: ${currentQuery} | VoidWaveOS` : `${list.length} 个工具 | VoidWaveOS`;
+
+      gridEl.innerHTML = '';
+      if (list.length === 0) {
+        gridEl.innerHTML = '<div class="empty-state">没有找到相关工具</div>';
+        return;
+      }
+
+      const useGrouping = (currentCategory === '全部' || currentCategory === '通用工具') && !currentQuery && currentView === 'grid';
+
+      if (useGrouping) {
+        const grouped = {};
+        list.forEach(item => {
+          const groupName = item.group || '其他';
+          if (!grouped[groupName]) grouped[groupName] = [];
+          grouped[groupName].push(item);
+        });
+
+        let html = '';
+        let globalIndex = 0;
+        const groupOrder = ['文本与开发', '图像与媒体', '时间与生活', '其他'];
+        
+        groupOrder.forEach(gName => {
+          if (grouped[gName] && grouped[gName].length > 0) {
+            html += `<div class="group-title">${gName}</div>`;
+            html += `<div class="grid-view" style="margin-bottom:24px;">`;
+            html += grouped[gName].map(w => {
+              const itemHtml = createCardHtml(w, globalIndex);
+              globalIndex++;
+              return itemHtml;
+            }).join('');
+            html += `</div>`;
+          }
+        });
+        gridEl.className = ''; 
+        gridEl.innerHTML = html;
+      } else {
+        gridEl.className = currentView === 'list' ? 'list-view' : 'grid-view';
+        gridEl.innerHTML = list.map((w, index) => createCardHtml(w, index)).join('');
+      }
+
+      if (currentView === 'grid') {
+        gridEl.querySelectorAll(".work").forEach((card, i) => { card.style.animationDelay = `${i * 40}ms`; });
+      }
+    }
+
+    gridEl.addEventListener('click', (e) => {
+      const card = e.target.closest('.work');
+      if (!card) return;
+      const toolName = card.getAttribute('data-name');
+      const toolData = WORKS.find(w => w.name === toolName);
+      if (toolData) {
+        openToolModal(toolData);
+      }
+    });
+
+    function createCardHtml(w, index) {
+      const offlineClass = (isOffline && w.needsNet) ? 'style="opacity:0.5; pointer-events:none;"' : '';
+      const netBadge = w.needsNet ? '<span class="badge needs-net">需联网</span>' : '';
+      let badgeHtml = w.badge ? `<span class="badge ${w.badge === '占位' ? 'placeholder' : ''}">${w.badge}</span>` : '';
+      
+      const platforms = (w.platform || []).map(p => `<span>${p}</span>`).join("");
+      
+      return `
+      <a class="work" href="javascript:void(0);" data-name="${w.name}" tabindex="0" role="button" ${offlineClass}>
+        <div class="cover">${w.mark || w.name.slice(0, 2).toUpperCase()}</div>
+        <div class="body">
+          <h3><span class="status-dot status-${w.status || 'online'}"></span>${w.name}${badgeHtml}${netBadge}</h3>
+          <p>${w.tagline}</p>
+          <div class="meta">
+            ${platforms}
+            ${w.year ? `<span>${w.year}</span>` : ""}
+          </div>
+        </div>
+      </a>
+      `;
+    }
+
+    function buildFilters() {
+      const categories = ['全部', '通用工具', 'v/s', 'LXH', '中V'];
+      
+      let html = '';
+      categories.forEach(cat => {
+        const isActive = cat === currentCategory ? 'active' : '';
+        html += `<button type="button" class="filter-btn ${isActive}" data-cat="${cat}">${cat}</button>`;
+      });
+      filtersEl.innerHTML = html;
+    }
+
+    filtersEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      if (btn.dataset.cat === currentCategory) return;
+
+      currentCategory = btn.dataset.cat;
+      
+      filtersEl.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.cat === currentCategory);
+      });
+
+      applyTheme(currentCategory);
+      renderGridData();
+    });
+
+    searchEl.addEventListener("input", (e) => {
+      currentQuery = e.target.value.trim();
+      renderGridData();
+    });
+    searchEl.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') addSearchHistory(currentQuery);
+    });
+
+    viewBtn.addEventListener("click", () => {
+      currentView = currentView === 'grid' ? 'list' : 'grid';
+      viewBtn.textContent = currentView === 'list' ? '列表' : '网格';
+      renderGridData();
+    });
+
+    sortBtn.addEventListener("click", () => {
+      currentSort = currentSort === 'desc' ? 'asc' : 'desc';
+      sortText.textContent = currentSort === 'desc' ? '↓' : '↑';
+      renderGridData();
+    });
+
+    const modal = document.getElementById("modal");
+    const mTitle = document.getElementById("m-title");
+    const mBadge = document.getElementById("m-badge");
+    const mTagline = document.getElementById("m-tagline");
+    const mDesc = document.getElementById("m-desc");
+    const mLink = document.getElementById("m-link");
+    const mCopyLink = document.getElementById("m-copy-link");
+    const mCopyName = document.getElementById("m-copy-name");
+    const mInlineTool = document.getElementById("m-inline-tool");
+    const mActions = document.getElementById("m-actions");
+
+    let currentCopyUrl = '', currentCopyName = '';
+    let pomodoroInterval = null;
+
+    function openToolModal(data) {
+      if (isOffline && data.needsNet) {
+        showToast('离线模式下此工具不可用', 'error');
+        return;
+      }
+      
+      mTitle.childNodes[0].nodeValue = data.name + " ";
+      mBadge.textContent = data.badge || "";
+      mBadge.className = 'badge' + (data.badge === '占位' ? ' placeholder' : '');
+      mBadge.style.display = data.badge ? 'inline-block' : 'none';
+      mTagline.textContent = data.tagline;
+      mDesc.textContent = data.longDesc || "暂无详细描述。";
+
+      mInlineTool.style.display = 'none';
+      mActions.style.display = 'flex';
+
+      if (data.status === 'inline') {
+        mActions.style.display = 'none';
+        mInlineTool.style.display = 'block';
+        mDesc.style.display = 'none';
+
+        if (pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
+
+        if (data.inlineType === 'sha256') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><textarea id="sha-input" class="inline-input" placeholder="输入文本以计算 SHA-256..." style="height:80px; resize:vertical; margin-bottom:8px;"></textarea></div>
+            <button class="btn" id="btn-sha-gen" style="width:100%;">生成哈希</button>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <div id="sha-output" class="inline-output" style="flex:1; word-break:break-all;">等待输入...</div>
+              <button class="copy-btn" id="btn-sha-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          document.getElementById('btn-sha-gen').addEventListener('click', async () => {
+            const text = document.getElementById('sha-input').value;
+            if (!text) return;
+            const out = document.getElementById('sha-output');
+            out.textContent = '计算中...';
+            try {
+              const msgBuffer = new TextEncoder().encode(text);
+              const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+              const hashArray = Array.from(new Uint8Array(hashBuffer));
+              out.textContent = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+              document.getElementById('btn-sha-copy').style.display = 'inline-block';
+            } catch(e) {
+              out.textContent = '当前环境不支持 Web Crypto。';
+            }
+          });
+          document.getElementById('btn-sha-copy').addEventListener('click', () => {
+            copyText(document.getElementById('sha-output').textContent);
+          });
+        } else if (data.inlineType === 'regex') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><input type="text" id="regex-pattern" class="inline-input" placeholder="输入正则表达式..." style="margin-bottom:8px;"></div>
+            <div class="inline-input"><textarea id="regex-text" class="inline-input" placeholder="输入测试文本..." style="height:80px; resize:vertical; margin-bottom:8px;"></textarea></div>
+            <span id="regex-count" class="regex-count"></span>
+            <div id="regex-preview" class="inline-output" style="margin-top:8px; height:100px; overflow:auto; line-height:1.5;"></div>
+          `;
+          const doRegex = () => {
+            const pattern = document.getElementById('regex-pattern').value;
+            const text = document.getElementById('regex-text').value;
+            const countEl = document.getElementById('regex-count');
+            const preview = document.getElementById('regex-preview');
+            if (!pattern) { countEl.textContent = ''; preview.textContent = text; return; }
+            try {
+              const re = new RegExp(pattern, 'g');
+              const matches = [...text.matchAll(re)];
+              countEl.textContent = `找到 ${matches.length} 处匹配`;
+              let highlighted = '';
+              let lastIndex = 0;
+              matches.forEach(m => {
+                highlighted += text.slice(lastIndex, m.index).replace(/</g, '&lt;');
+                highlighted += `<span class="regex-highlight">${m[0].replace(/</g, '&lt;')}</span>`;
+                lastIndex = m.index + m[0].length;
+              });
+              highlighted += text.slice(lastIndex).replace(/</g, '&lt;');
+              preview.innerHTML = highlighted;
+            } catch(e) {
+              countEl.textContent = '语法错误: ' + e.message;
+              preview.textContent = text;
+            }
+          };
+          document.getElementById('regex-pattern').addEventListener('input', doRegex);
+          document.getElementById('regex-text').addEventListener('input', doRegex);
+        } else if (data.inlineType === 'qrcode') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><textarea id="qr-input" class="inline-input" placeholder="输入文本或链接..." style="height:80px; resize:vertical; margin-bottom:8px;"></textarea></div>
+            <div class="inline-btn-row">
+              <button class="btn btn-outline" id="btn-qr-standard">生成二维码</button>
+              <button class="btn btn-outline" id="btn-qr-solar">生成太阳码</button>
+              <button class="btn btn-outline" id="btn-barcode">生成条形码</button>
+            </div>
+            <div id="qr-container" class="qr-container"></div>
+            <canvas id="barcode-canvas" style="max-width:100%; margin-top:12px;"></canvas>
+          `;
+          const container = document.getElementById('qr-container');
+          const barcodeCanvas = document.getElementById('barcode-canvas');
+          const renderQR = (isSolar) => {
+            const text = document.getElementById('qr-input').value.trim();
+            if (!text) return;
+            container.innerHTML = '';
+            const wrapper = document.createElement('div');
+            if (isSolar) wrapper.className = 'solar-qr';
+            container.appendChild(wrapper);
+            if (typeof QRCode !== 'undefined') {
+              new QRCode(wrapper, { text: text, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+            } else { wrapper.textContent = '库未加载'; }
+          };
+          document.getElementById('btn-qr-standard').addEventListener('click', () => renderQR(false));
+          document.getElementById('btn-qr-solar').addEventListener('click', () => renderQR(true));
+          document.getElementById('btn-barcode').addEventListener('click', () => {
+            const text = document.getElementById('qr-input').value.trim();
+            if (!text) return;
+            if (typeof JsBarcode !== 'undefined') {
+              try { JsBarcode(barcodeCanvas, text, { format: "CODE128", width: 2, height: 100, displayValue: true }); } catch(e) { showToast('生成失败', 'error'); }
+            } else { showToast('库未加载', 'error'); }
+          });
+        } else if (data.inlineType === 'uuid') {
+          mInlineTool.innerHTML = `
+            <div class="inline-btn-row">
+              <button class="btn btn-outline" id="btn-uuid-v4">生成 UUID v4</button>
+              <button class="btn btn-outline" id="btn-uuid-short">生成短 ID</button>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <div id="uuid-output" class="inline-output" style="flex:1; height:80px; overflow:auto;">等待生成...</div>
+              <button class="copy-btn" id="btn-uuid-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          const genUUID = () => {
+            if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+              const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          };
+          const genShort = () => Math.random().toString(36).substring(2, 10);
+          const setUUIDOut = (arr) => {
+            document.getElementById('uuid-output').textContent = arr.join('\n');
+            document.getElementById('btn-uuid-copy').style.display = 'inline-block';
+          };
+          document.getElementById('btn-uuid-v4').addEventListener('click', () => { let out = []; for(let i=0; i<5; i++) out.push(genUUID()); setUUIDOut(out); });
+          document.getElementById('btn-uuid-short').addEventListener('click', () => { let out = []; for(let i=0; i<5; i++) out.push(genShort()); setUUIDOut(out); });
+          document.getElementById('btn-uuid-copy').addEventListener('click', () => { copyText(document.getElementById('uuid-output').textContent); });
+        } else if (data.inlineType === 'exif') {
+          mInlineTool.innerHTML = `
+            <div class="drop-zone" id="exif-drop">点击或拖拽图片到此处（清洗 EXIF 信息）</div>
+            <div class="img-preview-box"><img id="exif-preview" src="" style="display:none;"></div>
+            <input type="file" id="exif-file" accept="image/*" style="display:none;">
+            <div class="inline-btn-row">
+              <button class="btn btn-outline" id="btn-exif-select">选择图片</button>
+              <button class="btn" id="btn-exif-clean" style="display:none;">清除并下载</button>
+            </div>
+          `;
+          let currentFile = null;
+          const handleFile = (file) => {
+            if (!file) return;
+            currentFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = document.getElementById('exif-preview');
+              img.src = ev.target.result; img.style.display = 'inline-block';
+              document.getElementById('btn-exif-clean').style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+          };
+          const dropZone = document.getElementById('exif-drop');
+          document.getElementById('btn-exif-select').addEventListener('click', () => document.getElementById('exif-file').click());
+          document.getElementById('exif-file').addEventListener('change', (e) => handleFile(e.target.files[0]));
+          dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+          dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+          dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
+          
+          document.getElementById('btn-exif-clean').addEventListener('click', () => {
+            if (!currentFile) return;
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width; canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `clean_${currentFile.name.split('.')[0] || 'image'}.jpg`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('已清除并开始下载', 'success');
+              }, 'image/jpeg', 0.95);
+            };
+            img.src = document.getElementById('exif-preview').src;
+          });
+        } else if (data.inlineType === 'timestamp') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><input type="text" id="ts-input" class="inline-input" placeholder="输入时间戳 (秒/毫秒) 或 日期字符串..." style="margin-bottom:8px;"></div>
+            <div class="inline-btn-row">
+              <button class="btn btn-outline" id="btn-ts-convert">转换</button>
+              <button class="btn btn-outline" id="btn-ts-now">填入当前时间戳</button>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <div id="ts-output" class="inline-output" style="flex:1;">等待输入...</div>
+              <button class="copy-btn" id="btn-ts-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          document.getElementById('btn-ts-convert').addEventListener('click', () => {
+            let v = document.getElementById('ts-input').value.trim(); if(!v) return;
+            let d;
+            if(/^\d+$/.test(v)) { let num = parseInt(v); if(v.length <= 10) num *= 1000; d = new Date(num); } else { d = new Date(v); }
+            const out = isNaN(d.getTime()) ? '解析失败' : d.toString();
+            document.getElementById('ts-output').textContent = out;
+            if (!isNaN(d.getTime())) document.getElementById('btn-ts-copy').style.display = 'inline-block';
+          });
+          document.getElementById('btn-ts-now').addEventListener('click', () => {
+            document.getElementById('ts-input').value = Date.now();
+          });
+          document.getElementById('btn-ts-copy').addEventListener('click', () => copyText(document.getElementById('ts-output').textContent));
+        } else if (data.inlineType === 'text-tools') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><textarea id="txt-input" class="inline-input" placeholder="在此输入/粘贴文本..." style="height:80px; resize:vertical; margin-bottom:8px;"></textarea></div>
+            <div class="text-toolbar">
+              <button class="btn btn-outline btn-sm" id="btn-txt-b64e">Base64编码</button>
+              <button class="btn btn-outline btn-sm" id="btn-txt-b64d">Base64解码</button>
+              <button class="btn btn-outline btn-sm" id="btn-txt-urle">URL编码</button>
+              <button class="btn btn-outline btn-sm" id="btn-txt-urld">URL解码</button>
+              <button class="btn btn-outline btn-sm" id="btn-txt-upper">转大写</button>
+              <button class="btn btn-outline btn-sm" id="btn-txt-lower">转小写</button>
+            </div>
+            <div class="text-stats" id="txt-stats"></div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <div id="txt-output" class="inline-output" style="flex:1; height:80px; overflow:auto;">等待操作...</div>
+              <button class="copy-btn" id="btn-txt-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          const getTxt = () => document.getElementById('txt-input').value;
+          const setTxtOut = (val) => {
+            document.getElementById('txt-output').textContent = val;
+            document.getElementById('btn-txt-copy').style.display = 'inline-block';
+          };
+          document.getElementById('txt-input').addEventListener('input', () => {
+            const t = getTxt();
+            document.getElementById('txt-stats').innerHTML = `<span>字符: ${t.length}</span><span>中文: ${(t.match(/[\u4e00-\u9fa5]/g) || []).length}</span><span>行数: ${t.split('\n').length}</span>`;
+          });
+          document.getElementById('btn-txt-b64e').addEventListener('click', () => { try { setTxtOut(btoa(unescape(encodeURIComponent(getTxt())))); } catch(e) { setTxtOut('编码失败'); } });
+          document.getElementById('btn-txt-b64d').addEventListener('click', () => { try { setTxtOut(decodeURIComponent(escape(atob(getTxt())))); } catch(e) { setTxtOut('解码失败'); } });
+          document.getElementById('btn-txt-urle').addEventListener('click', () => setTxtOut(encodeURIComponent(getTxt())));
+          document.getElementById('btn-txt-urld').addEventListener('click', () => { try { setTxtOut(decodeURIComponent(getTxt())); } catch(e) { setTxtOut('解码失败'); } });
+          document.getElementById('btn-txt-upper').addEventListener('click', () => setTxtOut(getTxt().toUpperCase()));
+          document.getElementById('btn-txt-lower').addEventListener('click', () => setTxtOut(getTxt().toLowerCase()));
+          document.getElementById('btn-txt-copy').addEventListener('click', () => copyText(document.getElementById('txt-output').textContent));
+        } else if (data.inlineType === 'base-conv') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <input type="text" id="base-input" class="inline-input" style="flex:1; margin:0;" placeholder="输入数字..." value="255">
+              <select id="base-from" class="inline-input" style="width:90px; margin:0;">
+                <option value="10">10进制</option><option value="2">2进制</option><option value="16">16进制</option><option value="8">8进制</option>
+              </select>
+            </div>
+            <div id="base-output" class="inline-output" style="height:120px; overflow:auto; line-height:2; font-size:0.9rem;"></div>
+          `;
+          const doBaseConv = () => {
+            const v = document.getElementById('base-input').value.trim();
+            const from = parseInt(document.getElementById('base-from').value);
+            const out = document.getElementById('base-output');
+            if (!v) { out.textContent = ''; return; }
+            const num = parseInt(v, from);
+            if (isNaN(num)) { out.textContent = '无效的输入格式'; return; }
+            out.innerHTML = `
+              <div>2进制: <span style="font-family:monospace; font-size:1.1em;">${num.toString(2)}</span></div>
+              <div>8进制: <span style="font-family:monospace; font-size:1.1em;">${num.toString(8)}</span></div>
+              <div>10进制: <span style="font-family:monospace; font-size:1.1em;">${num.toString(10)}</span></div>
+              <div>16进制: <span style="font-family:monospace; font-size:1.1em;">${num.toString(16).toUpperCase()}</span></div>
+            `;
+          };
+          document.getElementById('base-input').addEventListener('input', doBaseConv);
+          document.getElementById('base-from').addEventListener('change', doBaseConv);
+          doBaseConv();
+        } else if (data.inlineType === 'html-preview') {
+          mInlineTool.innerHTML = `
+            <div class="html-preview-tool">
+              <textarea id="hp-input" placeholder="在此粘贴 HTML / CSS / JS 代码...">&lt;h1&gt;Hello, VoidWave&lt;/h1&gt;
+&lt;script&gt;console.log('Ready.');&lt;/script&gt;</textarea>
+              <div class="inline-btn-row">
+                <button class="btn" id="btn-hp-run">运行预览</button>
+                <button class="btn btn-outline" id="btn-hp-full">全屏</button>
+              </div>
+              <iframe id="hp-frame" sandbox="allow-scripts allow-modals" allowfullscreen></iframe>
+              <div id="hp-log" class="console-log">// 控制台就绪</div>
+            </div>
+          `;
+          document.getElementById('btn-hp-run').addEventListener('click', () => {
+            const code = document.getElementById('hp-input').value;
+            const iframe = document.getElementById('hp-frame');
+            const logBox = document.getElementById('hp-log');
+            logBox.innerHTML = '';
+            const injected = code.replace('</body>', '') + 
+              '<script>' +
+              'const _log = console.log, _err = console.error, _warn = console.warn;' +
+              'function send(type, args) { parent.postMessage({ type: "hp-console", level: type, msg: Array.from(args).map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ") }, "*"); }' +
+              'console.log = (...args) => { send("log", args); _log.apply(console, args); };' +
+              'console.error = (...args) => { send("error", args); _err.apply(console, args); };' +
+              'console.warn = (...args) => { send("warn", args); _warn.apply(console, args); };' +
+              '<\/script>' +
+              '</body>';
+            iframe.srcdoc = injected;
+          });
+          document.getElementById('btn-hp-full').addEventListener('click', () => {
+            const iframe = document.getElementById('hp-frame');
+            if (iframe.requestFullscreen) iframe.requestFullscreen();
+            else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+            else if (iframe.msRequestFullscreen) iframe.msRequestFullscreen();
+          });
+        } else if (data.inlineType === 'totp') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div class="inline-input" style="display:flex; gap:8px;">
+                <input type="text" id="totp-secret" class="inline-input" placeholder="输入 Base32 密钥或 otpauth:// 链接" style="flex:1; margin:0;">
+                <button class="btn btn-outline" id="btn-totp-start">生成</button>
+              </div>
+              <div class="inline-btn-row">
+                <button class="btn btn-outline" id="btn-totp-upload">上传二维码识别</button>
+                <input type="file" id="totp-file" accept="image/*" style="display:none;">
+              </div>
+              <div id="totp-result" style="display:none;">
+                <div id="totp-code" class="totp-display" title="点击复制">------</div>
+                <div class="totp-timer"><div id="totp-bar" class="totp-timer-bar"></div></div>
+                <div style="font-size:0.7rem; color:var(--muted); text-align:center; margin-bottom:8px;" id="totp-label"></div>
+              </div>
+            </div>
+          `;
+          document.getElementById('btn-totp-start').addEventListener('click', startTOTP);
+          document.getElementById('btn-totp-upload').addEventListener('click', () => document.getElementById('totp-file').click());
+          document.getElementById('totp-file').addEventListener('change', function() { handleQRUpload(this); });
+          document.getElementById('totp-code').addEventListener('click', () => {
+            const code = document.getElementById('totp-code').textContent.replace(/\s/g, '');
+            if (code !== '------') copyText(code);
+          });
+        } else if (data.inlineType === 'json') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><textarea id="json-input" class="inline-input" placeholder="粘贴 JSON 数据..." style="height:120px; resize:vertical; font-family:monospace; margin-bottom:8px;"></textarea></div>
+            <div class="inline-btn-row">
+              <button class="btn btn-outline" id="btn-json-format">格式化</button>
+              <button class="btn btn-outline" id="btn-json-compress">压缩</button>
+              <button class="btn btn-outline" id="btn-json-clear">清空</button>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <div id="json-output" class="inline-output" style="flex:1; height:150px; overflow:auto; white-space:pre; font-size:0.75rem;">等待输入...</div>
+              <button class="copy-btn" id="btn-json-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          const setJsonOut = (val, isErr=false) => {
+            const out = document.getElementById('json-output');
+            out.textContent = val;
+            out.style.color = isErr ? '#ef4444' : '';
+            if (!isErr) document.getElementById('btn-json-copy').style.display = 'inline-block';
+            else document.getElementById('btn-json-copy').style.display = 'none';
+          };
+          document.getElementById('btn-json-format').addEventListener('click', () => {
+            try { setJsonOut(JSON.stringify(JSON.parse(document.getElementById('json-input').value), null, 2)); } catch(e) { setJsonOut('JSON 格式错误: ' + e.message, true); }
+          });
+          document.getElementById('btn-json-compress').addEventListener('click', () => {
+            try { setJsonOut(JSON.stringify(JSON.parse(document.getElementById('json-input').value))); } catch(e) { setJsonOut('JSON 格式错误: ' + e.message, true); }
+          });
+          document.getElementById('btn-json-clear').addEventListener('click', () => {
+            document.getElementById('json-input').value = '';
+            setJsonOut('等待输入...');
+          });
+          document.getElementById('btn-json-copy').addEventListener('click', () => copyText(document.getElementById('json-output').textContent));
+        } else if (data.inlineType === 'image-compress') {
+          mInlineTool.innerHTML = `
+            <div class="drop-zone" id="img-drop">点击或拖拽图片到此处</div>
+            <div class="inline-btn-row" style="justify-content:center;">
+              <button class="btn btn-outline" id="btn-img-select">选择图片</button>
+            </div>
+            <input type="file" id="img-file" accept="image/*" style="display:none;">
+            <div id="img-controls" style="display:none; margin-top:12px;">
+              <div style="font-size:0.75rem; margin-bottom:4px; display:flex; justify-content:space-between;">
+                <span>压缩质量</span><span id="img-quality-val">70%</span>
+              </div>
+              <input type="range" id="img-quality" min="0.1" max="1.0" step="0.05" value="0.7">
+              <div class="img-compare">
+                <div><img id="img-orig-preview" src=""><div id="img-orig-info"></div></div>
+                <div><img id="img-comp-preview" src=""><div id="img-comp-info"></div></div>
+              </div>
+              <button class="btn" id="btn-img-download" style="width:100%; margin-top:12px;">下载压缩图片</button>
+            </div>
+          `;
+          let currentFile = null;
+          const handleImg = (file) => {
+            if (!file || !file.type.startsWith('image/')) return;
+            currentFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              document.getElementById('img-orig-preview').src = ev.target.result;
+              document.getElementById('img-orig-info').textContent = `${(file.size/1024).toFixed(1)} KB`;
+              document.getElementById('img-controls').style.display = 'block';
+              doCompress();
+            };
+            reader.readAsDataURL(file);
+          };
+          let compressedBlob = null;
+          const doCompress = () => {
+            if(!currentFile) return;
+            const quality = parseFloat(document.getElementById('img-quality').value);
+            document.getElementById('img-quality-val').textContent = Math.round(quality*100)+'%';
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width; canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((blob) => {
+                compressedBlob = blob;
+                document.getElementById('img-comp-preview').src = URL.createObjectURL(blob);
+                document.getElementById('img-comp-info').textContent = `${(blob.size/1024).toFixed(1)} KB (节约 ${((1 - blob.size/currentFile.size)*100).toFixed(0)}%)`;
+              }, currentFile.type || 'image/jpeg', quality);
+            };
+            img.src = document.getElementById('img-orig-preview').src;
+          };
+          const dropZone = document.getElementById('img-drop');
+          document.getElementById('btn-img-select').addEventListener('click', () => document.getElementById('img-file').click());
+          document.getElementById('img-file').addEventListener('change', (e) => handleImg(e.target.files[0]));
+          dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+          dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+          dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleImg(e.dataTransfer.files[0]); });
+          document.getElementById('img-quality').addEventListener('input', doCompress);
+          document.getElementById('btn-img-download').addEventListener('click', () => {
+            if(!compressedBlob) return;
+            const url = URL.createObjectURL(compressedBlob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `compressed_${currentFile.name}`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('开始下载', 'success');
+          });
+        } else if (data.inlineType === 'grid9') {
+          mInlineTool.innerHTML = `
+            <div class="drop-zone" id="grid9-drop">点击或拖拽图片到此处生成九宫格</div>
+            <input type="file" id="grid9-file" accept="image/*" style="display:none;">
+            <div id="grid9-result" class="grid-9" style="margin-top:12px;"></div>
+          `;
+          const handleGrid9 = (file) => {
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => {
+                const w = img.width / 3; const h = img.height / 3;
+                const container = document.getElementById('grid9-result');
+                container.innerHTML = '';
+                for(let r=0; r<3; r++){
+                  for(let c=0; c<3; c++){
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, c*w, r*h, w, h, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                    const a = document.createElement('a');
+                    a.href = dataUrl; a.download = `grid_${r*3+c+1}.jpg`;
+                    a.innerHTML = `<img src="${dataUrl}" title="点击下载">`;
+                    container.appendChild(a);
+                  }
+                }
+              };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+          const dropZone = document.getElementById('grid9-drop');
+          dropZone.addEventListener('click', () => document.getElementById('grid9-file').click());
+          document.getElementById('grid9-file').addEventListener('change', (e) => handleGrid9(e.target.files[0]));
+          dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+          dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+          dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleGrid9(e.dataTransfer.files[0]); });
+        } else if (data.inlineType === 'image-stitch') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <div style="flex:1; text-align:center;">
+                <div class="drop-zone" id="stitch-drop1" style="padding:12px; margin-bottom:4px;">图1</div>
+                <input type="file" id="stitch-file1" accept="image/*" style="display:none;">
+              </div>
+              <div style="flex:1; text-align:center;">
+                <div class="drop-zone" id="stitch-drop2" style="padding:12px; margin-bottom:4px;">图2</div>
+                <input type="file" id="stitch-file2" accept="image/*" style="display:none;">
+              </div>
+            </div>
+            <div class="inline-btn-row">
+              <button class="btn" id="btn-stitch-h" style="flex:1;">横向拼接</button>
+              <button class="btn" id="btn-stitch-v" style="flex:1;">纵向拼接</button>
+            </div>
+            <div class="stitch-preview"><img id="stitch-img" src="" style="display:none; max-width:100%; border:1px solid var(--line); margin-top:12px;"></div>
+            <div class="inline-btn-row" style="margin-top:12px;">
+              <a id="stitch-dl" class="btn btn-outline" style="width:100%; display:none;" download="stitched.jpg">下载拼接结果</a>
+            </div>
+          `;
+          let img1 = null, img2 = null;
+          const setupDrop = (dropId, fileId, onLoad) => {
+            const drop = document.getElementById(dropId);
+            drop.addEventListener('click', () => document.getElementById(fileId).click());
+            document.getElementById(fileId).addEventListener('change', (e) => { loadFile(e.target.files[0], onLoad); });
+            drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
+            drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+            drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('dragover'); loadFile(e.dataTransfer.files[0], onLoad); });
+          };
+          const loadFile = (file, cb) => {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => { const img = new Image(); img.onload = () => cb(img); img.src = ev.target.result; };
+            reader.readAsDataURL(file);
+          };
+          setupDrop('stitch-drop1', 'stitch-file1', (img) => { img1 = img; document.getElementById('stitch-drop1').textContent = '图1已选择'; });
+          setupDrop('stitch-drop2', 'stitch-file2', (img) => { img2 = img; document.getElementById('stitch-drop2').textContent = '图2已选择'; });
+          
+          const doStitch = (isH) => {
+            if(!img1 || !img2) { showToast('请先选择两张图片', 'error'); return; }
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (isH) {
+              canvas.width = img1.width + img2.width;
+              canvas.height = Math.max(img1.height, img2.height);
+              ctx.drawImage(img1, 0, 0); ctx.drawImage(img2, img1.width, 0);
+            } else {
+              canvas.width = Math.max(img1.width, img2.width);
+              canvas.height = img1.height + img2.height;
+              ctx.drawImage(img1, 0, 0); ctx.drawImage(img2, 0, img1.height);
+            }
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const preview = document.getElementById('stitch-img');
+            preview.src = dataUrl; preview.style.display = 'inline-block';
+            const dl = document.getElementById('stitch-dl');
+            dl.href = dataUrl; dl.style.display = 'inline-flex';
+          };
+          document.getElementById('btn-stitch-h').addEventListener('click', () => doStitch(true));
+          document.getElementById('btn-stitch-v').addEventListener('click', () => doStitch(false));
+        } else if (data.inlineType === 'danmaku') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><input type="text" id="danmaku-input" class="inline-input" placeholder="输入弹幕文字..." style="margin-bottom:8px;" value="HELLO WORLD"></div>
+            <button class="btn" id="btn-danmaku-go" style="width:100%;">全屏发送</button>
+          `;
+          document.getElementById('btn-danmaku-go').addEventListener('click', () => {
+            const text = document.getElementById('danmaku-input').value || 'HELLO';
+            document.getElementById('danmaku-text-el').textContent = text;
+            document.getElementById('danmaku-overlay').classList.add('active');
+          });
+        } else if (data.inlineType === 'pomodoro') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:4px; margin-bottom:12px;">
+              <button class="btn btn-outline btn-sm" data-pomo="25" style="flex:1;">25分钟工作</button>
+              <button class="btn btn-outline btn-sm" data-pomo="5" style="flex:1;">5分钟休息</button>
+            </div>
+            <div class="timer-progress"><div id="pomo-bar" class="timer-progress-bar" style="transform:scaleX(1);"></div></div>
+            <div class="timer-display" id="pomo-time">25:00</div>
+            <div class="inline-btn-row" style="justify-content:center;">
+              <button class="btn" id="btn-pomo-start">开始</button>
+              <button class="btn btn-outline" id="btn-pomo-reset">重置</button>
+            </div>
+          `;
+          let timeLeft = 25 * 60;
+          let totalTime = 25 * 60;
+          let pomoRunning = false;
+          let lastTime = 0;
+          const timeEl = document.getElementById('pomo-time');
+          const barEl = document.getElementById('pomo-bar');
+          
+          const updatePomoUI = () => {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            timeEl.textContent = `${m}:${s}`;
+            barEl.style.transform = `scaleX(${timeLeft / totalTime})`;
+          };
+          
+          const tick = () => {
+            if (!pomoRunning) return;
+            const now = Date.now();
+            const delta = Math.floor((now - lastTime) / 1000);
+            if (delta > 0) {
+              timeLeft -= delta;
+              lastTime += delta * 1000;
+              if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(pomodoroInterval);
+                pomodoroInterval = null;
+                pomoRunning = false;
+                document.getElementById('btn-pomo-start').textContent = '开始';
+                playBeep();
+              }
+              updatePomoUI();
+            }
+          };
+          
+          document.querySelectorAll('[data-pomo]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              if (pomoRunning) return;
+              totalTime = parseInt(btn.dataset.pomo) * 60;
+              timeLeft = totalTime;
+              updatePomoUI();
+            });
+          });
+          
+          document.getElementById('btn-pomo-start').addEventListener('click', (e) => {
+            if (pomoRunning) {
+              clearInterval(pomodoroInterval);
+              pomodoroInterval = null;
+              e.target.textContent = '开始';
+              pomoRunning = false;
+            } else {
+              if (timeLeft <= 0) timeLeft = totalTime;
+              e.target.textContent = '暂停';
+              pomoRunning = true;
+              lastTime = Date.now();
+              pomodoroInterval = setInterval(tick, 200);
+            }
+          });
+          document.getElementById('btn-pomo-reset').addEventListener('click', () => {
+            clearInterval(pomodoroInterval);
+            pomodoroInterval = null;
+            timeLeft = totalTime;
+            updatePomoUI();
+            document.getElementById('btn-pomo-start').textContent = '开始';
+            pomoRunning = false;
+          });
+        } else if (data.inlineType === 'todo') {
+          mInlineTool.innerHTML = `
+            <div class="inline-btn-row">
+              <input type="text" id="todo-input" class="inline-input" placeholder="添加新任务..." style="margin-bottom:0; flex:1;">
+              <button class="btn" id="btn-todo-add">添加</button>
+            </div>
+            <div id="todo-list" class="todo-list"></div>
+          `;
+          let todos = JSON.parse(localStorage.getItem('stech_todos') || '[]');
+          const listEl = document.getElementById('todo-list');
+          const renderTodo = () => {
+            listEl.innerHTML = todos.map((t, i) => `
+              <div class="todo-item ${t.done ? 'done' : ''}">
+                <span style="cursor:pointer; flex:1;" onclick="toggleTodo(${i})">${t.text}</span>
+                <button onclick="delTodo(${i})">×</button>
+              </div>
+            `).join('');
+            localStorage.setItem('stech_todos', JSON.stringify(todos));
+          };
+          window.toggleTodo = (i) => { todos[i].done = !todos[i].done; renderTodo(); };
+          window.delTodo = (i) => { todos.splice(i, 1); renderTodo(); };
+          document.getElementById('btn-todo-add').addEventListener('click', () => {
+            const v = document.getElementById('todo-input').value.trim();
+            if (!v) return;
+            todos.push({ text: v, done: false });
+            document.getElementById('todo-input').value = '';
+            renderTodo();
+          });
+          renderTodo();
+        } else if (data.inlineType === 'random-picker') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><textarea id="dec-input" class="inline-input" placeholder="输入候选项，每行一个..." style="height:80px; resize:vertical; margin-bottom:8px;"></textarea></div>
+            <button class="btn" id="btn-dec-go" style="width:100%;">开始抽奖</button>
+            <div id="dec-result" class="decision-result" style="margin-top:12px;">?</div>
+          `;
+          document.getElementById('btn-dec-go').addEventListener('click', () => {
+            const lines = document.getElementById('dec-input').value.split('\n').map(l=>l.trim()).filter(Boolean);
+            if (lines.length === 0) { showToast('请至少输入一个选项', 'error'); return; }
+            let count = 0;
+            const res = document.getElementById('dec-result');
+            res.textContent = '抽取中...';
+            const interval = setInterval(() => {
+              res.textContent = lines[Math.floor(Math.random() * lines.length)];
+              count++;
+              if (count > 15) {
+                clearInterval(interval);
+                res.textContent = lines[Math.floor(Math.random() * lines.length)];
+                res.style.color = '#22c55e';
+                setTimeout(() => res.style.color = '', 800);
+              }
+            }, 60);
+          });
+        } else if (data.inlineType === 'clock-timer') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button class="btn btn-outline" id="btn-clock-start" style="flex:1;">全屏时钟</button>
+              <button class="btn btn-outline" id="btn-timer-start" style="flex:1;">倒计时设置</button>
+            </div>
+            <div id="timer-input-wrap" style="display:none;">
+              <div class="inline-input" style="display:flex; gap:4px;">
+                <input type="number" id="timer-min" class="inline-input" placeholder="分" value="5" style="flex:1; margin:0;">
+                <input type="number" id="timer-sec" class="inline-input" placeholder="秒" value="0" style="flex:1; margin:0;">
+              </div>
+              <button class="btn" id="btn-timer-go" style="width:100%; margin-top:8px;">开始倒计时</button>
+            </div>
+          `;
+          const createOverlay = (contentHtml) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15vw;font-family:monospace;z-index:999999;cursor:pointer;';
+            overlay.innerHTML = contentHtml;
+            overlay.addEventListener('click', (e) => {
+              if(e.target.tagName !== 'BUTTON') { clearInterval(overlay._intv); overlay.remove(); }
+            });
+            document.body.appendChild(overlay);
+            return overlay;
+          };
+          document.getElementById('btn-clock-start').addEventListener('click', () => {
+            const overlay = createOverlay('00:00:00');
+            const update = () => {
+              const d = new Date();
+              overlay.textContent = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+            };
+            update();
+            overlay._intv = setInterval(update, 1000);
+          });
+          document.getElementById('btn-timer-start').addEventListener('click', () => {
+            document.getElementById('timer-input-wrap').style.display = 'block';
+          });
+          document.getElementById('btn-timer-go').addEventListener('click', () => {
+            const mins = parseInt(document.getElementById('timer-min').value) || 0;
+            const secs = parseInt(document.getElementById('timer-sec').value) || 0;
+            let t = mins * 60 + secs;
+            if (t <= 0) { showToast('请输入有效时间', 'error'); return; }
+            const overlay = createOverlay('--:--');
+            const update = () => {
+              const m = Math.floor(t / 60).toString().padStart(2,'0');
+              const s = (t % 60).toString().padStart(2,'0');
+              overlay.textContent = `${m}:${s}`;
+              if (t <= 0) { clearInterval(overlay._intv); overlay.textContent = 'TIME UP'; playBeep(); }
+              t--;
+            };
+            update();
+            overlay._intv = setInterval(update, 1000);
+          });
+        } else if (data.inlineType === 'habit') {
+          mInlineTool.innerHTML = `
+            <div style="font-size:0.8rem; color:var(--muted); margin-bottom:12px;">点击格子进行打卡，数据保存在本地。</div>
+            <div class="habit-grid" id="habit-grid"></div>
+            <div style="text-align:center; margin-top:12px;">
+              <button class="btn btn-outline" id="btn-habit-reset" style="font-size:0.75rem;">重置本月打卡</button>
+            </div>
+          `;
+          let habits = JSON.parse(localStorage.getItem('stech_habits') || '[]');
+          const grid = document.getElementById('habit-grid');
+          const now = new Date();
+          const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          const renderHabit = () => {
+            grid.innerHTML = '';
+            for(let i=1; i<=daysInMonth; i++) {
+              const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+              const cell = document.createElement('div');
+              cell.className = 'habit-cell ' + (habits.includes(dateStr) ? 'done' : '');
+              cell.textContent = i;
+              cell.addEventListener('click', () => {
+                if (habits.includes(dateStr)) habits = habits.filter(d => d !== dateStr);
+                else habits.push(dateStr);
+                localStorage.setItem('stech_habits', JSON.stringify(habits));
+                cell.classList.toggle('done');
+              });
+              grid.appendChild(cell);
+            }
+          };
+          renderHabit();
+          document.getElementById('btn-habit-reset').addEventListener('click', () => {
+            if(confirm('确定要重置本月打卡吗？')) {
+              habits = habits.filter(d => !d.startsWith(`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`));
+              localStorage.setItem('stech_habits', JSON.stringify(habits));
+              renderHabit();
+            }
+          });
+        }
+      } else if (data.status === 'external') {
+        currentCopyUrl = data.url;
+        currentCopyName = data.name;
+        mLink.href = data.url;
+        mLink.textContent = "前往使用 →";
+        mLink.classList.remove('disabled');
+        mCopyLink.textContent = "复制链接";
+        mCopyName.textContent = "复制名称";
+        mDesc.style.display = 'block';
+      } else if (data.status === 'placeholder') {
+        currentCopyUrl = data.url;
+        currentCopyName = data.name;
+        mLink.href = 'javascript:void(0);';
+        mLink.textContent = "未完成 (占位)";
+        mLink.classList.add('disabled');
+        mCopyLink.textContent = "复制链接";
+        mCopyName.textContent = "复制名称";
+        mDesc.style.display = 'block';
+      }
+
+      modal.classList.add("active");
+      recordClick(data.name); 
+      renderRecent();
+    }
+
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'hp-console') {
+        const logBox = document.getElementById('hp-log');
+        if (!logBox) return;
+        const div = document.createElement('div');
+        div.className = e.data.level === 'error' ? 'log-error' : e.data.level === 'warn' ? 'log-warn' : '';
+        div.textContent = `[${e.data.level}] ${e.data.msg}`;
+        logBox.appendChild(div);
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+    });
+
+    document.getElementById("modal-close").addEventListener("click", () => modal.classList.remove("active"));
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
+
+    mCopyLink.addEventListener("click", () => {
+      copyText(currentCopyUrl);
+      mCopyLink.textContent = "COPIED!";
+      setTimeout(() => { mCopyLink.textContent = "复制链接"; }, 2000);
+    });
+
+    mCopyName.addEventListener("click", () => {
+      copyText(currentCopyName);
+      mCopyName.textContent = "COPIED!";
+      setTimeout(() => { mCopyName.textContent = "复制名称"; }, 2000);
+    });
+
+    const aboutModal = document.getElementById("about-modal");
+    document.getElementById("about-btn").addEventListener("click", () => aboutModal.classList.add("active"));
+    document.getElementById("about-close").addEventListener("click", () => aboutModal.classList.remove("active"));
+    aboutModal.addEventListener("click", (e) => { if (e.target === aboutModal) aboutModal.classList.remove("active"); });
+
+    const disclaimerModal = document.getElementById("disclaimer-modal");
+    document.getElementById("disclaimer-btn").addEventListener("click", () => disclaimerModal.classList.add("active"));
+    disclaimerModal.addEventListener("click", (e) => { if (e.target === disclaimerModal) disclaimerModal.classList.remove("active"); });
+
+    document.addEventListener("keydown", (e) => {
+      const cards = [...gridEl.querySelectorAll(".work")];
+      const activeEl = document.activeElement;
+      const idx = cards.indexOf(activeEl);
+
+      if (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT') {
+        if (e.key === 'Escape') { activeEl.blur(); }
+        return;
+      }
+
+      if (modal.classList.contains("active") || aboutModal.classList.contains("active") || disclaimerModal.classList.contains("active")) return;
+
+      if (e.key === '/') { e.preventDefault(); searchEl.focus(); return; }
+      if (e.key === '?') { e.preventDefault(); shortcutPopup.classList.toggle("active"); return; }
+      if (e.key === 'Escape') {
+        modal.classList.remove("active"); aboutModal.classList.remove("active"); disclaimerModal.classList.remove("active"); shortcutPopup.classList.remove("active");
+        return;
+      }
+
+      if (['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(e.key)) {
+        if (cards.length === 0) return;
+        e.preventDefault();
+        if (idx === -1) { cards[0].focus(); return; }
+        let next = idx;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (idx + 1) % cards.length;
+        else next = (idx - 1 + cards.length) % cards.length;
+        cards[next].focus();
+      }
+    });
+
+    function updateClock() {
+      const t = new Date().toTimeString().split(' ')[0];
+      document.getElementById("clock").textContent = `LOCAL.TIME: ${t}`;
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    buildFilters();
+    try {
+      const initHash = decodeURIComponent(window.location.hash.replace('#', ''));
+      if (['全部', '通用工具', 'v/s', 'LXH', '中V'].includes(initHash)) {
+        currentCategory = initHash;
+        buildFilters();
+      }
+    } catch(e) {}
     
-    const savedMode = localStorage.getItem('displayMode');
-    if (savedMode && ['auto', 'pc', 'mobile'].includes(savedMode)) currentMode = savedMode;
-    
-    renderLinks();
-    renderPhoneKeys();
-    renderNavDpad();
-    updateLayout();
-    updateClocks();
-    setInterval(updateClocks, 1000);
+    applyTheme(currentCategory);
+    renderRecent(); 
+    renderSearchHistory(); 
+    renderGridData(); 
+
+    if (typeof Lenis !== 'undefined') {
+      new Lenis({ autoRaf: true, lerp: 0.08 });
+    }
+  }
+
+  function playBeep() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch(e) {}
+  }
+
+  let totpInterval = null;
+
+  function sha1(bytes) {
+    const rotateLeft = (n, s) => (n << s) | (n >>> (32 - s));
+    let W = new Array(80);
+    let H0 = 0x67452301, H1 = 0xEFCDAB89, H2 = 0x98BADCFE, H3 = 0x10325476, H4 = 0xC3D2E1F0;
+    let msg = Array.from(bytes);
+    const bitLen = msg.length * 8;
+    msg.push(0x80);
+    while ((msg.length * 8) % 512 !== 448) msg.push(0);
+    for (let i = 7; i >= 0; i--) msg.push((bitLen / Math.pow(2, i * 8)) & 0xff);
+
+    for (let i = 0; i < msg.length; i += 64) {
+      for (let j = 0; j < 16; j++) W[j] = (msg[i + j * 4] << 24) | (msg[i + j * 4 + 1] << 16) | (msg[i + j * 4 + 2] << 8) | msg[i + j * 4 + 3];
+      for (let j = 16; j < 80; j++) W[j] = rotateLeft(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16], 1);
+      let a = H0, b = H1, c = H2, d = H3, e = H4;
+      for (let j = 0; j < 80; j++) {
+        let f, k;
+        if (j < 20) { f = (b & c) | (~b & d); k = 0x5A827999; }
+        else if (j < 40) { f = b ^ c ^ d; k = 0x6ED9EBA1; }
+        else if (j < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
+        else { f = b ^ c ^ d; k = 0xCA62C1D6; }
+        const temp = (rotateLeft(a, 5) + f + e + k + W[j]) & 0xffffffff;
+        e = d; d = c; c = rotateLeft(b, 30); b = a; a = temp;
+      }
+      H0 = (H0 + a) & 0xffffffff; H1 = (H1 + b) & 0xffffffff; H2 = (H2 + c) & 0xffffffff; H3 = (H3 + d) & 0xffffffff; H4 = (H4 + e) & 0xffffffff;
+    }
+    const res = [];
+    [H0, H1, H2, H3, H4].forEach(h => res.push((h >>> 24) & 0xff, (h >>> 16) & 0xff, (h >>> 8) & 0xff, h & 0xff));
+    return new Uint8Array(res);
+  }
+
+  function hmacSha1(key, msg) {
+    let keyBytes = new Uint8Array(key);
+    if (keyBytes.length > 64) keyBytes = sha1(keyBytes);
+    const block = new Uint8Array(64); block.set(keyBytes);
+    const oPad = new Uint8Array(64); const iPad = new Uint8Array(64);
+    for (let i = 0; i < 64; i++) { oPad[i] = block[i] ^ 0x5c; iPad[i] = block[i] ^ 0x36; }
+    const inner = new Uint8Array(iPad.length + msg.length); inner.set(iPad); inner.set(msg, iPad.length);
+    const innerHash = sha1(inner);
+    const outer = new Uint8Array(oPad.length + innerHash.length); outer.set(oPad); outer.set(innerHash, oPad.length);
+    return sha1(outer);
+  }
+
+  function base32ToUint8Array(base32) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = 0, value = 0, index = 0;
+    const clean = base32.replace(/=+$/, '').toUpperCase();
+    const output = new Uint8Array(Math.floor(clean.length * 5 / 8));
+    for (let i = 0; i < clean.length; i++) {
+      const idx = alphabet.indexOf(clean[i]);
+      if (idx === -1) continue;
+      value = (value << 5) | idx; bits += 5;
+      if (bits >= 8) { output[index++] = (value >>> (bits - 8)) & 0xff; bits -= 8; }
+    }
+    return output;
+  }
+
+  function generateTOTP(secretBase32, period = 30, digits = 6) {
+    const keyData = base32ToUint8Array(secretBase32);
+    const epoch = Math.floor(Date.now() / 1000);
+    const counter = Math.floor(epoch / period);
+    const buffer = new Uint8Array(8);
+    let tempCounter = counter;
+    for (let i = 7; i >= 0; i--) { buffer[i] = tempCounter & 0xff; tempCounter = Math.floor(tempCounter / 256); }
+    const hmac = hmacSha1(keyData, buffer);
+    const offset = hmac[hmac.length - 1] & 0xf;
+    const code = ((hmac[offset] & 0x7f) << 24) | ((hmac[offset + 1] & 0xff) << 16) | ((hmac[offset + 2] & 0xff) << 8) | (hmac[offset + 3] & 0xff);
+    return (code % Math.pow(10, digits)).toString().padStart(digits, '0');
+  }
+
+  function updateTOTPUI(secret) {
+    if (!secret) return;
+    const codeEl = document.getElementById('totp-code');
+    const barEl = document.getElementById('totp-bar');
+    const labelEl = document.getElementById('totp-label');
+    if (!codeEl) return;
+
+    try {
+      const code = generateTOTP(secret);
+      codeEl.textContent = code.slice(0, 3) + ' ' + code.slice(3);
+      const epoch = Math.floor(Date.now() / 1000);
+      const remaining = 30 - (epoch % 30);
+      barEl.style.transform = `scaleX(${remaining / 30})`;
+      barEl.style.background = remaining <= 5 ? '#ef4444' : '#22c55e';
+      labelEl.textContent = `剩余 ${remaining} 秒`;
+    } catch (err) { codeEl.textContent = "ERR"; labelEl.textContent = err.message; }
+  }
+
+  function startTOTP() {
+    const input = document.getElementById('totp-secret').value.trim();
+    if (!input) return;
+    let secret = input, label = '';
+    if (input.startsWith('otpauth://')) {
+      try {
+        const url = new URL(input);
+        secret = url.searchParams.get('secret');
+        label = decodeURIComponent(url.pathname.split('/').pop() || '');
+      } catch (e) { showToast('otpauth 链接格式不正确', 'error'); return; }
+    }
+    if (!secret) { showToast('未找到有效密钥', 'error'); return; }
+    secret = secret.replace(/[^A-Z2-7]/gi, '').toUpperCase();
+
+    document.getElementById('totp-result').style.display = 'block';
+    const labelEl = document.getElementById('totp-label');
+    if (label) labelEl.textContent = label;
+
+    if (totpInterval) clearInterval(totpInterval);
+    updateTOTPUI(secret);
+    totpInterval = setInterval(() => { updateTOTPUI(secret); }, 1000);
+  }
+
+  function handleQRUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (typeof jsQR === 'undefined') { showToast('二维码解析库未能加载', 'error'); return; }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        if (code && code.data) {
+          document.getElementById('totp-secret').value = code.data;
+          startTOTP();
+        } else { showToast('未能识别出二维码', 'error'); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
 </script>
 </body>
 </html>
