@@ -502,26 +502,30 @@ function renderLayerPanel() {
 
 /* ============ 元素 ============ */
 function createElementData(type) {
+  const { w: sw, h: sh } = getScreen();
+  // ⚠️ 坐标单位 = 屏幕像素（不是万分比！）
   const base = {
     id: nextElementId++,
     elementType: type,
     uuid: randomHex(16),
-    x: 5000, y: 5000,
-    w: 1500, h: 1500,
-    sizeType: type === 'joystick' ? 'percentage' : 'percentage',
+    x: Math.round(sw * 0.5),
+    y: Math.round(sh * 0.5),
+    w: Math.round(sw * 0.125),  // 屏幕宽的 1/8
+    h: Math.round(sh * 0.2),    // 屏幕高的 1/5
+    sizeType: 'percentage',
     buttonStyle: '',
   };
   if (type === 'normal') return { ...base, text: '按键', keyName: 'GLFW_KEY_SPACE', toggleable: false };
   if (type === 'textbox') return { ...base, text: '文字', sizeType: 'wrap_content' };
-  return base; // joystick
+  return base; // joystick（大小由系统固定，此处只是占位）
 }
 function addElement(type) { addElementToActiveLayer(createElementData(type)); }
 function addElementToActiveLayer(el) {
   const layer = getActiveLayer();
   if (!layer) { showStatus('请先创建图层'); return; }
-  // 加个偏移，避免重叠
-  el.x += Math.floor(Math.random() * 800 - 400);
-  el.y += Math.floor(Math.random() * 800 - 400);
+  // 加个小偏移，避免多个按钮完全重叠
+  el.x = Math.max(50, el.x + Math.floor(Math.random() * 120 - 60));
+  el.y = Math.max(50, el.y + Math.floor(Math.random() * 120 - 60));
   layer.elements.push(el);
   selectedId = el.id;
   renderAll();
@@ -534,13 +538,43 @@ function deleteElement(id) {
 }
 function duplicateElement(id) {
   const f = findElement(id); if (!f) return;
+  const { w: sw, h: sh } = getScreen();
   const src = f.element;
   const dup = JSON.parse(JSON.stringify(src));
   dup.id = nextElementId++; dup.uuid = randomHex(16);
-  dup.x = Math.min(10000, dup.x + 300); dup.y = Math.min(10000, dup.y + 300);
+  dup.x = Math.min(sw - 100, dup.x + 120);
+  dup.y = Math.min(sh - 100, dup.y + 120);
   f.layer.elements.push(dup);
   selectedId = dup.id;
-  renderAll(); showStatus('已复制');
+  renderAll(); showStatus('已复制 (Ctrl+D)');
+}
+
+/* ============ 数据自动修复：把超出屏幕的坐标拉回来 ============ */
+function fixOutOfBoundsElements() {
+  const { w: sw, h: sh } = getScreen();
+  let fixed = 0;
+  layers.forEach(l => {
+    l.elements.forEach(el => {
+      const was = { x: el.x, y: el.y, w: el.w, h: el.h };
+      // 如果 x/y 超出屏幕 3 倍以上，说明用了万分比单位，自动转换
+      if (el.x > sw * 2 || el.y > sh * 2) {
+        const newX = Math.round(el.x / 10000 * sw);  // 万分比 → 像素
+        const newY = Math.round(el.y / 10000 * sh);
+        if (newX > 0 && newX < sw && newY > 0 && newY < sh) {
+          el.x = newX; el.y = newY; fixed++;
+        } else {
+          el.x = Math.round(sw * 0.5); el.y = Math.round(sh * 0.5); fixed++;
+        }
+      }
+      if (el.w > sw * 2 || el.h > sh * 2) {
+        el.w = Math.round(sw * 0.125); el.h = Math.round(sh * 0.2); fixed++;
+      }
+      // clamp
+      el.x = Math.max(20, Math.min(sw - 20, el.x));
+      el.y = Math.max(20, Math.min(sh - 20, el.y));
+    });
+  });
+  if (fixed > 0) showStatus(`自动修正了 ${fixed} 个控件位置`);
 }
 
 /* ============ 画布渲染 ============ */
@@ -1093,6 +1127,7 @@ function importJSON(data) {
     });
     activeLayerId = layers[0]?.id || null;
   }
+  fixOutOfBoundsElements();
   renderAll(); syncStageSize();
 }
 
@@ -1141,6 +1176,7 @@ function updateAllPanels() {
   }
 
   renderKeyChips();
+  fixOutOfBoundsElements();  // 自动修正可能存在的旧版万分比坐标
   syncStageSize();
   renderAll();
 
