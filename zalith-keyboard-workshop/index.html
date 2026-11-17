@@ -488,12 +488,31 @@ const GLFW_KEYS = {
   '↑':'GLFW_KEY_UP','↓':'GLFW_KEY_DOWN','←':'GLFW_KEY_LEFT','→':'GLFW_KEY_RIGHT',
   'Caps':'GLFW_KEY_CAPS_LOCK','Delete':'GLFW_KEY_DELETE',
   'Home':'GLFW_KEY_HOME','End':'GLFW_KEY_END','PgUp':'GLFW_KEY_PAGE_UP','PgDn':'GLFW_KEY_PAGE_DOWN',
+  '`':'GLFW_KEY_GRAVE_ACCENT','-':'GLFW_KEY_MINUS','=':'GLFW_KEY_EQUAL',
+  '[':'GLFW_KEY_LEFT_BRACKET',']':'GLFW_KEY_RIGHT_BRACKET',
+  '\\':'GLFW_KEY_BACKSLASH',';':'GLFW_KEY_SEMICOLON',"'":'GLFW_KEY_APOSTROPHE',
+  ',':'GLFW_KEY_COMMA','.':'GLFW_KEY_PERIOD','/':'GLFW_KEY_SLASH',
 };
 const GLFW_MOUSE = {
   '🖱 左键':'GLFW_MOUSE_BUTTON_LEFT','🖱 右键':'GLFW_MOUSE_BUTTON_RIGHT',
   '🖱 中键':'GLFW_MOUSE_BUTTON_MIDDLE','🖱 侧键1':'GLFW_MOUSE_BUTTON_4','🖱 侧键2':'GLFW_MOUSE_BUTTON_5',
 };
-const ALL_KEYS = { ...GLFW_KEYS, ...GLFW_MOUSE };
+// Minecraft 聊天命令快捷按钮（导出时走 sendCommand 逻辑）
+const CHAT_COMMANDS = {
+  '💬 聊天键 T':'chat:T',
+  '📢 指令 /say':'chat:/say ',
+  '⚡ 指令 /gamemode creative':'chat:/gamemode creative',
+  '⛏ 指令 /gamemode survival':'chat:/gamemode survival',
+  '🛡 指令 /gamemode spectator':'chat:/gamemode spectator',
+  '✨ 指令 /effect give':'chat:/effect give @s ',
+  '🎁 指令 /give':'chat:/give @s ',
+  '🏠 指令 /tp @s':'chat:/tp @s ',
+  '🌙 指令 /time set':'chat:/time set ',
+  '🌧 指令 /weather':'chat:/weather ',
+  '🔫 指令 /fill':'chat:/fill ',
+  '📦 指令 /setblock':'chat:/setblock ',
+};
+const ALL_KEYS = { ...GLFW_KEYS, ...GLFW_MOUSE, ...CHAT_COMMANDS };
 
 /* ============ 键位库 ============ */
 function renderKeyChips() {
@@ -802,7 +821,7 @@ function positionNode(el) {
   }
 }
 
-/* ============ 拖拽（同时支持鼠标 + 触摸） ============ */
+/* ============ 拖拽（pointer events 统一 mouse + touch + pen） ============ */
 let dragState = null;
 
 function getEventPoint(e) {
@@ -816,19 +835,24 @@ function startDrag(e, id) {
   const f = findElement(id); if (!f) return;
   selectElement(id);
   const dom = stage.querySelector(`[data-id="${id}"]`); if (!dom) return;
+  // 提升 z-index 避免被同级遮挡
+  dom.style.zIndex = '999';
   const p = getEventPoint(e);
   const rect = dom.getBoundingClientRect();
   dragState = { id, offsetX: p.x - rect.left, offsetY: p.y - rect.top };
 
-  if (e.type === 'touchstart') {
-    document.addEventListener('touchmove', onDrag, { passive: false });
-    document.addEventListener('touchend', endDrag, { passive: false });
-    document.addEventListener('touchcancel', endDrag, { passive: false });
-  } else {
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', endDrag);
-  }
+  // pointer events 一次搞定所有设备
+  try { dom.setPointerCapture?.(e.pointerId); } catch(_) {}
+  document.addEventListener('pointermove', onDrag, { passive: false });
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
 }
+// 画布空白处点击 → 取消选中
+stage.addEventListener('pointerdown', function(e) {
+  if (e.target === stage || e.target.classList.contains('grid-overlay')) {
+    if (selectedId) { selectedId = null; renderAll(); }
+  }
+});
 
 function onDrag(e) {
   if (!dragState) return;
@@ -873,15 +897,16 @@ function onDrag(e) {
 }
 
 function endDrag() {
-  if (dragState) snapshot();
+  if (dragState) {
+    try { stage.querySelector(`[data-id="${dragState.id}"]`).style.zIndex = ''; } catch(_) {}
+    snapshot();
+  }
   dragState = null;
-  document.removeEventListener('mousemove', onDrag);
-  document.removeEventListener('mouseup', endDrag);
-  document.removeEventListener('touchmove', onDrag);
-  document.removeEventListener('touchend', endDrag);
-  document.removeEventListener('touchcancel', endDrag);
+  document.removeEventListener('pointermove', onDrag);
+  document.removeEventListener('pointerup', endDrag);
+  document.removeEventListener('pointercancel', endDrag);
   renderStage();
-  renderInspector();  // 确保属性面板数值同步
+  renderInspector();
 }
 
 function updateSelectedBadge(el) {
@@ -982,17 +1007,73 @@ function renderKeyChipsHTML(el) {
     return `<span class="keychip">${escapeHtml(label)}<span class="remove" onclick="removeKeycode(${el.id}, ${idx})" title="移除">×</span></span>`;
   }).join('');
 }
-// chip 对应的隐藏 select（添加新按键用）
+// chip 对应的搜索下拉（支持实时过滤 + 自定义输入 chat:/xxx）
 function keyAddSelectHTML(el) {
-  const codeToLabel = {};
-  Object.entries(ALL_KEYS).forEach(([label, code]) => codeToLabel[code] = label);
   return `
-    <select id="propKeyAdd" style="margin-top:6px" onchange="addKeycode(${el.id}, this.value)">
-      <option value="">＋ 按键…</option>
-      ${Object.entries(ALL_KEYS).map(([label, code]) => 
-        `<option value="${code}">${label}</option>`
-      ).join('')}
-    </select>`;
+    <div class="key-search" style="position:relative;margin-top:6px">
+      <input id="propKeyAddSearch" type="text" placeholder="🔍 搜索键位…  或  输入 chat:/say " style="width:100%;background:#1e1e28;border:1px solid #2e2e3a;color:#e8e8ed;padding:6px 8px;border-radius:5px;font-size:12px" oninput="filterKeyList(${el.id}, this.value)" onfocus="showKeyList(${el.id}, this)">
+      <div id="keyListDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:220px;overflow-y:auto;background:#1e1e28;border:1px solid #2e2e3a;border-radius:5px;margin-top:2px;z-index:100"></div>
+    </div>`;
+}
+function showKeyList(elId, input) {
+  filterKeyList(elId, input.value || '');
+  // 点击外部关闭
+  setTimeout(() => {
+    const dd = document.getElementById('keyListDropdown');
+    if (!dd) return;
+    const close = (e) => {
+      if (!dd.contains(e.target) && e.target !== input) {
+        dd.style.display = 'none';
+        document.removeEventListener('click', close, true);
+      }
+    };
+    document.addEventListener('click', close, true);
+  }, 10);
+}
+function filterKeyList(elId, q) {
+  const dd = document.getElementById('keyListDropdown');
+  if (!dd) return;
+  dd.style.display = 'block';
+  const ql = (q || '').toLowerCase();
+  const groups = [
+    { name: '⌨ 键盘', map: GLFW_KEYS },
+    { name: '🖱 鼠标', map: GLFW_MOUSE },
+    { name: '💬 Minecraft 命令', map: CHAT_COMMANDS },
+  ];
+  let html = '';
+  let shown = 0;
+  groups.forEach(g => {
+    const items = Object.entries(g.map).filter(([label, code]) => {
+      if (!ql) return true;
+      return label.toLowerCase().includes(ql) || code.toLowerCase().includes(ql);
+    });
+    if (!items.length) return;
+    html += `<div style="padding:4px 8px;font-size:10px;color:#5a5a68;border-top:1px solid #2e2e3a">${g.name}</div>`;
+    items.slice(0, 30).forEach(([label, code]) => {
+      html += `<div class="kli" style="padding:5px 8px;cursor:pointer;font-size:12px;color:#c8c8d4;display:flex;justify-content:space-between" data-code="${code}" data-label="${label}">
+        <span>${label}</span><span style="color:#5a5a68;font-size:10px;font-family:monospace">${code}</span></div>`;
+      shown++;
+    });
+  });
+  if (!shown) {
+    // 完全没匹配，把输入内容当作 chat: 命令直接加
+    if (ql.startsWith('chat:') || ql.startsWith('/')) {
+      html = `<div class="kli" style="padding:8px;cursor:pointer;background:#4a6cf7;color:#fff" data-code="${ql.startsWith('chat:') ? ql : 'chat:' + ql}" data-label="自定义: ${ql}">✚ 作为聊天命令添加 "chat:${ql}"</div>`;
+    } else {
+      html = `<div style="padding:8px;color:#5a5a68;font-size:11px;text-align:center">未匹配。试试完整输入 chat:/say 或 GLFW_KEY_xxx</div>`;
+    }
+  }
+  dd.innerHTML = html;
+  dd.querySelectorAll('.kli').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const code = item.dataset.code;
+      addKeycode(elId, code);
+      dd.style.display = 'none';
+    });
+    item.addEventListener('mouseenter', () => item.style.background = '#2a2a38');
+    item.addEventListener('mouseleave', () => item.style.background = '');
+  });
 }
 function removeKeycode(elId, idx) {
   const f = findElement(elId); if (!f) return;
