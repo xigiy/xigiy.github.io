@@ -2,97 +2,105 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zalith 键位预览与制作</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zalith 键位工坊</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0f0f13; color: #e8e8ed; height: 100vh; overflow: hidden;
+    background: #0f0f13; color: #e8e8ed;
     display: flex; flex-direction: column;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
   }
-  /* 通用工具栏 */
+
+  /* ============ 工具栏 ============ */
   .toolbar {
-    display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+    display: flex; align-items: center; gap: 6px; padding: 8px 10px;
     background: #1a1a22; border-bottom: 1px solid #2a2a35; flex-shrink: 0;
     flex-wrap: wrap;
   }
-  .toolbar h1 { font-size: 15px; font-weight: 600; margin-right: 8px; color: #c8c8d4; white-space: nowrap; }
+  .toolbar h1 { font-size: 14px; font-weight: 600; color: #c8c8d4; white-space: nowrap; }
   .toolbar input {
     background: #24242e; border: 1px solid #35353f; color: #e8e8ed;
-    padding: 6px 10px; border-radius: 6px; font-size: 13px; width: 120px;
+    padding: 5px 8px; border-radius: 5px; font-size: 12px; width: 100px;
   }
-  .toolbar input#layoutDesc { width: 170px; }
+  .toolbar input#screenW, .toolbar input#screenH { width: 56px; }
+  .toolbar .sep { width: 1px; height: 20px; background: #2a2a35; margin: 0 2px; }
   .toolbar button {
     background: #2d2d3a; border: 1px solid #3d3d4a; color: #e8e8ed;
-    padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+    padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer;
     white-space: nowrap;
   }
   .toolbar button:hover { background: #3d3d4a; }
   .toolbar button.primary { background: #4a6cf7; border-color: #4a6cf7; color: #fff; }
   .toolbar button.primary:hover { background: #5b7cf8; }
-  .toolbar button.accent { background: #7a4a9e; border-color: #7a4a9e; color: #fff; }
-  .toolbar button.accent:hover { background: #8e5ab8; }
-  .main { display: flex; flex: 1; overflow: hidden; }
 
-  /* 左侧面板 */
-  .palette {
-    width: 230px; background: #14141a; border-right: 1px solid #2a2a35;
+  /* ============ 主布局 ============ */
+  .main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* 左右面板（桌面端）*/
+  .side {
+    width: 220px; background: #14141a; border-right: 1px solid #2a2a35;
     overflow-y: auto; padding: 10px; flex-shrink: 0;
   }
-  .palette h3 {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-    color: #6b6b7a; margin: 12px 0 6px 4px; font-weight: 600;
+  .side.right { border-right: none; border-left: 1px solid #2a2a35; width: 260px; }
+  .side h3 {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #6b6b7a; margin: 14px 0 6px 4px; font-weight: 600;
   }
-  .palette h3:first-child { margin-top: 2px; }
-  .key-chip {
-    display: inline-block; background: #1e1e28; border: 1px solid #2e2e3a;
-    color: #d0d0dc; padding: 5px 8px; border-radius: 5px; font-size: 12px;
-    cursor: pointer; margin: 2px; font-family: "SF Mono", Consolas, monospace;
-    transition: background 0.1s, border-color 0.1s; user-select: none;
-  }
-  .key-chip:hover { background: #2a2a38; border-color: #4a6cf7; color: #fff; }
-  .key-chip.mouse { border-color: #6b4a7a; color: #c9a0d4; }
+  .side h3:first-child { margin-top: 2px; }
 
-  /* 图层列表 */
+  /* 图层面板 */
   .layer-row {
     display: flex; align-items: center; gap: 4px;
-    padding: 5px 6px; border-radius: 5px; margin-bottom: 3px;
+    padding: 6px 8px; border-radius: 5px; margin-bottom: 3px;
     background: #1a1a22; border: 1px solid #26262f; font-size: 12px;
     cursor: pointer; user-select: none;
   }
   .layer-row:hover { border-color: #3d3d4a; }
   .layer-row.active { background: #23233a; border-color: #4a6cf7; }
-  .layer-row.hidden-layer .layer-name { color: #5a5a68; text-decoration: line-through; }
-  .layer-row .layer-eye { cursor: pointer; font-size: 12px; width: 16px; text-align: center; }
+  .layer-row .layer-eye { cursor: pointer; width: 18px; text-align: center; }
   .layer-row .layer-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .layer-row .layer-actions { display: flex; gap: 1px; }
+  .layer-row .layer-actions { display: flex; gap: 0; }
   .layer-row .layer-actions button {
     background: transparent; border: none; color: #77778a; cursor: pointer;
-    font-size: 11px; padding: 1px 3px; border-radius: 3px;
+    font-size: 10px; padding: 2px 4px; border-radius: 3px;
   }
   .layer-row .layer-actions button:hover { color: #fff; background: #2e2e3a; }
   .add-layer-btn {
     width: 100%; background: #1e1e28; border: 1px dashed #3d3d4a;
     color: #8888a0; padding: 5px; border-radius: 5px; font-size: 11px;
-    cursor: pointer; margin: 4px 0 2px;
+    cursor: pointer; margin: 4px 0;
   }
   .add-layer-btn:hover { border-color: #4a6cf7; color: #4a6cf7; }
 
-  /* 画布 */
+  /* 键位 chips */
+  .key-chip {
+    display: inline-block; background: #1e1e28; border: 1px solid #2e2e3a;
+    color: #d0d0dc; padding: 4px 7px; border-radius: 4px; font-size: 11px;
+    cursor: pointer; margin: 2px; font-family: "SF Mono", Consolas, monospace;
+    transition: all 0.1s; user-select: none;
+  }
+  .key-chip:hover { background: #2a2a38; border-color: #4a6cf7; color: #fff; }
+  .key-chip.mouse { border-color: #6b4a7a; color: #c9a0d4; }
+
+  /* ============ 画布 ============ */
   .stage-wrap {
     flex: 1; display: flex; flex-direction: column; align-items: center;
     justify-content: center; background: #0a0a0e; position: relative;
-    overflow: hidden; padding: 20px;
+    overflow: hidden; padding: 16px; min-width: 0;
   }
   .stage-label {
-    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-    font-size: 11px; color: #4a4a58; white-space: nowrap;
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: #4a4a58; white-space: nowrap; z-index: 5;
   }
   .stage {
     position: relative; background: #1c1c24; border: 1px solid #2e2e3a;
-    border-radius: 12px; overflow: hidden; flex-shrink: 0;
-    box-shadow: 0 0 0 1px #000, 0 8px 32px rgba(0,0,0,0.5);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 0 0 1px #000, 0 6px 24px rgba(0,0,0,0.5);
+    transform-origin: center center;
   }
   .stage::before {
     content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -101,31 +109,31 @@
       linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
     background-size: 5% 5%;
   }
-  
+
   .element-node {
     position: absolute; display: flex; align-items: center; justify-content: center;
-    cursor: grab; user-select: none; text-align: center; 
+    cursor: grab; user-select: none; text-align: center;
     line-height: 1.2; white-space: pre-line; overflow: hidden;
     transition: box-shadow 0.1s; font-family: "SF Mono", Consolas, monospace;
     word-break: break-all;
+    touch-action: none;
   }
   .element-node:active { cursor: grabbing; }
   .element-node.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4a6cf7 !important; z-index: 10 !important; }
-  
-  /* 默认样式 */
+  .element-node.joystick { border-radius: 50%; }
+
   .element-node.default-style {
     background: rgba(100,100,100,0.7); color: #fff;
+    border: 1px solid rgba(255,255,255,0.15);
   }
-  .element-node.normal.toggleable { border-style: dashed; border: 1.5px solid #fff; }
+  .element-node.normal.toggleable { border: 1.5px dashed #fff; }
   .element-node.textbox.default-style {
-    background: rgba(130,130,140,0.3); border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 4px; color: #e8e8ed;
+    background: rgba(130,130,140,0.25); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px; color: #c8c8d4;
   }
-  
-  .element-node.joystick { border-radius: 50%; }
   .joystick-base {
     width: 100%; height: 100%; border-radius: 50%;
-    background: rgba(100,100,100,0.6); border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(100,100,100,0.6); border: 2px solid rgba(255,255,255,0.15);
     display: flex; align-items: center; justify-content: center;
   }
   .joystick-stick {
@@ -133,19 +141,17 @@
     background: rgba(200,200,200,0.8);
   }
 
-  /* 右侧属性 */
-  .inspector {
-    width: 280px; background: #14141a; border-left: 1px solid #2a2a35;
-    overflow-y: auto; padding: 14px; flex-shrink: 0;
+  /* 选中时浮现坐标标签 */
+  .coord-badge {
+    position: absolute; background: #4a6cf7; color: #fff;
+    padding: 2px 6px; border-radius: 4px; font-size: 10px;
+    white-space: nowrap; pointer-events: none; z-index: 20;
+    transform: translate(-50%, -140%);
   }
-  .inspector h3 {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-    color: #6b6b7a; margin-bottom: 10px; font-weight: 600;
-  }
-  .field { margin-bottom: 12px; }
-  .field label {
-    display: block; font-size: 11px; color: #8888a0; margin-bottom: 4px;
-  }
+
+  /* ============ 属性面板 ============ */
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: #8888a0; margin-bottom: 4px; }
   .field input, .field select {
     width: 100%; background: #1e1e28; border: 1px solid #2e2e3a;
     color: #e8e8ed; padding: 6px 8px; border-radius: 5px; font-size: 12px;
@@ -154,129 +160,128 @@
   .field input:focus, .field select:focus { outline: none; border-color: #4a6cf7; }
   .field-row { display: flex; gap: 8px; }
   .field-row .field { flex: 1; }
-  .empty-hint {
-    color: #4a4a58; font-size: 12px; text-align: center; padding: 30px 10px;
-    line-height: 1.6;
-  }
-  .toggle-row {
-    display: flex; align-items: center; gap: 8px; font-size: 12px;
-    color: #c8c8d4; cursor: pointer; margin-bottom: 10px;
-  }
+  .field-hint { font-size: 10px; color: #5a5a68; margin-top: 3px; }
+  .pct-row { display: flex; align-items: center; gap: 6px; }
+  .pct-row input { flex: 1; }
+  .pct-row span { width: 28px; text-align: right; font-size: 11px; color: #8888a0; }
+  .empty-hint { color: #4a4a58; font-size: 12px; text-align: center; padding: 30px 10px; line-height: 1.6; }
+  .toggle-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #c8c8d4; cursor: pointer; margin-bottom: 8px; }
   .toggle-row input { width: auto; }
   .delete-btn {
     background: #3a1a1a; border: 1px solid #6a2a2a; color: #e07070;
-    padding: 6px; border-radius: 5px; cursor: pointer; width: 100%;
-    font-size: 12px; margin-top: 8px;
+    padding: 7px; border-radius: 5px; cursor: pointer; width: 100%;
+    font-size: 12px; margin-top: 10px;
   }
   .delete-btn:hover { background: #4a2020; }
 
-  /* 模态浮层 (JSON & 样式管理) */
+  /* ============ 移动端底部 Tab ============ */
+  .mobile-tabs { display: none; }
+
+  /* ============ 模态 ============ */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
     display: none; align-items: center; justify-content: center; z-index: 100;
   }
   .modal-overlay.show { display: flex; }
   .modal-box {
     background: #14141a; border: 1px solid #2e2e3a; border-radius: 10px;
-    width: 80%; max-width: 800px; max-height: 85vh; display: flex;
+    width: 80%; max-width: 720px; max-height: 85vh; display: flex;
     flex-direction: column; overflow: hidden;
   }
   .modal-header {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 14px; border-bottom: 1px solid #2a2a35;
+    padding: 10px 14px; border-bottom: 1px solid #2a2a35; flex-shrink: 0;
   }
   .modal-header span { font-size: 13px; font-weight: 600; }
   .modal-header button {
     background: #2d2d3a; border: 1px solid #3d3d4a; color: #e8e8ed;
     padding: 4px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;
   }
-  .modal-body { flex: 1; overflow: hidden; display: flex; }
-  
+  .modal-body { flex: 1; overflow: hidden; display: flex; min-height: 0; }
   .modal-textarea {
     flex: 1; background: #0f0f13; color: #a0d0a0; border: none;
     padding: 12px 14px; font-family: "SF Mono", Consolas, monospace;
     font-size: 11px; line-height: 1.5; resize: none; outline: none;
-    min-height: 400px;
   }
-
-  /* 样式管理器布局 */
-  .style-sidebar {
-    width: 200px; border-right: 1px solid #2a2a35; overflow-y: auto;
-    display: flex; flex-direction: column;
-  }
-  .style-list { flex: 1; overflow-y: auto; padding: 8px; }
-  .style-item {
-    padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px;
-    border: 1px solid transparent; margin-bottom: 4px; display: flex;
-    justify-content: space-between; align-items: center;
-  }
-  .style-item:hover { background: #1e1e28; }
-  .style-item.active { background: #23233a; border-color: #4a6cf7; }
-  .style-item .del-btn { color: #e05555; cursor: pointer; padding: 0 4px; font-size: 14px; }
-  .style-sidebar .add-style-btn {
-    margin: 8px; padding: 8px; background: #1e1e28; border: 1px dashed #3d3d4a;
-    color: #8888a0; border-radius: 5px; cursor: pointer; text-align: center;
-    font-size: 12px;
-  }
-  .style-sidebar .add-style-btn:hover { border-color: #4a6cf7; color: #4a6cf7; }
-
-  .style-editor {
-    flex: 1; overflow-y: auto; padding: 14px;
-  }
-  .style-editor h4 { font-size: 12px; color: #c8c8d4; margin-bottom: 10px; border-bottom: 1px solid #2a2a35; padding-bottom: 4px; }
-  .style-theme-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-  .style-theme-tabs button {
-    flex: 1; padding: 6px; background: #1e1e28; border: 1px solid #2e2e3a;
-    color: #a0a0b0; border-radius: 5px; cursor: pointer;
-  }
-  .style-theme-tabs button.active { background: #4a6cf7; color: #fff; border-color: #4a6cf7; }
-  
-  .color-picker-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-  .color-picker-row label { width: 80px; font-size: 11px; color: #8888a0; }
-  .color-picker-row input[type="color"] { width: 30px; height: 30px; padding: 0; border: none; background: none; cursor: pointer; }
-  .color-picker-row input[type="range"] { flex: 1; }
-  .color-picker-row span { width: 40px; font-size: 11px; text-align: right; color: #8888a0; }
 
   .status {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     background: #1e1e28; border: 1px solid #3d3d4a; color: #c8c8d4;
-    padding: 8px 18px; border-radius: 20px; font-size: 12px;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
+    padding: 8px 16px; border-radius: 20px; font-size: 12px;
+    opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 200;
+    white-space: nowrap;
   }
   .status.show { opacity: 1; }
+
+  /* ============ 响应式 ============ */
+  @media (max-width: 720px) {
+    body { overflow: hidden; }
+    .toolbar input { display: none; }
+    .toolbar input#screenW, .toolbar input#screenH { display: block; width: 48px; }
+    .toolbar h1 { font-size: 12px; }
+    .toolbar button { padding: 4px 7px; font-size: 11px; }
+
+    .main { flex-direction: column; }
+    .side { display: none; width: 100% !important; max-height: 40vh; border-right: none; border-left: none; border-top: 1px solid #2a2a35; }
+    .side.active { display: block; }
+    .stage-wrap { padding: 10px; flex: 1; }
+
+    .mobile-tabs {
+      display: flex; flex-shrink: 0; background: #14141a;
+      border-top: 1px solid #2a2a35;
+    }
+    .mobile-tabs .mtab {
+      flex: 1; padding: 10px 0; text-align: center; font-size: 12px;
+      color: #8888a0; cursor: pointer; border: none; background: none;
+      border-top: 2px solid transparent;
+    }
+    .mobile-tabs .mtab.active { color: #4a6cf7; border-top-color: #4a6cf7; background: #1a1a22; }
+  }
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <h1>⚡ Zalith 键位工坊</h1>
-  <input id="layoutName" value="name" placeholder="布局名称">
-  <input id="authorName" value="editor" placeholder="作者">
-  <input id="layoutDesc" value="" placeholder="描述（可空）">
-  <input id="screenW" type="number" value="2400" title="屏幕宽度(px)" style="width:70px">
-  <input id="screenH" type="number" value="1080" title="屏幕高度(px)" style="width:70px">
-  <button onclick="addElement('normal')">+ 按钮</button>
-  <button onclick="addElement('textbox')">+ 文本</button>
-  <button onclick="addElement('joystick')">+ 摇杆</button>
-  <button class="accent" onclick="openStyleManager()">🎨 样式</button>
+  <h1>⚡ 键位工坊</h1>
+  <div class="sep"></div>
+  <input id="screenW" type="number" value="2400" title="屏幕宽">
+  <span style="font-size:11px;color:#6b6b7a">×</span>
+  <input id="screenH" type="number" value="1080" title="屏幕高">
+  <div class="sep"></div>
+  <button onclick="addElement('normal')">🔘 按钮</button>
+  <button onclick="addElement('joystick')">🕹 摇杆</button>
+  <button onclick="addElement('textbox')">📝 文字</button>
+  <div class="sep"></div>
   <button onclick="showImport()">📥 导入</button>
-  <button class="primary" onclick="exportJSON()">📤 导出 JSON</button>
+  <button class="primary" onclick="exportJSON()">📤 导出</button>
 </div>
 
 <div class="main">
-  <div class="palette">
-    <h3>图层（上 → 下）</h3>
+  <!-- 左侧：图层 + 键位库 -->
+  <div class="side" id="panelLeft">
+    <h3>图层</h3>
     <div id="layerPanel"></div>
     <button class="add-layer-btn" onclick="addLayerUI()">＋ 新建图层</button>
-    <div id="keyChips"></div>
+    <div id="keyChips" style="display:none"></div>
+    <h3 style="display:inline-block;cursor:pointer" onclick="toggleKeyChips()">⌨ 键位库 <span id="kcToggle">▼</span></h3>
+    <div id="keyChips2"></div>
   </div>
 
+  <!-- 中间：画布 -->
   <div class="stage-wrap" id="stageWrap">
     <div class="stage-label" id="stageLabel"></div>
     <div class="stage" id="stage"></div>
   </div>
 
-  <div class="inspector" id="inspector"></div>
+  <!-- 右侧：属性 -->
+  <div class="side right" id="panelRight"></div>
+</div>
+
+<!-- 移动端底部 Tab -->
+<div class="mobile-tabs" id="mobileTabs">
+  <button class="mtab" onclick="switchMobileTab('layers')">📚 图层</button>
+  <button class="mtab" onclick="switchMobileTab('props')">⚙ 属性</button>
+  <button class="mtab" onclick="switchMobileTab('keys')">⌨ 键位</button>
 </div>
 
 <!-- JSON 浮层 -->
@@ -285,7 +290,7 @@
     <div class="modal-header">
       <span id="jsonTitle">导出 JSON</span>
       <div style="display:flex;gap:8px">
-        <button id="jsonCopyBtn" onclick="copyJSON()">复制</button>
+        <button id="jsonActionBtn" onclick="copyJSON()">复制</button>
         <button onclick="closeJSON()">关闭</button>
       </div>
     </div>
@@ -293,29 +298,50 @@
   </div>
 </div>
 
-<!-- 样式管理浮层 -->
-<div class="modal-overlay" id="styleOverlay">
-  <div class="modal-box" style="max-width: 700px; height: 600px;">
-    <div class="modal-header">
-      <span>样式管理 (Styles)</span>
-      <button onclick="document.getElementById('styleOverlay').classList.remove('show')">关闭</button>
-    </div>
-    <div class="modal-body">
-      <div class="style-sidebar">
-        <div class="style-list" id="styleList"></div>
-        <button class="add-style-btn" onclick="addStyle()">＋ 新建样式</button>
-      </div>
-      <div class="style-editor" id="styleEditor"></div>
-    </div>
-  </div>
-</div>
-
 <div class="status" id="status"></div>
 
 <script>
-// ============================================================
-// GLFW 键码
-// ============================================================
+'use strict';
+
+/* ============ 状态 ============ */
+let layers = [];
+let styles = [];
+let activeLayerId = null;
+let selectedId = null;
+let nextElementId = 1;
+let nextLayerId = 1;
+let nextLayerSeq = 1;
+let currentEditingStyleId = null;
+let currentStyleTheme = 'darkStyle';
+let currentMobileTab = 'props';
+
+const stage = document.getElementById('stage');
+const stageWrap = document.getElementById('stageWrap');
+const rightPanel = document.getElementById('panelRight');
+const screenWInput = document.getElementById('screenW');
+const screenHInput = document.getElementById('screenH');
+
+/* ============ 工具 ============ */
+function escapeHtml(s) { s = s == null ? '' : s; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s) { return escapeHtml(s); }
+function randomHex(len) { let out=''; for(let i=0;i<len;i++) out+='0123456789abcdef'[Math.floor(Math.random()*16)]; return out; }
+function pctToTen(pct) { return Math.round(Math.max(0, Math.min(100, pct)) * 100); }
+function tenToPct(ten) { return Math.round((ten / 100) * 10) / 10; } // 保留一位小数
+function showStatus(msg) {
+  const s = document.getElementById('status');
+  s.textContent = msg; s.classList.add('show');
+  clearTimeout(s._t); s._t = setTimeout(() => s.classList.remove('show'), 1800);
+}
+function getScreen() {
+  return { w: Math.max(240, parseInt(screenWInput.value) || 2400), h: Math.max(480, parseInt(screenHInput.value) || 1080) };
+}
+function getActiveLayer() { return layers.find(l => l.id === activeLayerId) || layers[0] || null; }
+function findElement(id) {
+  for (const l of layers) { const e = l.elements.find(x => x.id === id); if (e) return { layer: l, element: e }; }
+  return null;
+}
+
+/* ============ GLFW 键码 ============ */
 const GLFW_KEYS = {
   'A':'GLFW_KEY_A','B':'GLFW_KEY_B','C':'GLFW_KEY_C','D':'GLFW_KEY_D','E':'GLFW_KEY_E',
   'F':'GLFW_KEY_F','G':'GLFW_KEY_G','H':'GLFW_KEY_H','I':'GLFW_KEY_I','J':'GLFW_KEY_J',
@@ -329,168 +355,102 @@ const GLFW_KEYS = {
   'F11':'GLFW_KEY_F11','F12':'GLFW_KEY_F12',
   'Space':'GLFW_KEY_SPACE','Enter':'GLFW_KEY_ENTER','Escape':'GLFW_KEY_ESCAPE',
   'Tab':'GLFW_KEY_TAB','Backspace':'GLFW_KEY_BACKSPACE',
-  'Left Shift':'GLFW_KEY_LEFT_SHIFT','Right Shift':'GLFW_KEY_RIGHT_SHIFT',
-  'Left Ctrl':'GLFW_KEY_LEFT_CONTROL','Right Ctrl':'GLFW_KEY_RIGHT_CONTROL',
-  'Left Alt':'GLFW_KEY_LEFT_ALT','Right Alt':'GLFW_KEY_RIGHT_ALT',
-  'Up':'GLFW_KEY_UP','Down':'GLFW_KEY_DOWN','Left':'GLFW_KEY_LEFT','Right':'GLFW_KEY_RIGHT',
-  'Caps Lock':'GLFW_KEY_CAPS_LOCK','Delete':'GLFW_KEY_DELETE',
-  'Insert':'GLFW_KEY_INSERT','Home':'GLFW_KEY_HOME','End':'GLFW_KEY_END',
-  'Page Up':'GLFW_KEY_PAGE_UP','Page Down':'GLFW_KEY_PAGE_DOWN',
-  '🖱 左键':'GLFW_MOUSE_BUTTON_LEFT','🖱 右键':'GLFW_MOUSE_BUTTON_RIGHT',
-  '🖱 中键':'GLFW_MOUSE_BUTTON_MIDDLE',
-  '🖱 侧键1':'GLFW_MOUSE_BUTTON_4','🖱 侧键2':'GLFW_MOUSE_BUTTON_5',
+  'L Shift':'GLFW_KEY_LEFT_SHIFT','R Shift':'GLFW_KEY_RIGHT_SHIFT',
+  'L Ctrl':'GLFW_KEY_LEFT_CONTROL','R Ctrl':'GLFW_KEY_RIGHT_CONTROL',
+  'L Alt':'GLFW_KEY_LEFT_ALT','R Alt':'GLFW_KEY_RIGHT_ALT',
+  '↑':'GLFW_KEY_UP','↓':'GLFW_KEY_DOWN','←':'GLFW_KEY_LEFT','→':'GLFW_KEY_RIGHT',
+  'Caps':'GLFW_KEY_CAPS_LOCK','Delete':'GLFW_KEY_DELETE',
+  'Home':'GLFW_KEY_HOME','End':'GLFW_KEY_END','PgUp':'GLFW_KEY_PAGE_UP','PgDn':'GLFW_KEY_PAGE_DOWN',
 };
-const KNOWN_CODES = new Set(Object.values(GLFW_KEYS));
-const MOUSE_KEYS = new Set(Object.keys(GLFW_KEYS).filter(k => k.startsWith('🖱')));
+const GLFW_MOUSE = {
+  '🖱 左键':'GLFW_MOUSE_BUTTON_LEFT','🖱 右键':'GLFW_MOUSE_BUTTON_RIGHT',
+  '🖱 中键':'GLFW_MOUSE_BUTTON_MIDDLE','🖱 侧键1':'GLFW_MOUSE_BUTTON_4','🖱 侧键2':'GLFW_MOUSE_BUTTON_5',
+};
+const ALL_KEYS = { ...GLFW_KEYS, ...GLFW_MOUSE };
 
-// ============================================================
-// 状态
-// ============================================================
-let layers = [];
-let styles = [];
-let activeLayerId = null;
-let selectedId = null;
-let nextElementId = 1;
-let nextLayerId = 1;
-let nextLayerSeq = 1;
-let currentEditingStyleId = null;
-let currentStyleTheme = 'darkStyle'; // 'lightStyle' or 'darkStyle'
-
-const stage = document.getElementById('stage');
-const stageWrap = document.getElementById('stageWrap');
-const inspector = document.getElementById('inspector');
-const screenWInput = document.getElementById('screenW');
-const screenHInput = document.getElementById('screenH');
-
-function getScreen() {
-  return {
-    w: Math.max(240, parseInt(screenWInput.value) || 2400),
-    h: Math.max(480, parseInt(screenHInput.value) || 1080),
-  };
+/* ============ 键位库 ============ */
+function renderKeyChips() {
+  const wrap = document.getElementById('keyChips2');
+  const groups = [
+    { title: '字母', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
+    { title: '数字', keys: '0123456789'.split('') },
+    { title: 'F1-F12', keys: ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'] },
+    { title: '常用', keys: ['Space','Enter','Escape','Tab','Backspace'] },
+    { title: '方向', keys: ['↑','↓','←','→'] },
+    { title: 'Shift', keys: ['L Shift','R Shift'] },
+    { title: 'Ctrl', keys: ['L Ctrl','R Ctrl'] },
+    { title: 'Alt', keys: ['L Alt','R Alt'] },
+    { title: '其他', keys: ['Caps','Delete','Home','End','PgUp','PgDn'] },
+    { title: '鼠标', keys: ['🖱 左键','🖱 右键','🖱 中键','🖱 侧键1','🖱 侧键2'] },
+  ];
+  wrap.innerHTML = groups.map(g => {
+    const mouse = g.title === '鼠标';
+    return `<h3>${g.title}</h3><div>${g.keys.map(k => 
+      `<span class="key-chip${mouse?' mouse':''}" title="${ALL_KEYS[k]}">${k}</span>`
+    ).join('')}</div>`;
+  }).join('');
+  wrap.querySelectorAll('.key-chip').forEach(chip => {
+    chip.onclick = () => {
+      const k = chip.textContent.trim();
+      const el = createElementData('normal');
+      el.keyName = ALL_KEYS[k];
+      el.text = k;
+      addElementToActiveLayer(el);
+    };
+  });
 }
-function getActiveLayer() {
-  return layers.find(l => l.id === activeLayerId) || layers[0] || null;
-}
-function findElement(id) {
-  for (const l of layers) {
-    const el = l.elements.find(x => x.id === id);
-    if (el) return { layer: l, element: el };
-  }
-  return null;
-}
-
-// ============================================================
-// 颜色与数据转换工具
-// ============================================================
-function argbToHex(argb) {
-  const u = argb >>> 0;
-  return '#' + [(u >>> 16) & 0xFF, (u >>> 8) & 0xFF, u & 0xFF]
-    .map(x => x.toString(16).padStart(2, '0')).join('');
-}
-function argbToAlpha(argb) {
-  return Math.round(((argb >>> 24) & 0xFF) / 255 * 100);
-}
-function hexAlphaToArgb(hex, alphaPct) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const a = Math.round((alphaPct / 100) * 255);
-  return ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
+function toggleKeyChips() {
+  const kc = document.getElementById('keyChips');
+  const kc2 = document.getElementById('keyChips2');
+  const t = document.getElementById('kcToggle');
+  // 两个是同一个内容的两个渲染，复用 renderKeyChips 渲染到 kc2，kc 隐藏
+  kc.style.display = 'none';
+  kc2.style.display = kc2.style.display === 'none' ? 'block' : 'none';
+  t.textContent = kc2.style.display === 'none' ? '▶' : '▼';
 }
 
-// ============================================================
-// 画布尺寸与缩放
-// ============================================================
+/* ============ 画布尺寸 ============ */
 function syncStageSize() {
   const wrap = stageWrap.getBoundingClientRect();
   const { w: sw, h: sh } = getScreen();
-  const availW = wrap.width - 40;
-  const availH = wrap.height - 50;
-  const scale = Math.min(availW / sw, availH / sh);
+  const availW = wrap.width - 24;
+  const availH = wrap.height - 36;
+  const scale = Math.min(availW / sw, availH / sh, 1);
   stage.style.width = Math.round(sw * scale) + 'px';
   stage.style.height = Math.round(sh * scale) + 'px';
-  renderStageLabel();
   const layer = getActiveLayer();
   if (layer) layer.elements.forEach(el => positionNode(el));
+  renderStageLabel();
+  updateAllPanels();
 }
 window.addEventListener('resize', syncStageSize);
+screenWInput.addEventListener('change', syncStageSize);
+screenHInput.addEventListener('change', syncStageSize);
 
 function renderStageLabel() {
   const { w, h } = getScreen();
   const layer = getActiveLayer();
-  const pre = layer ? `当前层：${layer.name}${layer.hide ? '（已隐藏）' : ''} · ` : '';
-  document.getElementById('stageLabel').textContent = `${pre}屏幕预览 ${w}×${h} · 拖拽调整位置`;
+  const pre = layer ? `${layer.name} · ` : '';
+  document.getElementById('stageLabel').textContent = `${pre}${w}×${h} · 拖拽移动`;
 }
 
-// ============================================================
-// 左侧键位面板
-// ============================================================
-function renderKeyChips() {
-  const wrap = document.getElementById('keyChips');
-  const groups = [
-    { title: '字母', keys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
-    { title: '数字', keys: '0123456789'.split('') },
-    { title: '功能键', keys: ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'] },
-    { title: '特殊键', keys: ['Space','Enter','Escape','Tab','Backspace','Left Shift','Right Shift','Left Ctrl','Right Ctrl','Left Alt','Right Alt','Up','Down','Left','Right','Caps Lock','Delete','Insert','Home','End','Page Up','Page Down'] },
-    { title: '鼠标键', keys: ['🖱 左键','🖱 右键','🖱 中键','🖱 侧键1','🖱 侧键2'] },
-  ];
-  wrap.innerHTML = '';
-  groups.forEach(g => {
-    const h = document.createElement('h3');
-    h.textContent = g.title;
-    wrap.appendChild(h);
-    const row = document.createElement('div');
-    g.keys.forEach(k => {
-      const chip = document.createElement('span');
-      chip.className = 'key-chip' + (MOUSE_KEYS.has(k) ? ' mouse' : '');
-      chip.textContent = k;
-      chip.title = GLFW_KEYS[k];
-      chip.onclick = () => {
-        const el = createElementData('normal');
-        el.keyName = GLFW_KEYS[k];
-        el.text = k.startsWith('🖱') ? k.replace('🖱 ', '') : k;
-        addElementToActiveLayer(el);
-      };
-      row.appendChild(chip);
-    });
-    wrap.appendChild(row);
-  });
+/* ============ 图层 ============ */
+function createLayer(name, visibilityType) {
+  return {
+    id: nextLayerId++,
+    name: name || ('控件层' + nextLayerSeq++),
+    uuid: randomHex(12),
+    hide: false, hideWhenMouse: false, hideWhenGamepad: false,
+    visibilityType: visibilityType || 'always',
+    elements: [],
+  };
 }
-
-// ============================================================
-// 图层面板
-// ============================================================
-function renderLayerPanel() {
-  const panel = document.getElementById('layerPanel');
-  panel.innerHTML = '';
-  layers.forEach((layer, idx) => {
-    const row = document.createElement('div');
-    row.className = 'layer-row'
-      + (layer.id === activeLayerId ? ' active' : '')
-      + (layer.hide ? ' hidden-layer' : '');
-    row.innerHTML = `
-      <span class="layer-eye" title="显示/隐藏图层">${layer.hide ? '🚫' : '👁'}</span>
-      <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}</span>
-      <span class="layer-actions">
-        <button title="上移（更靠前）">↑</button>
-        <button title="下移（更靠后）">↓</button>
-        <button title="删除图层">✕</button>
-      </span>
-    `;
-    row.onclick = () => setActiveLayer(layer.id);
-    row.querySelector('.layer-eye').onclick = (e) => {
-      e.stopPropagation();
-      layer.hide = !layer.hide;
-      renderAll();
-    };
-    const btns = row.querySelectorAll('.layer-actions button');
-    btns[0].onclick = (e) => { e.stopPropagation(); moveLayer(layer.id, -1); };
-    btns[1].onclick = (e) => { e.stopPropagation(); moveLayer(layer.id, 1); };
-    btns[2].onclick = (e) => { e.stopPropagation(); deleteLayer(layer.id); };
-    panel.appendChild(row);
-  });
+function addLayerUI() {
+  const layer = createLayer('控件层' + nextLayerSeq++, 'always');
+  layers.unshift(layer);
+  activeLayerId = layer.id; selectedId = null;
+  renderAll(); showStatus('已新建图层');
 }
-
 function setActiveLayer(id) {
   if (activeLayerId === id) return;
   activeLayerId = id;
@@ -498,325 +458,149 @@ function setActiveLayer(id) {
   if (!f || f.layer.id !== id) selectedId = null;
   renderAll();
 }
-
 function moveLayer(id, dir) {
-  const idx = layers.findIndex(l => l.id === id);
-  if (idx < 0) return;
-  const ni = idx + dir;
+  const i = layers.findIndex(l => l.id === id);
+  if (i < 0) return;
+  const ni = i + dir;
   if (ni < 0 || ni >= layers.length) return;
-  [layers[idx], layers[ni]] = [layers[ni], layers[idx]];
+  [layers[i], layers[ni]] = [layers[ni], layers[i]];
   renderAll();
 }
-
 function deleteLayer(id) {
   if (layers.length <= 1) { showStatus('至少保留一个图层'); return; }
-  const idx = layers.findIndex(l => l.id === id);
-  if (idx < 0) return;
-  layers.splice(idx, 1);
-  if (activeLayerId === id) {
-    activeLayerId = layers[Math.min(idx, layers.length - 1)].id;
-  }
+  const i = layers.findIndex(l => l.id === id);
+  if (i < 0) return;
+  layers.splice(i, 1);
+  if (activeLayerId === id) { activeLayerId = layers[Math.min(i, layers.length - 1)].id; }
   if (selectedId && !findElement(selectedId)) selectedId = null;
-  renderAll();
-  showStatus('已删除图层');
+  renderAll(); showStatus('已删除图层');
 }
-
-function addLayerUI() {
-  const layer = createLayer('控件层' + nextLayerSeq++, 'always');
-  layers.unshift(layer);
-  activeLayerId = layer.id;
-  selectedId = null;
-  renderAll();
-  showStatus('已新建图层（置顶）');
-}
-
-function createLayer(name, visibilityType) {
-  return {
-    id: nextLayerId++,
-    name: name || ('控件层' + nextLayerSeq++),
-    uuid: randomHex(12),
-    hide: false,
-    hideWhenMouse: false,
-    hideWhenGamepad: false,
-    visibilityType: visibilityType || 'always',
-    elements: [],
-  };
-}
-
-// ============================================================
-// 样式管理逻辑
-// ============================================================
-function createDefaultTheme() {
-  return {
-    alpha: 1.0,
-    pressedAlpha: 1.0,
-    backgroundColor: 2147483648, // 50% black
-    pressedBackgroundColor: 3012069512,
-    contentColor: 4294967295, // white
-    pressedContentColor: 4294967295,
-    pressedFontSize: 14,
-    borderWidth: 0,
-    pressedBorderWidth: 0,
-    borderColor: 4294967295,
-    pressedBorderColor: 4294967295,
-    borderRadius: { topStart: 0.0, topEnd: 0.0, bottomEnd: 0.0, bottomStart: 0.0 },
-    pressedBorderRadius: { topStart: 0.0, topEnd: 0.0, bottomEnd: 0.0, bottomStart: 0.0 }
-  };
-}
-
-function createStyle(name) {
-  return {
-    id: nextElementId++, // 复用id生成器防止冲突
-    name: name || '新样式',
-    uuid: randomHex(12),
-    animateSwap: false,
-    lightStyle: createDefaultTheme(),
-    darkStyle: createDefaultTheme()
-  };
-}
-
-function openStyleManager() {
-  if (styles.length > 0 && !currentEditingStyleId) {
-    currentEditingStyleId = styles[0].id;
-  }
-  document.getElementById('styleOverlay').classList.add('show');
-  renderStyleManager();
-}
-
-function renderStyleManager() {
-  const listEl = document.getElementById('styleList');
-  listEl.innerHTML = '';
-  styles.forEach(s => {
-    const el = document.createElement('div');
-    el.className = 'style-item' + (s.id === currentEditingStyleId ? ' active' : '');
-    el.innerHTML = `<span>${escapeHtml(s.name)}</span><span class="del-btn" title="删除">✕</span>`;
-    el.onclick = () => { currentEditingStyleId = s.id; renderStyleManager(); };
-    el.querySelector('.del-btn').onclick = (e) => {
-      e.stopPropagation();
-      deleteStyle(s.id);
-    };
-    listEl.appendChild(el);
+function renderLayerPanel() {
+  const panel = document.getElementById('layerPanel');
+  if (!panel) return;
+  panel.innerHTML = '';
+  layers.forEach(layer => {
+    const row = document.createElement('div');
+    row.className = 'layer-row' + (layer.id === activeLayerId ? ' active' : '') + (layer.hide ? ' hidden-layer' : '');
+    row.innerHTML = `
+      <span class="layer-eye">${layer.hide ? '🚫' : '👁'}</span>
+      <span class="layer-name">${escapeHtml(layer.name)} <span style="color:#5a5a68;font-size:10px">(${layer.elements.length})</span></span>
+      <span class="layer-actions">
+        <button title="上移">↑</button>
+        <button title="下移">↓</button>
+        <button title="删除">✕</button>
+      </span>`;
+    row.onclick = () => setActiveLayer(layer.id);
+    row.querySelector('.layer-eye').onclick = e => { e.stopPropagation(); layer.hide = !layer.hide; renderAll(); };
+    const b = row.querySelectorAll('.layer-actions button');
+    b[0].onclick = e => { e.stopPropagation(); moveLayer(layer.id, -1); };
+    b[1].onclick = e => { e.stopPropagation(); moveLayer(layer.id, 1); };
+    b[2].onclick = e => { e.stopPropagation(); deleteLayer(layer.id); };
+    panel.appendChild(row);
   });
-
-  const editorEl = document.getElementById('styleEditor');
-  const s = styles.find(x => x.id === currentEditingStyleId);
-  if (!s) {
-    editorEl.innerHTML = '<div class="empty-hint">请选择或创建一个样式</div>';
-    return;
-  }
-
-  const theme = s[currentStyleTheme];
-  const bgHex = argbToHex(theme.backgroundColor);
-  const bgAlpha = argbToAlpha(theme.backgroundColor);
-  const pBgHex = argbToHex(theme.pressedBackgroundColor);
-  const pBgAlpha = argbToAlpha(theme.pressedBackgroundColor);
-  const cHex = argbToHex(theme.contentColor);
-  const cAlpha = argbToAlpha(theme.contentColor);
-  const radius = theme.borderRadius.topStart;
-
-  editorEl.innerHTML = `
-    <h4>编辑样式</h4>
-    <div class="field">
-      <label>样式名称</label>
-      <input type="text" id="styleNameInput" value="${escapeAttr(s.name)}">
-    </div>
-    <div class="style-theme-tabs">
-      <button class="${currentStyleTheme === 'lightStyle' ? 'active' : ''}" onclick="setStyleTheme('lightStyle')">亮色主题 (Light)</button>
-      <button class="${currentStyleTheme === 'darkStyle' ? 'active' : ''}" onclick="setStyleTheme('darkStyle')">暗色主题 (Dark)</button>
-    </div>
-    
-    <h4>常规状态</h4>
-    <div class="color-picker-row">
-      <label>背景颜色</label>
-      <input type="color" id="bgColor" value="${bgHex}">
-      <input type="range" id="bgAlpha" min="0" max="100" value="${bgAlpha}">
-      <span>${bgAlpha}%</span>
-    </div>
-    <div class="color-picker-row">
-      <label>文字颜色</label>
-      <input type="color" id="cColor" value="${cHex}">
-      <input type="range" id="cAlpha" min="0" max="100" value="${cAlpha}">
-      <span>${cAlpha}%</span>
-    </div>
-    
-    <h4>按下状态</h4>
-    <div class="color-picker-row">
-      <label>按下背景</label>
-      <input type="color" id="pBgColor" value="${pBgHex}">
-      <input type="range" id="pBgAlpha" min="0" max="100" value="${pBgAlpha}">
-      <span>${pBgAlpha}%</span>
-    </div>
-    
-    <h4>其它</h4>
-    <div class="field">
-      <label>圆角大小 (borderRadius)</label>
-      <input type="number" id="styleRadius" value="${radius}" step="0.5" min="0">
-    </div>
-  `;
-
-  // 绑定事件
-  document.getElementById('styleNameInput').oninput = (e) => { s.name = e.target.value; renderStyleManager(); };
-  document.getElementById('bgColor').oninput = (e) => { theme.backgroundColor = hexAlphaToArgb(e.target.value, bgAlpha); };
-  document.getElementById('bgAlpha').oninput = (e) => { 
-    document.querySelector('#bgAlpha + span').textContent = e.target.value + '%';
-    theme.backgroundColor = hexAlphaToArgb(document.getElementById('bgColor').value, parseInt(e.target.value)); 
-  };
-  document.getElementById('cColor').oninput = (e) => { theme.contentColor = hexAlphaToArgb(e.target.value, cAlpha); };
-  document.getElementById('cAlpha').oninput = (e) => { 
-    document.querySelector('#cAlpha + span').textContent = e.target.value + '%';
-    theme.contentColor = hexAlphaToArgb(document.getElementById('cColor').value, parseInt(e.target.value)); 
-  };
-  document.getElementById('pBgColor').oninput = (e) => { theme.pressedBackgroundColor = hexAlphaToArgb(e.target.value, pBgAlpha); };
-  document.getElementById('pBgAlpha').oninput = (e) => { 
-    document.querySelector('#pBgAlpha + span').textContent = e.target.value + '%';
-    theme.pressedBackgroundColor = hexAlphaToArgb(document.getElementById('pBgColor').value, parseInt(e.target.value)); 
-  };
-  document.getElementById('styleRadius').oninput = (e) => {
-    const v = parseFloat(e.target.value) || 0;
-    theme.borderRadius = { topStart: v, topEnd: v, bottomEnd: v, bottomStart: v };
-    theme.pressedBorderRadius = { topStart: v, topEnd: v, bottomEnd: v, bottomStart: v };
-  };
 }
 
-function setStyleTheme(themeName) {
-  currentStyleTheme = themeName;
-  renderStyleManager();
-}
-
-function addStyle() {
-  const s = createStyle('样式 ' + (styles.length + 1));
-  styles.push(s);
-  currentEditingStyleId = s.id;
-  renderStyleManager();
-}
-
-function deleteStyle(id) {
-  if (!confirm('确定删除该样式吗？绑定了该样式的按钮将恢复默认外观。')) return;
-  styles = styles.filter(s => s.id !== id);
-  layers.forEach(l => l.elements.forEach(el => {
-    if (el.buttonStyle === styles.find(x=>x.id===id)?.uuid) el.buttonStyle = '';
-  }));
-  if (currentEditingStyleId === id) {
-    currentEditingStyleId = styles.length > 0 ? styles[0].id : null;
-  }
-  renderStyleManager();
-  renderStage(); // 重新渲染画布以防有按钮使用了被删的样式
-}
-
-// ============================================================
-// 元素增删
-// ============================================================
-function createElementData(elementType) {
-  const { w: sw, h: sh } = getScreen();
+/* ============ 元素 ============ */
+function createElementData(type) {
   const base = {
     id: nextElementId++,
-    elementType,
+    elementType: type,
     uuid: randomHex(16),
-    x: Math.round(sw * 0.5),
-    y: Math.round(sh * 0.5),
-    w: 1562,
-    h: 1562,
-    wDp: 50.0,
-    hDp: 50.0,
-    sizeType: 'percentage',
-    buttonStyle: '' // 新增：绑定的样式uuid
+    x: 5000, y: 5000,
+    w: 1500, h: 1500,
+    sizeType: type === 'joystick' ? 'percentage' : 'percentage',
+    buttonStyle: '',
   };
-  if (elementType === 'normal') {
-    return { ...base, text: '按键', keyName: 'GLFW_KEY_SPACE', toggleable: false };
-  } else if (elementType === 'textbox') {
-    return { ...base, text: '文本框', sizeType: 'wrap_content' };
-  } else if (elementType === 'joystick') {
-    return { ...base }; 
-  }
+  if (type === 'normal') return { ...base, text: '按键', keyName: 'GLFW_KEY_SPACE', toggleable: false };
+  if (type === 'textbox') return { ...base, text: '文字', sizeType: 'wrap_content' };
+  return base; // joystick
 }
-
-function addElement(elementType) {
-  const el = createElementData(elementType);
-  addElementToActiveLayer(el);
-}
-
+function addElement(type) { addElementToActiveLayer(createElementData(type)); }
 function addElementToActiveLayer(el) {
   const layer = getActiveLayer();
   if (!layer) { showStatus('请先创建图层'); return; }
+  // 加个偏移，避免重叠
+  el.x += Math.floor(Math.random() * 800 - 400);
+  el.y += Math.floor(Math.random() * 800 - 400);
   layer.elements.push(el);
   selectedId = el.id;
   renderAll();
-  showStatus(`已添加到「${layer.name}」`);
 }
-
 function deleteElement(id) {
-  const f = findElement(id);
-  if (!f) return;
+  const f = findElement(id); if (!f) return;
   f.layer.elements = f.layer.elements.filter(el => el.id !== id);
   if (selectedId === id) selectedId = null;
-  renderAll();
+  renderAll(); showStatus('已删除');
+}
+function duplicateElement(id) {
+  const f = findElement(id); if (!f) return;
+  const src = f.element;
+  const dup = JSON.parse(JSON.stringify(src));
+  dup.id = nextElementId++; dup.uuid = randomHex(16);
+  dup.x = Math.min(10000, dup.x + 300); dup.y = Math.min(10000, dup.y + 300);
+  f.layer.elements.push(dup);
+  selectedId = dup.id;
+  renderAll(); showStatus('已复制');
 }
 
-function selectElement(id) {
-  selectedId = id;
-  renderStage();
-  renderInspector();
-}
-
-// ============================================================
-// 渲染总入口
-// ============================================================
-function renderAll() {
-  renderLayerPanel();
-  renderStage();
-  renderInspector();
-}
+/* ============ 画布渲染 ============ */
+function renderAll() { renderLayerPanel(); renderStage(); renderInspector(); }
 
 function renderStage() {
   stage.innerHTML = '';
   const layer = getActiveLayer();
   if (!layer) return;
   layer.elements.forEach(el => {
+    if (layer.hide) return; // 整个图层隐藏则跳过
     const dom = document.createElement('div');
     dom.className = 'element-node ' + el.elementType
       + (el.id === selectedId ? ' selected' : '')
-      + (el.elementType === 'normal' && el.toggleable ? ' toggleable' : '');
+      + (el.elementType === 'normal' && el.toggleable ? ' toggleable' : '')
+      + ' default-style';
     dom.dataset.id = el.id;
-    
+
     if (el.elementType === 'joystick') {
       dom.innerHTML = `<div class="joystick-base"><div class="joystick-stick"></div></div>`;
     } else {
       dom.textContent = el.text;
-      
-      // 样式渲染
+      // 样式渲染：如果绑定了 buttonStyle 且找到样式，用样式覆盖
       const s = styles.find(x => x.uuid === el.buttonStyle);
       if (s && s.darkStyle) {
-        const bg = s.darkStyle.backgroundColor;
-        const c = s.darkStyle.contentColor;
-        const globalAlpha = s.darkStyle.alpha;
-        const radius = s.darkStyle.borderRadius.topStart;
-        
-        // 转换为 CSS rgba
-        const u = bg >>> 0;
-        const a = (((u >>> 24) & 0xFF) / 255) * globalAlpha;
-        const r = (u >>> 16) & 0xFF;
-        const g = (u >>> 8) & 0xFF;
-        const b = u & 0xFF;
-        dom.style.backgroundColor = `rgba(${r},${g},${b},${a})`;
-        
-        const cu = c >>> 0;
-        const ca = ((cu >>> 24) & 0xFF) / 255;
-        const cr = (cu >>> 16) & 0xFF;
-        const cg = (cu >>> 8) & 0xFF;
-        const cb = cu & 0xFF;
-        dom.style.color = `rgba(${cr},${cg},${cb},${ca})`;
-        
-        dom.style.borderRadius = (radius * stage.clientHeight / 1080) + 'px';
-        dom.style.border = 'none';
-      } else {
-        dom.classList.add('default-style');
+        const th = s.darkStyle;
+        const u = th.backgroundColor >>> 0;
+        const a = ((u >>> 24) & 0xFF) / 255 * th.alpha;
+        dom.style.backgroundColor = `rgba(${(u>>>16)&0xFF},${(u>>>8)&0xFF},${u&0xFF},${a})`;
+        const cu = th.contentColor >>> 0;
+        dom.style.color = `rgba(${(cu>>>16)&0xFF},${(cu>>>8)&0xFF},${cu&0xFF},${((cu>>>24)&0xFF)/255})`;
+        const r = th.borderRadius.topStart;
+        dom.style.borderRadius = (r * stage.clientHeight / 1080) + 'px';
+        dom.classList.remove('default-style');
       }
     }
-    
-    dom.onmousedown = (e) => startDrag(e, el.id);
+
+    dom.addEventListener('mousedown', e => startDrag(e, el.id), { passive: false });
+    dom.addEventListener('touchstart', e => startDrag(e, el.id), { passive: false });
     stage.appendChild(dom);
     positionNode(el);
   });
+  // 选中元素加坐标标签
+  if (selectedId) {
+    const f = findElement(selectedId);
+    if (f) {
+      const dom = stage.querySelector(`[data-id="${selectedId}"]`);
+      if (dom) {
+        const badge = document.createElement('div');
+        badge.className = 'coord-badge';
+        const { w: sw, h: sh } = getScreen();
+        const xp = (f.element.x / sw * 100).toFixed(1);
+        const yp = (f.element.y / sh * 100).toFixed(1);
+        badge.textContent = `${xp}%, ${yp}%`;
+        badge.style.left = dom.style.left;
+        badge.style.top = dom.style.top;
+        stage.appendChild(badge);
+      }
+    }
+  }
   renderStageLabel();
 }
 
@@ -826,449 +610,438 @@ function positionNode(el) {
   const { w: sw, h: sh } = getScreen();
   const scaleX = stage.clientWidth / sw;
   const scaleY = stage.clientHeight / sh;
-  
   dom.style.left = (el.x * scaleX) + 'px';
   dom.style.top = (el.y * scaleY) + 'px';
-  
+
   if (el.elementType === 'joystick') {
-    const jSize = 1562 * scaleY;
-    dom.style.width = jSize + 'px';
-    dom.style.height = jSize + 'px';
+    const js = 1562 * scaleY;
+    dom.style.width = js + 'px'; dom.style.height = js + 'px';
   } else {
+    dom.style.padding = '2px';
     if (el.sizeType === 'wrap_content') {
-      dom.style.width = 'auto';
-      dom.style.height = 'auto';
-      dom.style.padding = '4px 8px';
-      dom.style.fontSize = '12px';
+      dom.style.width = 'auto'; dom.style.height = 'auto';
+      dom.style.padding = '4px 8px'; dom.style.fontSize = '12px';
     } else {
-      dom.style.padding = '2px';
       let wPx, hPx;
       if (el.sizeType === 'dp') {
         wPx = el.wDp * (stage.clientHeight / 320);
         hPx = el.hDp * (stage.clientHeight / 320);
       } else {
-        wPx = el.w * scaleY;
-        hPx = el.h * scaleY;
+        wPx = el.w * scaleY; hPx = el.h * scaleY;
       }
-      dom.style.width = wPx + 'px';
-      dom.style.height = hPx + 'px';
-      dom.style.fontSize = Math.max(8, Math.min(16, wPx * 0.25)) + 'px';
+      dom.style.width = Math.max(8, wPx) + 'px';
+      dom.style.height = Math.max(8, hPx) + 'px';
+      dom.style.fontSize = Math.max(8, Math.min(16, wPx * 0.22)) + 'px';
     }
   }
 }
 
-// ============================================================
-// 拖拽
-// ============================================================
+/* ============ 拖拽（同时支持鼠标 + 触摸） ============ */
 let dragState = null;
+
+function getEventPoint(e) {
+  if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
+
 function startDrag(e, id) {
   e.preventDefault();
-  const f = findElement(id);
-  if (!f) return;
+  const f = findElement(id); if (!f) return;
   selectElement(id);
-  const dom = stage.querySelector(`[data-id="${id}"]`);
+  const dom = stage.querySelector(`[data-id="${id}"]`); if (!dom) return;
+  const p = getEventPoint(e);
   const rect = dom.getBoundingClientRect();
-  dragState = { id, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
-  document.onmousemove = onDrag;
-  document.onmouseup = endDrag;
+  dragState = { id, offsetX: p.x - rect.left, offsetY: p.y - rect.top };
+
+  if (e.type === 'touchstart') {
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('touchend', endDrag, { passive: false });
+    document.addEventListener('touchcancel', endDrag, { passive: false });
+  } else {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+  }
 }
+
 function onDrag(e) {
   if (!dragState) return;
-  const f = findElement(dragState.id);
-  if (!f) return;
+  e.preventDefault();
+  const f = findElement(dragState.id); if (!f) return;
   const el = f.element;
   const stageRect = stage.getBoundingClientRect();
   const { w: sw, h: sh } = getScreen();
   const scaleX = stage.clientWidth / sw;
   const scaleY = stage.clientHeight / sh;
-  let px = e.clientX - stageRect.left - dragState.offsetX;
-  let py = e.clientY - stageRect.top - dragState.offsetY;
-  
+  const p = getEventPoint(e);
+  let px = p.x - stageRect.left - dragState.offsetX;
+  let py = p.y - stageRect.top - dragState.offsetY;
+
   let domW = 0, domH = 0;
-  if (el.elementType === 'joystick') {
-    domW = 1562 * scaleY;
-    domH = 1562 * scaleY;
-  } else {
+  if (el.elementType === 'joystick') { domW = 1562 * scaleY; domH = 1562 * scaleY; }
+  else {
     const dom = stage.querySelector(`[data-id="${el.id}"]`);
-    if (dom) {
-      domW = dom.offsetWidth;
-      domH = dom.offsetHeight;
-    }
+    if (dom) { domW = dom.offsetWidth; domH = dom.offsetHeight; }
   }
-  
   px = Math.max(0, Math.min(stage.clientWidth - domW, px));
   py = Math.max(0, Math.min(stage.clientHeight - domH, py));
-  
+
   el.x = Math.round(px / scaleX);
   el.y = Math.round(py / scaleY);
   positionNode(el);
-  
-  const ix = document.getElementById('propX');
-  const iy = document.getElementById('propY');
-  if (ix) ix.value = el.x;
-  if (iy) iy.value = el.y;
-}
-function endDrag() {
-  dragState = null;
-  document.onmousemove = null;
-  document.onmouseup = null;
+
+  // 实时更新右侧面板 + 坐标标签
+  updateSelectedBadge(el);
 }
 
-// ============================================================
-// 右侧属性面板
-// ============================================================
+function endDrag() {
+  dragState = null;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', endDrag);
+  document.removeEventListener('touchmove', onDrag);
+  document.removeEventListener('touchend', endDrag);
+  document.removeEventListener('touchcancel', endDrag);
+  renderStage();
+}
+
+function updateSelectedBadge(el) {
+  const badge = stage.querySelector('.coord-badge');
+  if (badge) {
+    const { w: sw, h: sh } = getScreen();
+    const xp = (el.x / sw * 100).toFixed(1);
+    const yp = (el.y / sh * 100).toFixed(1);
+    badge.textContent = `${xp}%, ${yp}%`;
+    badge.style.left = stage.querySelector(`[data-id="${el.id}"]`)?.style.left || '0';
+    badge.style.top = stage.querySelector(`[data-id="${el.id}"]`)?.style.top || '0';
+  }
+}
+
+/* ============ 选中 ============ */
+function selectElement(id) {
+  selectedId = id;
+  renderStage();
+  // 同步更新所有面板
+  updateAllPanels();
+}
+// 画布空白处点击取消选中
+stageWrap.addEventListener('mousedown', e => {
+  if (e.target === stage || e.target.classList.contains('stage')) {
+    selectedId = null; renderAll();
+  }
+});
+stageWrap.addEventListener('touchstart', e => {
+  if (e.target === stage || e.target.classList.contains('stage')) {
+    selectedId = null; renderAll();
+  }
+}, { passive: true });
+
+/* ============ 键盘快捷键 ============ */
+document.addEventListener('keydown', e => {
+  // 输入框里别触发
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+    e.preventDefault();
+    deleteElement(selectedId);
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && selectedId) {
+    e.preventDefault();
+    duplicateElement(selectedId);
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+    // Ctrl+A 选中第一个元素
+    const layer = getActiveLayer();
+    if (layer && layer.elements.length) { e.preventDefault(); selectElement(layer.elements[0].id); }
+  }
+});
+
+/* ============ 属性面板（核心：万分比 ↔ 百分比） ============ */
 function renderInspector() {
   const f = selectedId ? findElement(selectedId) : null;
-  if (f) renderElementInspector(f.element);
-  else renderLayerInspector();
+  rightPanel.innerHTML = f ? renderElementInspector(f.element) : renderLayerInspector();
+  bindInspectorEvents();
 }
 
 function renderElementInspector(el) {
-  let html = '';
-  
+  const { w: sw, h: sh } = getScreen();
+  const xp = (el.x / sw * 100).toFixed(1);
+  const yp = (el.y / sh * 100).toFixed(1);
+  const wp = el.elementType !== 'joystick' && el.sizeType === 'percentage' ? (el.w / sw * 100).toFixed(1) : null;
+  const hp = el.elementType !== 'joystick' && el.sizeType === 'percentage' ? (el.h / sh * 100).toFixed(1) : null;
+
   if (el.elementType === 'joystick') {
-    html = `
-      <h3>摇杆属性</h3>
-      <div class="field-row">
-        <div class="field"><label>X (万分比)</label><input id="propX" type="number" value="${el.x}" min="0" max="10000"></div>
-        <div class="field"><label>Y (万分比)</label><input id="propY" type="number" value="${el.y}" min="0" max="10000"></div>
-      </div>
-      <div class="empty-hint" style="padding:14px 4px; text-align:left; border-top:1px solid #22222c; margin-top:10px">
-        摇杆大小由 Zalith 系统固定，无需设置文本或宽高。
-      </div>
-      <button class="delete-btn" onclick="deleteElement(${el.id})">删除此摇杆</button>
-    `;
-  } 
-  else if (el.elementType === 'textbox') {
-    html = `
-      <h3>文本框属性</h3>
+    return `
+      <h3>🎮 摇杆</h3>
       <div class="field">
-        <label>显示文本</label>
-        <input id="propText" value="${escapeAttr(el.text)}">
+        <label>位置 X（屏幕宽度 %）</label>
+        <div class="pct-row">
+          <input id="propXpct" type="number" min="0" max="100" step="0.5" value="${xp}">
+          <span>%</span>
+        </div>
       </div>
       <div class="field">
-        <label>尺寸类型 (buttonSize.type)</label>
-        <select id="propSizeType">
-          <option value="wrap_content" ${el.sizeType === 'wrap_content' ? 'selected' : ''}>wrap_content（自适应）</option>
-          <option value="percentage" ${el.sizeType === 'percentage' ? 'selected' : ''}>percentage（固定比例）</option>
-          <option value="dp" ${el.sizeType === 'dp' ? 'selected' : ''}>dp（固定像素）</option>
-        </select>
+        <label>位置 Y（屏幕高度 %）</label>
+        <div class="pct-row">
+          <input id="propYpct" type="number" min="0" max="100" step="0.5" value="${yp}">
+          <span>%</span>
+        </div>
       </div>
-      <div id="propSizeRowPct" style="display:${el.sizeType === 'percentage' ? 'flex' : 'none'}" class="field-row">
-        <div class="field"><label>宽 (万分比)</label><input id="propW" type="number" value="${el.w}" min="100" max="10000"></div>
-        <div class="field"><label>高 (万分比)</label><input id="propH" type="number" value="${el.h}" min="100" max="10000"></div>
-      </div>
-      <div id="propSizeRowDp" style="display:${el.sizeType === 'dp' ? 'flex' : 'none'}" class="field-row">
-        <div class="field"><label>宽 (dp)</label><input id="propWDp" type="number" value="${el.wDp}" min="1"></div>
-        <div class="field"><label>高 (dp)</label><input id="propHDp" type="number" value="${el.hDp}" min="1"></div>
-      </div>
-      ${renderStylePicker(el)}
-      <button class="delete-btn" onclick="deleteElement(${el.id})">删除此文本框</button>
+      <div class="empty-hint" style="text-align:left">摇杆大小由 Zalith 固定，此处只需设置位置。</div>
+      <button class="delete-btn" onclick="deleteElement(${el.id})">🗑 删除</button>
     `;
   }
-  else if (el.elementType === 'normal') {
-    html = `
-      <h3>按钮属性</h3>
-      <div class="field">
-        <label>显示文本</label>
-        <input id="propText" value="${escapeAttr(el.text)}">
-      </div>
-      <div class="field">
-        <label>绑定按键 (keyName / GLFW 键码)</label>
-        <select id="propKeyName">
-          ${renderKeyNameOptions(el.keyName)}
-        </select>
-        <input id="propKeyNameCustom" style="margin-top:4px" value="${escapeAttr(el.keyName)}" placeholder="或自定义 GLFW_KEY_xxx">
-      </div>
-      <div class="toggle-row"><input type="checkbox" id="propToggle" ${el.toggleable ? 'checked' : ''}> 切换模式 (toggleable)</div>
-      <div class="field-row">
-        <div class="field"><label>X (万分比)</label><input id="propX" type="number" value="${el.x}" min="0" max="10000"></div>
-        <div class="field"><label>Y (万分比)</label><input id="propY" type="number" value="${el.y}" min="0" max="10000"></div>
-      </div>
-      <div class="field">
-        <label>尺寸类型 (buttonSize.type)</label>
-        <select id="propSizeType">
-          <option value="percentage" ${el.sizeType === 'percentage' ? 'selected' : ''}>percentage（固定比例）</option>
-          <option value="dp" ${el.sizeType === 'dp' ? 'selected' : ''}>dp（固定像素）</option>
-        </select>
-      </div>
-      <div id="propSizeRowPct" style="display:${el.sizeType === 'percentage' ? 'flex' : 'none'}" class="field-row">
-        <div class="field"><label>宽 (万分比)</label><input id="propW" type="number" value="${el.w}" min="100" max="10000"></div>
-        <div class="field"><label>高 (万分比)</label><input id="propH" type="number" value="${el.h}" min="100" max="10000"></div>
-      </div>
-      <div id="propSizeRowDp" style="display:${el.sizeType === 'dp' ? 'flex' : 'none'}" class="field-row">
-        <div class="field"><label>宽 (dp)</label><input id="propWDp" type="number" value="${el.wDp}" min="1"></div>
-        <div class="field"><label>高 (dp)</label><input id="propHDp" type="number" value="${el.hDp}" min="1"></div>
-      </div>
-      ${renderStylePicker(el)}
-      <button class="delete-btn" onclick="deleteElement(${el.id})">删除此按钮</button>
-    `;
-  }
-  
-  inspector.innerHTML = html;
-  bindElementInspectorEvents(el);
-}
 
-function renderStylePicker(el) {
-  if (styles.length === 0) {
-    return `<div class="empty-hint" style="padding:10px 4px">尚未创建样式，点击顶部 🎨 样式 新建</div>`;
+  let sizeBlock = '';
+  if (el.elementType === 'textbox') {
+    sizeBlock = `
+      <div class="toggle-row"><input type="checkbox" id="propWrap" ${el.sizeType === 'wrap_content' ? 'checked' : ''}> 自适应文字大小</div>
+      <div id="pctSize" style="display:${el.sizeType !== 'wrap_content' ? 'block' : 'none'}">
+        <div class="field">
+          <label>宽度（屏幕宽 %）</label>
+          <div class="pct-row"><input id="propWpct" type="number" min="0.5" max="100" step="0.5" value="${wp}"><span>%</span></div>
+        </div>
+        <div class="field">
+          <label>高度（屏幕高 %）</label>
+          <div class="pct-row"><input id="propHpct" type="number" min="0.5" max="100" step="0.5" value="${hp}"><span>%</span></div>
+        </div>
+      </div>`;
+  } else {
+    sizeBlock = `
+      <div class="field">
+        <label>宽度（屏幕宽 %）</label>
+        <div class="pct-row"><input id="propWpct" type="number" min="0.5" max="100" step="0.5" value="${wp}"><span>%</span></div>
+      </div>
+      <div class="field">
+        <label>高度（屏幕高 %）</label>
+        <div class="pct-row"><input id="propHpct" type="number" min="0.5" max="100" step="0.5" value="${hp}"><span>%</span></div>
+      </div>`;
   }
-  const opts = styles.map(s => 
-    `<option value="${s.uuid}" ${el.buttonStyle === s.uuid ? 'selected' : ''}>${escapeAttr(s.name)}</option>`
-  ).join('');
+
+  let keyBlock = '';
+  if (el.elementType === 'normal') {
+    const keyList = Object.entries(ALL_KEYS).map(([label, code]) =>
+      `<option value="${code}" ${el.keyName === code ? 'selected' : ''}>${label}</option>`
+    ).join('');
+    keyBlock = `
+      <div class="field">
+        <label>绑定按键</label>
+        <select id="propKey">${keyList}</select>
+        <input id="propKeyCustom" style="margin-top:4px" value="${escapeAttr(el.keyName)}" placeholder="自定义 GLFW_KEY_xxx">
+      </div>
+      <div class="toggle-row"><input type="checkbox" id="propToggle" ${el.toggleable ? 'checked' : ''}> 切换模式（点一次按下，再点抬起）</div>`;
+  }
+
+  const kindLabel = el.elementType === 'normal' ? '🔘 按钮' : '📝 文字';
+
   return `
+    <h3>${kindLabel}</h3>
     <div class="field">
-      <label>绑定样式 (buttonStyle)</label>
-      <select id="propStyle">
-        <option value="">默认（不绑定）</option>
-        ${opts}
-      </select>
+      <label>显示文字</label>
+      <input id="propText" value="${escapeAttr(el.text)}">
     </div>
+    ${keyBlock}
+    <div class="field">
+      <label>位置 X（屏幕宽度 %）</label>
+      <div class="pct-row"><input id="propXpct" type="number" min="0" max="100" step="0.5" value="${xp}"><span>%</span></div>
+    </div>
+    <div class="field">
+      <label>位置 Y（屏幕高度 %）</label>
+      <div class="pct-row"><input id="propYpct" type="number" min="0" max="100" step="0.5" value="${yp}"><span>%</span></div>
+    </div>
+    ${sizeBlock}
+    <button onclick="duplicateElement(${el.id})" style="width:100%;padding:6px;background:#2d2d3a;border:1px solid #3d3d4a;color:#e8e8ed;border-radius:5px;cursor:pointer;font-size:12px;margin-top:6px">📋 复制 (Ctrl+D)</button>
+    <button class="delete-btn" onclick="deleteElement(${el.id})">🗑 删除 (Delete)</button>
   `;
-}
-
-function renderKeyNameOptions(currentKey) {
-  let opts = Object.entries(GLFW_KEYS).map(([label, code]) =>
-    `<option value="${code}" ${currentKey === code ? 'selected' : ''}>${label} (${code})</option>`
-  ).join('');
-  if (!Object.values(GLFW_KEYS).includes(currentKey)) {
-    opts = `<option value="${escapeAttr(currentKey)}" selected>${escapeAttr(currentKey)} (自定义)</option>` + opts;
-  }
-  return opts;
-}
-
-function bindElementInspectorEvents(el) {
-  const getEl = () => findElement(selectedId)?.element;
-  
-  const textInput = document.getElementById('propText');
-  if (textInput) textInput.oninput = (e) => { const x = getEl(); if (x) { x.text = e.target.value; renderStage(); } };
-  
-  const keySel = document.getElementById('propKeyName');
-  const keyCustom = document.getElementById('propKeyNameCustom');
-  if (keySel) keySel.onchange = (e) => { const x = getEl(); if (x) { x.keyName = e.target.value; if (keyCustom) keyCustom.value = e.target.value; } };
-  if (keyCustom) keyCustom.oninput = (e) => { const x = getEl(); if (x) x.keyName = e.target.value; };
-  
-  const toggleChk = document.getElementById('propToggle');
-  if (toggleChk) toggleChk.onchange = (e) => { const x = getEl(); if (x) x.toggleable = e.target.checked; renderStage(); };
-  
-  const xInput = document.getElementById('propX');
-  const yInput = document.getElementById('propY');
-  if (xInput) xInput.oninput = (e) => { const x = getEl(); if (x) { x.x = parseInt(e.target.value) || 0; positionNode(x); } };
-  if (yInput) yInput.oninput = (e) => { const x = getEl(); if (x) { x.y = parseInt(e.target.value) || 0; positionNode(x); } };
-  
-  const sizeTypeSel = document.getElementById('propSizeType');
-  if (sizeTypeSel) sizeTypeSel.onchange = (e) => { 
-    const x = getEl(); 
-    if (x) { 
-      x.sizeType = e.target.value; 
-      renderInspector(); 
-      renderStage(); 
-    } 
-  };
-  
-  const wInput = document.getElementById('propW');
-  const hInput = document.getElementById('propH');
-  if (wInput) wInput.oninput = (e) => { const x = getEl(); if (x) { x.w = parseInt(e.target.value) || 100; positionNode(x); } };
-  if (hInput) hInput.oninput = (e) => { const x = getEl(); if (x) { x.h = parseInt(e.target.value) || 100; positionNode(x); } };
-  
-  const wDpInput = document.getElementById('propWDp');
-  const hDpInput = document.getElementById('propHDp');
-  if (wDpInput) wDpInput.oninput = (e) => { const x = getEl(); if (x) { x.wDp = parseFloat(e.target.value) || 1; positionNode(x); } };
-  if (hDpInput) hDpInput.oninput = (e) => { const x = getEl(); if (x) { x.hDp = parseFloat(e.target.value) || 1; positionNode(x); } };
-  
-  const styleSel = document.getElementById('propStyle');
-  if (styleSel) styleSel.onchange = (e) => { const x = getEl(); if (x) { x.buttonStyle = e.target.value; renderStage(); } };
 }
 
 function renderLayerInspector() {
   const layer = getActiveLayer();
-  if (!layer) {
-    inspector.innerHTML = `<div class="empty-hint">点击左侧图层进行编辑<br>或创建一个新图层</div>`;
-    return;
-  }
-  
-  let html = `
-    <h3>图层属性</h3>
+  if (!layer) return `<div class="empty-hint">点击左侧图层进行编辑</div>`;
+  return `
+    <h3>📚 图层：${escapeHtml(layer.name)}</h3>
     <div class="field">
       <label>图层名称</label>
       <input id="layerName" value="${escapeAttr(layer.name)}">
     </div>
     <div class="field">
-      <label>可见场景 (visibilityType)</label>
-      <select id="layerVisibility">
-        <option value="always" ${layer.visibilityType === 'always' ? 'selected' : ''}>始终可见 (always)</option>
-        <option value="ingame" ${layer.visibilityType === 'ingame' ? 'selected' : ''}>游戏内可见 (ingame)</option>
-        <option value="inmenu" ${layer.visibilityType === 'inmenu' ? 'selected' : ''}>游戏外可见 (inmenu)</option>
+      <label>可见场景</label>
+      <select id="layerVis">
+        <option value="always" ${layer.visibilityType === 'always' ? 'selected' : ''}>始终可见</option>
+        <option value="ingame" ${layer.visibilityType === 'ingame' ? 'selected' : ''}>仅游戏内</option>
+        <option value="inmenu" ${layer.visibilityType === 'inmenu' ? 'selected' : ''}>仅菜单</option>
       </select>
     </div>
     <div class="toggle-row"><input type="checkbox" id="layerHide" ${layer.hide ? 'checked' : ''}> 默认隐藏</div>
-    <div class="toggle-row"><input type="checkbox" id="layerHideWhenMouse" ${layer.hideWhenMouse ? 'checked' : ''}> 实体鼠标操作时不隐藏</div>
-    <div class="toggle-row"><input type="checkbox" id="layerHideWhenGamepad" ${layer.hideWhenGamepad ? 'checked' : ''}> 手柄操作时不隐藏</div>
-    <div class="field">
-      <label>图层 UUID（系统生成）</label>
-      <input value="${layer.uuid}" readonly style="font-size:11px">
-    </div>
-    <div class="empty-hint" style="border-top:1px solid #22222c; margin-top:10px; padding-top:10px">
-      该图层包含 <b>${layer.elements.length}</b> 个控件
+    <div class="toggle-row"><input type="checkbox" id="layerHideWhenMouse" ${layer.hideWhenMouse ? 'checked' : ''}> 实体鼠标时不隐藏</div>
+    <div class="toggle-row"><input type="checkbox" id="layerHideWhenGamepad" ${layer.hideWhenGamepad ? 'checked' : ''}> 手柄时不隐藏</div>
+    <div class="empty-hint" style="border-top:1px solid #22222c;margin-top:8px;padding-top:10px">
+      本图层 <b>${layer.elements.length}</b> 个控件
     </div>
   `;
-  
-  inspector.innerHTML = html;
-  
-  document.getElementById('layerName').oninput = (e) => { layer.name = e.target.value; renderLayerPanel(); renderStageLabel(); };
-  document.getElementById('layerVisibility').onchange = (e) => { layer.visibilityType = e.target.value; };
-  document.getElementById('layerHide').onchange = (e) => { layer.hide = e.target.checked; renderLayerPanel(); renderStage(); };
-  document.getElementById('layerHideWhenMouse').onchange = (e) => { layer.hideWhenMouse = e.target.checked; };
-  document.getElementById('layerHideWhenGamepad').onchange = (e) => { layer.hideWhenGamepad = e.target.checked; };
 }
 
-// ============================================================
-// 工具函数
-// ============================================================
-function escapeHtml(str) {
-  return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[m]));
-}
-function escapeAttr(str) { return escapeHtml(str); }
+function bindInspectorEvents() {
+  const f = selectedId ? findElement(selectedId) : null;
+  const el = f?.element;
 
-function randomHex(len) {
-  const chars = '0123456789abcdef';
-  let out = '';
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * 16)];
-  return out;
+  // 元素属性
+  if (el) {
+    const t = document.getElementById('propText');
+    if (t) t.oninput = e => { el.text = e.target.value; renderStage(); };
+
+    const k = document.getElementById('propKey');
+    const kc = document.getElementById('propKeyCustom');
+    if (k) k.onchange = e => { el.keyName = e.target.value; if (kc) kc.value = e.target.value; };
+    if (kc) kc.oninput = e => { el.keyName = e.target.value; };
+
+    const tg = document.getElementById('propToggle');
+    if (tg) tg.onchange = e => { el.toggleable = e.target.checked; renderStage(); };
+
+    const xp = document.getElementById('propXpct');
+    const yp = document.getElementById('propYpct');
+    if (xp) xp.oninput = e => {
+      const { w: sw } = getScreen(); el.x = Math.round(parseFloat(e.target.value) / 100 * sw);
+      positionNode(el); updateSelectedBadge(el);
+    };
+    if (yp) yp.oninput = e => {
+      const { h: sh } = getScreen(); el.y = Math.round(parseFloat(e.target.value) / 100 * sh);
+      positionNode(el); updateSelectedBadge(el);
+    };
+
+    const wp = document.getElementById('propWpct');
+    const hp = document.getElementById('propHpct');
+    if (wp) wp.oninput = e => {
+      const { w: sw } = getScreen(); el.sizeType = 'percentage';
+      el.w = Math.max(100, Math.round(parseFloat(e.target.value) / 100 * sw));
+      positionNode(el);
+    };
+    if (hp) hp.oninput = e => {
+      const { h: sh } = getScreen(); el.sizeType = 'percentage';
+      el.h = Math.max(100, Math.round(parseFloat(e.target.value) / 100 * sh));
+      positionNode(el);
+    };
+
+    const wrap = document.getElementById('propWrap');
+    if (wrap) wrap.onchange = e => {
+      el.sizeType = e.target.checked ? 'wrap_content' : 'percentage';
+      renderInspector(); renderStage();
+    };
+    return;
+  }
+
+  // 图层属性
+  const layer = getActiveLayer();
+  if (!layer) return;
+  const ln = document.getElementById('layerName');
+  if (ln) ln.oninput = e => { layer.name = e.target.value; renderLayerPanel(); renderStageLabel(); };
+  const lv = document.getElementById('layerVis');
+  if (lv) lv.onchange = e => { layer.visibilityType = e.target.value; };
+  const lh = document.getElementById('layerHide');
+  if (lh) lh.onchange = e => { layer.hide = e.target.checked; renderAll(); };
+  const lhwm = document.getElementById('layerHideWhenMouse');
+  if (lhwm) lhwm.onchange = e => { layer.hideWhenMouse = e.target.checked; };
+  const lhwg = document.getElementById('layerHideWhenGamepad');
+  if (lhwg) lhwg.onchange = e => { layer.hideWhenGamepad = e.target.checked; };
 }
 
-let statusTimer = null;
-function showStatus(msg) {
-  const s = document.getElementById('status');
-  s.textContent = msg;
-  s.classList.add('show');
-  if (statusTimer) clearTimeout(statusTimer);
-  statusTimer = setTimeout(() => s.classList.remove('show'), 2000);
+/* ============ 移动端 Tab 切换 ============ */
+function switchMobileTab(which) {
+  document.querySelectorAll('.mobile-tabs .mtab').forEach(b => b.classList.remove('active'));
+  if (which === 'layers') {
+    document.querySelector('.mtab:nth-child(1)').classList.add('active');
+    document.getElementById('panelLeft').classList.add('active');
+    document.getElementById('panelRight').classList.remove('active');
+    document.getElementById('keyChips2').style.display = 'none';
+    document.getElementById('kcToggle').textContent = '▶';
+  } else if (which === 'props') {
+    document.querySelector('.mtab:nth-child(2)').classList.add('active');
+    document.getElementById('panelRight').classList.add('active');
+    document.getElementById('panelLeft').classList.remove('active');
+    document.getElementById('keyChips2').style.display = 'none';
+  } else {
+    document.querySelector('.mtab:nth-child(3)').classList.add('active');
+    document.getElementById('panelLeft').classList.remove('active');
+    document.getElementById('panelRight').classList.remove('active');
+    document.getElementById('keyChips2').style.display = 'block';
+  }
+  currentMobileTab = which;
 }
 
-// ============================================================
-// 导出 JSON
-// ============================================================
+/* ============ 导出 / 导入 JSON ============ */
 function exportJSON() {
-  const layoutName = document.getElementById('layoutName').value || 'Untitled';
-  const authorName = document.getElementById('authorName').value || 'editor';
-  const layoutDesc = document.getElementById('layoutDesc').value || '';
+  const layoutName = document.getElementById('layoutName')?.value || 'Untitled';
+  const authorName = document.getElementById('authorName')?.value || 'editor';
+  const layoutDesc = document.getElementById('layoutDesc')?.value || '';
   const { w: sw, h: sh } = getScreen();
-  
-  const cleanElements = (layer) => ({
-    id: layer.id,
-    name: layer.name,
-    uuid: layer.uuid,
-    hide: !!layer.hide,
-    visibilityType: layer.visibilityType || 'always',
-    hideWhenMouse: !!layer.hideWhenMouse,
-    hideWhenGamepad: !!layer.hideWhenGamepad,
-    elements: layer.elements.map(el => {
-      const out = {
-        elementType: el.elementType,
-        uuid: el.uuid,
-        x: el.x,
-        y: el.y,
-        sizeType: el.sizeType,
-      };
-      if (el.elementType === 'joystick') {
-        // 摇杆
-      } else if (el.elementType === 'textbox') {
-        out.text = el.text || '';
-        if (el.sizeType === 'percentage') { out.w = el.w; out.h = el.h; }
-        else if (el.sizeType === 'dp') { out.wDp = el.wDp; out.hDp = el.hDp; }
-        if (el.buttonStyle) out.buttonStyle = el.buttonStyle;
+
+  const outLayers = layers.map(l => ({
+    id: l.id, name: l.name, uuid: l.uuid,
+    hide: !!l.hide,
+    visibilityType: l.visibilityType || 'always',
+    hideWhenMouse: !!l.hideWhenMouse,
+    hideWhenGamepad: !!l.hideWhenGamepad,
+    elements: l.elements.map(el => {
+      const o = { elementType: el.elementType, uuid: el.uuid, x: el.x, y: el.y, sizeType: el.sizeType };
+      if (el.elementType === 'joystick') return o;
+      if (el.elementType === 'textbox') {
+        o.text = el.text || '';
+        if (el.sizeType === 'percentage') { o.w = el.w; o.h = el.h; }
+        else if (el.sizeType === 'dp') { o.wDp = el.wDp; o.hDp = el.hDp; }
+        if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
       } else if (el.elementType === 'normal') {
-        out.text = el.text || '';
-        out.keyName = el.keyName || 'GLFW_KEY_SPACE';
-        out.toggleable = !!el.toggleable;
-        if (el.sizeType === 'percentage') { out.w = el.w; out.h = el.h; }
-        else if (el.sizeType === 'dp') { out.wDp = el.wDp; out.hDp = el.hDp; }
-        if (el.buttonStyle) out.buttonStyle = el.buttonStyle;
+        o.text = el.text || '';
+        o.keyName = el.keyName || 'GLFW_KEY_SPACE';
+        o.toggleable = !!el.toggleable;
+        if (el.sizeType === 'percentage') { o.w = el.w; o.h = el.h; }
+        else if (el.sizeType === 'dp') { o.wDp = el.wDp; o.hDp = el.hDp; }
+        if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
       }
-      return out;
+      return o;
     })
-  });
-  
+  }));
+
   const output = {
-    version: 2,
-    name: layoutName,
-    author: authorName,
-    description: layoutDesc,
+    version: 2, name: layoutName, author: authorName, description: layoutDesc,
     screen: { width: sw, height: sh },
-    layers: layers.map(cleanElements),
+    layers: outLayers,
     styles: styles.map(s => ({
-      name: s.name,
-      uuid: s.uuid,
-      animateSwap: !!s.animateSwap,
-      lightStyle: s.lightStyle,
-      darkStyle: s.darkStyle
+      name: s.name, uuid: s.uuid, animateSwap: !!s.animateSwap,
+      lightStyle: s.lightStyle, darkStyle: s.darkStyle
     }))
   };
-  
-  const json = JSON.stringify(output, null, 2);
-  document.getElementById('jsonTitle').textContent = `导出 JSON · ${layoutName}`;
-  document.getElementById('jsonArea').value = json;
+
+  document.getElementById('jsonTitle').textContent = `导出 · ${layoutName}`;
+  document.getElementById('jsonArea').value = JSON.stringify(output, null, 2);
+  document.getElementById('jsonActionBtn').textContent = '复制';
+  document.getElementById('jsonActionBtn').onclick = copyJSON;
   document.getElementById('jsonOverlay').classList.add('show');
 }
-
-function closeJSON() {
-  document.getElementById('jsonOverlay').classList.remove('show');
-}
-
+function closeJSON() { document.getElementById('jsonOverlay').classList.remove('show'); }
 function copyJSON() {
   const ta = document.getElementById('jsonArea');
   ta.select();
-  try {
-    navigator.clipboard.writeText(ta.value).then(() => showStatus('已复制到剪贴板'));
-  } catch (e) {
-    document.execCommand('copy');
-    showStatus('已复制');
-  }
+  try { navigator.clipboard.writeText(ta.value).then(() => showStatus('已复制')); }
+  catch (e) { document.execCommand('copy'); showStatus('已复制'); }
 }
-
 function showImport() {
-  const ta = document.getElementById('jsonArea');
-  ta.value = '';
-  document.getElementById('jsonTitle').textContent = '导入 JSON（粘贴后点下方导入按钮）';
-  document.getElementById('jsonCopyBtn').textContent = '导入';
-  document.getElementById('jsonCopyBtn').onclick = doImport;
+  document.getElementById('jsonTitle').textContent = '导入 JSON（粘贴后点下方导入）';
+  document.getElementById('jsonArea').value = '';
+  document.getElementById('jsonActionBtn').textContent = '导入';
+  document.getElementById('jsonActionBtn').onclick = doImport;
   document.getElementById('jsonOverlay').classList.add('show');
 }
-
 function doImport() {
-  const ta = document.getElementById('jsonArea');
-  try {
-    const data = JSON.parse(ta.value);
-    importJSON(data);
-    closeJSON();
-    document.getElementById('jsonCopyBtn').textContent = '复制';
-    document.getElementById('jsonCopyBtn').onclick = copyJSON;
-    showStatus('导入成功');
-  } catch (e) {
-    showStatus('导入失败：' + e.message);
-  }
+  try { importJSON(JSON.parse(document.getElementById('jsonArea').value)); closeJSON(); showStatus('导入成功'); }
+  catch (e) { showStatus('导入失败：' + e.message); }
 }
-
 function importJSON(data) {
-  layers = [];
-  styles = [];
-  activeLayerId = null;
-  selectedId = null;
-  nextElementId = 1;
-  nextLayerId = 1;
-  nextLayerSeq = 1;
-  
-  if (data.name) document.getElementById('layoutName').value = data.name;
-  if (data.author) document.getElementById('authorName').value = data.author;
-  if (data.description !== undefined) document.getElementById('layoutDesc').value = data.description;
+  layers = []; styles = [];
+  activeLayerId = null; selectedId = null;
+  nextElementId = 1; nextLayerId = 1; nextLayerSeq = 1;
+
   if (data.screen) {
-    if (data.screen.width) document.getElementById('screenW').value = data.screen.width;
-    if (data.screen.height) document.getElementById('screenH').value = data.screen.height;
+    if (data.screen.width) screenWInput.value = data.screen.width;
+    if (data.screen.height) screenHInput.value = data.screen.height;
   }
-  
   if (Array.isArray(data.styles)) {
     data.styles.forEach(s => {
       const ns = createStyle(s.name);
@@ -1279,7 +1052,6 @@ function importJSON(data) {
       styles.push(ns);
     });
   }
-  
   if (Array.isArray(data.layers)) {
     data.layers.forEach(l => {
       const layer = createLayer(l.name, l.visibilityType || 'always');
@@ -1296,7 +1068,7 @@ function importJSON(data) {
           el.y = e.y !== undefined ? e.y : el.y;
           el.sizeType = e.sizeType || el.sizeType;
           if (e.elementType === 'textbox') {
-            el.text = e.text || '文本框';
+            el.text = e.text || '文字';
             if (e.w !== undefined) el.w = e.w;
             if (e.h !== undefined) el.h = e.h;
             if (e.wDp !== undefined) el.wDp = e.wDp;
@@ -1311,8 +1083,6 @@ function importJSON(data) {
             if (e.wDp !== undefined) el.wDp = e.wDp;
             if (e.hDp !== undefined) el.hDp = e.hDp;
             if (e.buttonStyle) el.buttonStyle = e.buttonStyle;
-          } else if (e.elementType === 'joystick') {
-            // 使用默认值
           }
           layer.elements.push(el);
           if (el.id >= nextElementId) nextElementId = el.id + 1;
@@ -1323,24 +1093,66 @@ function importJSON(data) {
     });
     activeLayerId = layers[0]?.id || null;
   }
-  
-  renderAll();
-  syncStageSize();
+  renderAll(); syncStageSize();
 }
 
-// ============================================================
-// 初始化
-// ============================================================
+/* ============ 样式管理（保留逻辑，不再暴露） ============ */
+function createDefaultTheme() {
+  return {
+    alpha: 1.0, pressedAlpha: 1.0,
+    backgroundColor: 2147483648, pressedBackgroundColor: 3012069512,
+    contentColor: 4294967295, pressedContentColor: 4294967295,
+    pressedFontSize: 14, borderWidth: 0, pressedBorderWidth: 0,
+    borderColor: 4294967295, pressedBorderColor: 4294967295,
+    borderRadius: { topStart: 0.0, topEnd: 0.0, bottomEnd: 0.0, bottomStart: 0.0 },
+    pressedBorderRadius: { topStart: 0.0, topEnd: 0.0, bottomEnd: 0.0, bottomStart: 0.0 }
+  };
+}
+function createStyle(name) {
+  return {
+    id: nextElementId++, name: name || '新样式',
+    uuid: randomHex(12), animateSwap: false,
+    lightStyle: createDefaultTheme(), darkStyle: createDefaultTheme()
+  };
+}
+
+/* ============ Panels 同步 ============ */
+function updateAllPanels() {
+  if (window.innerWidth <= 720) {
+    // 移动端：根据当前 tab 决定哪个面板 active
+    switchMobileTab(currentMobileTab);
+  } else {
+    document.getElementById('panelLeft').classList.add('active');
+    document.getElementById('panelRight').classList.add('active');
+  }
+}
+
+/* ============ 初始化 ============ */
 (function init() {
-  const defaultLayer = createLayer('主控件层', 'always');
-  layers.push(defaultLayer);
-  activeLayerId = defaultLayer.id;
-  nextLayerSeq = 2;
-  
+  // 默认图层
+  const dl = createLayer('主控件层', 'always');
+  layers.push(dl); activeLayerId = dl.id; nextLayerSeq = 2;
+
+  // 桌面端显示左侧（图层+键位库）和右侧（属性），移动端由 tab 控制
+  if (window.innerWidth <= 720) {
+    document.getElementById('keyChips2').style.display = 'none';
+    switchMobileTab('props');
+    document.querySelector('.mobile-tabs .mtab:nth-child(2)').classList.add('active');
+  }
+
   renderKeyChips();
   syncStageSize();
   renderAll();
-  showStatus('欢迎使用 Zalith 键位工坊');
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth <= 720) {
+      if (!document.querySelector('.mobile-tabs .mtab.active')) {
+        switchMobileTab('props');
+      }
+    }
+  });
+
+  showStatus('欢迎使用 — 拖动画布上的按钮，或按 Delete 删除');
 })();
 </script>
 </body>
