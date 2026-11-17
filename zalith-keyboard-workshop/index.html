@@ -259,15 +259,15 @@
   @media (max-width: 720px) {
     body { overflow: hidden; }
     .toolbar input { display: none; }
-    .toolbar input#screenW, .toolbar input#screenH { display: block; width: 48px; }
+    .toolbar input#screenW, .toolbar input#screenH { display: block; width: 38px; }
+    .toolbar input#canvasScale { display: inline-block; width: 50px; }
+    #scaleLabel { display: inline-block; font-size: 9px; width: 28px; }
     .toolbar h1 { font-size: 12px; }
-    .toolbar button { padding: 4px 7px; font-size: 11px; }
-
+    .toolbar button { padding: 3px 5px; font-size: 10px; }
     .main { flex-direction: column; }
     .side { display: none; width: 100% !important; max-height: 40vh; border-right: none; border-left: none; border-top: 1px solid #2a2a35; }
     .side.active { display: block; }
     .stage-wrap { padding: 10px; flex: 1; }
-
     .mobile-tabs {
       display: flex; flex-shrink: 0; background: #14141a;
       border-top: 1px solid #2a2a35;
@@ -278,6 +278,16 @@
       border-top: 2px solid transparent;
     }
     .mobile-tabs .mtab.active { color: #4a6cf7; border-top-color: #4a6cf7; background: #1a1a22; }
+    /* 横屏 → 桌面模式 */
+    @media (orientation: landscape) {
+      .toolbar button, .toolbar input#screenW, .toolbar input#screenH { padding: 5px 7px; font-size: 11px; }
+      .stage-wrap { flex: 1; padding: 6px; }
+      .side { max-height: 100vh; width: 200px !important; max-height: none; }
+      .main { flex-direction: row; }
+      .mobile-tabs { display: none; }
+      #panelLeft, #panelRight { display: block; }
+      #panelLeft.active, #panelRight.active { display: block; }
+    }
   }
 </style>
 </head>
@@ -288,17 +298,24 @@
   <div class="sep"></div>
   <button onclick="undo()" id="btnUndo" title="撤销 (Ctrl+Z)" style="font-size:14px;padding:4px 8px">↶</button>
   <button onclick="redo()" id="btnRedo" title="重做 (Ctrl+Y)" style="font-size:14px;padding:4px 8px">↷</button>
-  <button onclick="toggleGrid()" id="btnGrid" title="对齐网格" style="font-size:13px;padding:4px 8px">🔲</button>
+  <button onclick="toggleGrid()" id="btnGrid" title="对齐网格 (G)" style="font-size:13px;padding:4px 8px">🔲</button>
   <div class="sep"></div>
-  <input id="screenW" type="number" value="2400" title="屏幕宽">
+  <button onclick="setPreset(1920,1080)" title="1080p" style="padding:4px 7px;font-size:10px">1080p</button>
+  <button onclick="setPreset(2400,1080)" title="2K 手机横" style="padding:4px 7px;font-size:10px">2K横</button>
+  <button onclick="setPreset(1080,1920)" title="手机竖屏" style="padding:4px 7px;font-size:10px">手机</button>
+  <button onclick="swapScreenXY()" title="横竖屏切换" style="padding:4px 7px;font-size:11px">🔄</button>
+  <div class="sep"></div>
+  <input id="screenW" type="number" value="2400" title="屏幕宽" style="width:50px">
   <span style="font-size:11px;color:#6b6b7a">×</span>
-  <input id="screenH" type="number" value="1080" title="屏幕高">
+  <input id="screenH" type="number" value="1080" title="屏幕高" style="width:50px">
+  <input id="canvasScale" type="range" min="30" max="200" value="80" style="width:80px" title="画布缩放">
+  <span id="scaleLabel" style="font-size:10px;color:#6b6b7a;width:32px">80%</span>
   <div class="sep"></div>
-  <button onclick="addElement('normal')">🔘 按钮</button>
-  <button onclick="addElement('joystick')">🕹 摇杆</button>
-  <button onclick="addElement('textbox')">📝 文字</button>
+  <button onclick="addElement('normal')">🔘</button>
+  <button onclick="addElement('joystick')">🕹</button>
+  <button onclick="addElement('textbox')">📝</button>
   <div class="sep"></div>
-  <button onclick="showImport()">📥 导入</button>
+  <button onclick="showImport()">📥</button>
   <button class="primary" onclick="exportJSON()">📤 下载</button>
 </div>
 
@@ -561,17 +578,52 @@ function syncStageSize() {
   const { w: sw, h: sh } = getScreen();
   const availW = wrap.width - 24;
   const availH = wrap.height - 36;
-  const scale = Math.min(availW / sw, availH / sh, 1);
+  // 画布缩放：优先用用户滑块，否则自动填满
+  const userScaleInput = document.getElementById('canvasScale');
+  let scale;
+  if (userScaleInput && userScaleInput.dataset.manual === '1') {
+    scale = parseInt(userScaleInput.value) / 100;
+  } else {
+    scale = Math.min(availW / sw, availH / sh, 1);
+    // 自动填入滑块（给用户一个初始值）
+    if (userScaleInput) userScaleInput.value = Math.round(scale * 100);
+  }
   stage.style.width = Math.round(sw * scale) + 'px';
   stage.style.height = Math.round(sh * scale) + 'px';
+  const label = document.getElementById('scaleLabel');
+  if (label) label.textContent = Math.round(scale * 100) + '%';
+  // 网格跟随缩放
+  if (typeof window._updateGridOverlay === 'function') window._updateGridOverlay();
   const layer = getActiveLayer();
   if (layer) layer.elements.forEach(el => positionNode(el));
   renderStageLabel();
   updateAllPanels();
 }
+// 画布缩放滑块事件
+const canvasScaleInputEl = document.getElementById('canvasScale');
+if (canvasScaleInputEl) {
+  canvasScaleInputEl.addEventListener('input', () => {
+    canvasScaleInputEl.dataset.manual = '1';  // 用户拖过 → 不再自动缩放
+    syncStageSize();
+  });
+}
+function setPreset(w, h) {
+  snapshot();
+  screenWInput.value = w; screenHInput.value = h;
+  canvasScaleInputEl.dataset.manual = '0';
+  syncStageSize(); showStatus('预设 ' + w + '×' + h);
+}
+function swapScreenXY() {
+  const w = parseInt(screenWInput.value);
+  const h = parseInt(screenHInput.value);
+  snapshot();
+  screenWInput.value = h; screenHInput.value = w;
+  canvasScaleInputEl.dataset.manual = '0';
+  syncStageSize(); showStatus('已切换横竖屏');
+}
 window.addEventListener('resize', syncStageSize);
-screenWInput.addEventListener('change', syncStageSize);
-screenHInput.addEventListener('change', syncStageSize);
+screenWInput.addEventListener('change', () => { snapshot(); syncStageSize(); });
+screenHInput.addEventListener('change', () => { snapshot(); syncStageSize(); });
 
 function renderStageLabel() {
   const { w, h } = getScreen();
@@ -658,14 +710,16 @@ function createElementData(type) {
     uuid: randomHex(16),
     x: Math.round(sw * 0.5),
     y: Math.round(sh * 0.5),
-    w: Math.round(sw * 0.125),  // 屏幕宽的 1/8
-    h: Math.round(sh * 0.2),    // 屏幕高的 1/5
+    w: Math.round(sw * 0.125),
+    h: Math.round(sh * 0.2),
     sizeType: 'percentage',
     buttonStyle: '',
+    // 启动器事件字段
+    slideTrigger: false, moveMouse: false, showLayers: false,
   };
   if (type === 'normal') return { ...base, text: '按键', keycodes: ['GLFW_KEY_SPACE'], toggleable: false };
-  if (type === 'textbox') return { ...base, text: '文字', sizeType: 'wrap_content' };
-  return base; // joystick（大小由系统固定，此处只是占位）
+  if (type === 'textbox') return { ...base, text: '文字', sizeType: 'wrap_content', textAlign: 'center', bold: false, italic: false, underline: false };
+  return base;
 }
 function addElement(type) { addElementToActiveLayer(createElementData(type)); }
 function addElementToActiveLayer(el) {
@@ -748,7 +802,13 @@ function renderStage() {
       dom.innerHTML = `<div class="joystick-base"><div class="joystick-stick"></div></div>`;
     } else {
       dom.textContent = el.text;
-      // 样式渲染：如果绑定了 buttonStyle 且找到样式，用样式覆盖
+      // textbox 富文本样式
+      if (el.elementType === 'textbox') {
+        if (el.textAlign) dom.style.textAlign = el.textAlign;
+        if (el.bold) dom.style.fontWeight = 'bold';
+        if (el.italic) dom.style.fontStyle = 'italic';
+        if (el.underline) dom.style.textDecoration = 'underline';
+      }
       const s = styles.find(x => x.uuid === el.buttonStyle);
       if (s && s.darkStyle) {
         const th = s.darkStyle;
@@ -1139,7 +1199,26 @@ function renderElementInspector(el) {
         <div class="keylist" id="keyListWrap">${renderKeyChipsHTML(el)}</div>
         ${keyAddSelectHTML(el)}
       </div>
-      <div class="toggle-row"><input type="checkbox" id="propToggle" ${el.toggleable ? 'checked' : ''}> 切换模式（点一次按下，再点抬起）</div>`;
+      <div class="toggle-row"><input type="checkbox" id="propToggle" ${el.toggleable ? 'checked' : ''}> 切换模式（点一次按下，再点抬起）</div>
+      <div class="toggle-row"><input type="checkbox" id="propSlideTrigger" ${el.slideTrigger ? 'checked' : ''}> 滑动触发</div>
+      <div class="toggle-row"><input type="checkbox" id="propMoveMouse" ${el.moveMouse ? 'checked' : ''}> 带动鼠标</div>
+      <div class="toggle-row"><input type="checkbox" id="propShowLayers" ${el.showLayers ? 'checked' : ''}> 切换控件层可见性</div>`;
+  }
+
+  let textBlock = '';
+  if (el.elementType === 'textbox') {
+    textBlock = `
+      <div class="field">
+        <label>文本对齐</label>
+        <div style="display:flex;gap:4px">
+          <button id="propAlignLeft" style="flex:1;padding:5px;background:${el.textAlign==='left'?'#4a6cf7':'#2d2d3a'};border:1px solid #3d3d4a;color:#e8e8ed;border-radius:4px;cursor:pointer;font-size:14px">⇤</button>
+          <button id="propAlignCenter" style="flex:1;padding:5px;background:${el.textAlign==='center'?'#4a6cf7':'#2d2d3a'};border:1px solid #3d3d4a;color:#e8e8ed;border-radius:4px;cursor:pointer;font-size:14px">≡</button>
+          <button id="propAlignRight" style="flex:1;padding:5px;background:${el.textAlign==='right'?'#4a6cf7':'#2d2d3a'};border:1px solid #3d3d4a;color:#e8e8ed;border-radius:4px;cursor:pointer;font-size:14px">⇥</button>
+        </div>
+      </div>
+      <div class="toggle-row"><input type="checkbox" id="propBold" ${el.bold ? 'checked' : ''}> <b>粗体</b></div>
+      <div class="toggle-row"><input type="checkbox" id="propItalic" ${el.italic ? 'checked' : ''}> <i>斜体</i></div>
+      <div class="toggle-row"><input type="checkbox" id="propUnderline" ${el.underline ? 'checked' : ''}> <u>下划线</u></div>`;
   }
 
   const kindLabel = el.elementType === 'normal' ? '🔘 按钮' : '📝 文字';
@@ -1151,6 +1230,7 @@ function renderElementInspector(el) {
       <input id="propText" value="${escapeAttr(el.text)}">
     </div>
     ${keyBlock}
+    ${textBlock}
     ${sliderRow('propXpct', '位置 X（屏幕宽 %）', xp, 0, 100, 0.1)}
     ${sliderRow('propYpct', '位置 Y（屏幕高 %）', yp, 0, 100, 0.1)}
     ${sizeBlock}
@@ -1213,6 +1293,25 @@ function bindInspectorEvents() {
 
     const tg = document.getElementById('propToggle');
     if (tg) tg.onchange = e => { el.toggleable = e.target.checked; renderStage(); snapshot(); };
+    const st = document.getElementById('propSlideTrigger');
+    if (st) st.onchange = e => { el.slideTrigger = e.target.checked; snapshot(); };
+    const mm = document.getElementById('propMoveMouse');
+    if (mm) mm.onchange = e => { el.moveMouse = e.target.checked; snapshot(); };
+    const sl = document.getElementById('propShowLayers');
+    if (sl) sl.onchange = e => { el.showLayers = e.target.checked; snapshot(); };
+
+    // textbox 富文本
+    const bold = document.getElementById('propBold');
+    const italic = document.getElementById('propItalic');
+    const undl = document.getElementById('propUnderline');
+    if (bold) bold.onchange = e => { el.bold = e.target.checked; snapshot(); renderStage(); };
+    if (italic) italic.onchange = e => { el.italic = e.target.checked; snapshot(); renderStage(); };
+    if (undl) undl.onchange = e => { el.underline = e.target.checked; snapshot(); renderStage(); };
+    const applyAlign = dir => { el.textAlign = dir; snapshot(); renderAll(); };
+    const aL = document.getElementById('propAlignLeft'), aC = document.getElementById('propAlignCenter'), aR = document.getElementById('propAlignRight');
+    if (aL) aL.onclick = () => applyAlign('left');
+    if (aC) aC.onclick = () => applyAlign('center');
+    if (aR) aR.onclick = () => applyAlign('right');
 
     const { w: sw, h: sh } = getScreen();
     bindPctPair('propXpct', v => {
@@ -1295,25 +1394,34 @@ function exportJSON() {
       if (el.elementType === 'joystick') return o;
       if (el.elementType === 'textbox') {
         o.text = el.text || '';
+        if (el.textAlign) o.textAlign = el.textAlign;
+        if (el.bold) o.bold = true;
+        if (el.italic) o.italic = true;
+        if (el.underline) o.underline = true;
+        if (el.slideTrigger) o.slideTrigger = true;
+        if (el.moveMouse) o.moveMouse = true;
+        if (el.showLayers) o.showLayers = true;
         if (el.sizeType === 'percentage') { o.w = el.w; o.h = el.h; }
         else if (el.sizeType === 'dp') { o.wDp = el.wDp; o.hDp = el.hDp; }
         if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
       } else if (el.elementType === 'normal') {
         o.text = el.text || '';
-        // 多按键：优先 keycodes 数组，也保留 keyName 兼容
         const codes = el.keycodes && el.keycodes.length ? el.keycodes : (el.keyName ? [el.keyName] : ['GLFW_KEY_SPACE']);
         o.keycodes = codes;
-        o.keyName = codes[0];  // 兼容旧版
+        o.keyName = codes[0];
         o.toggleable = !!el.toggleable;
+        if (el.slideTrigger) o.slideTrigger = true;
+        if (el.moveMouse) o.moveMouse = true;
+        if (el.showLayers) o.showLayers = true;
         if (el.sizeType === 'percentage') { o.w = el.w; o.h = el.h; }
         else if (el.sizeType === 'dp') { o.wDp = el.wDp; o.hDp = el.hDp; }
         if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
       }
-      return o;
     })
   }));
 
   const output = {
+    editorVersion: "1.0.0",
     version: 2,
     name: document.title.replace(' - 键位工坊', '') || 'layout',
     author: 'editor', description: '',
@@ -1399,6 +1507,13 @@ function importJSON(data) {
           el.sizeType = e.sizeType || el.sizeType;
           if (e.elementType === 'textbox') {
             el.text = e.text || '文字';
+            if (e.textAlign) el.textAlign = e.textAlign;
+            if (e.bold) el.bold = true;
+            if (e.italic) el.italic = true;
+            if (e.underline) el.underline = true;
+            if (e.slideTrigger) el.slideTrigger = true;
+            if (e.moveMouse) el.moveMouse = true;
+            if (e.showLayers) el.showLayers = true;
             if (e.w !== undefined) el.w = e.w;
             if (e.h !== undefined) el.h = e.h;
             if (e.wDp !== undefined) el.wDp = e.wDp;
@@ -1406,17 +1521,17 @@ function importJSON(data) {
             if (e.buttonStyle) el.buttonStyle = e.buttonStyle;
           } else if (e.elementType === 'normal') {
             el.text = e.text || '按键';
-            // 兼容：优先 keycodes 数组，其次 keyName
             if (Array.isArray(e.keycodes) && e.keycodes.length) {
-              el.keycodes = e.keycodes;
-              el.keyName = e.keycodes[0];
+              el.keycodes = e.keycodes; el.keyName = e.keycodes[0];
             } else if (e.keyName) {
-              el.keyName = e.keyName;
-              el.keycodes = [e.keyName];
+              el.keyName = e.keyName; el.keycodes = [e.keyName];
             } else {
               el.keycodes = ['GLFW_KEY_SPACE']; el.keyName = 'GLFW_KEY_SPACE';
             }
             el.toggleable = !!e.toggleable;
+            if (e.slideTrigger) el.slideTrigger = true;
+            if (e.moveMouse) el.moveMouse = true;
+            if (e.showLayers) el.showLayers = true;
             if (e.w !== undefined) el.w = e.w;
             if (e.h !== undefined) el.h = e.h;
             if (e.wDp !== undefined) el.wDp = e.wDp;
@@ -1469,6 +1584,19 @@ function updateAllPanels() {
 
 /* ============ 初始化 ============ */
 (function init() {
+  // 自动选分辨率预设（看当前视口方向）
+  const iw = window.innerWidth, ih = window.innerHeight;
+  let autoW = 2400, autoH = 1080;  // 默认 2K 横屏
+  if (iw <= 720) {
+    // 手机
+    if (iw > ih) { autoW = 2400; autoH = 1080; }  // 横屏 → 2K
+    else { autoW = 1080; autoH = 1920; }           // 竖屏
+  } else if (iw <= 1280 && iw > ih) {
+    autoW = 1920; autoH = 1080;
+  }
+  // 只有用户没改过时才用自动预设
+  screenWInput.value = autoW; screenHInput.value = autoH;
+
   // 默认图层
   const dl = createLayer('主控件层', 'always');
   layers.push(dl); activeLayerId = dl.id; nextLayerSeq = 2;
