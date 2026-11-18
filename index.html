@@ -410,13 +410,23 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
 .inline-tool-area { margin-bottom: 16px; }
 
 /* ================= 内置工具顶部抽屉 ================= */
-.m-drawer { margin: -4px 0 10px; }
+.m-drawer { margin: -2px 0 6px; }
 .m-drawer-toggle {
   background: transparent; color: var(--muted); border: none;
-  font-size: 0.75rem; cursor: pointer; padding: 4px 0; font-family: var(--font-family);
+  font-size: 0.72rem; cursor: pointer; padding: 2px 0; line-height: 1.4; font-family: var(--font-family);
 }
 .m-drawer-toggle:hover { color: var(--ink); }
-.m-drawer-panel { display: none; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.m-drawer-panel {
+  display: none; gap: 6px; margin-top: 4px;
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+}
+.m-drawer-panel::-webkit-scrollbar { display: none; }
+.m-drawer-panel button {
+  flex: 0 0 auto; font-size: 0.72rem; padding: 3px 10px;
+  background: var(--card-bg); color: var(--ink);
+  border: var(--border-width) var(--border-style) var(--line); cursor: pointer; font-family: var(--font-family);
+}
+.m-drawer-panel button:hover { background: var(--hover-bg); }
 .m-drawer.open .m-drawer-panel { display: flex; }
 #modal.fs-mode .modal-box {
   position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
@@ -700,10 +710,10 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     <div class="modal-desc" style="border-left:none; padding-left:0; font-size:0.85rem; line-height:1.8;">
       <p style="margin-bottom:10px;">1. 本站提供的所有外链工具与内置小工具，其代码均为作者个人编写或代发，仅供交流学习与个人使用。使用过程中产生的任何直接或间接风险（包括但不限于数据丢失、账号异常、设备问题）由使用者自行承担。</p>
       <p style="margin-bottom:10px;">2. 本站部分内容为同人衍生作品（如涉及 v/s、LXH、中V、MC 等圈子），相关版权归属原作者所有。本站不承担任何因使用、分享、修改这些内容而产生的直接或间接责任。如原作者要求下架相关内容，请联系站长处理。</p>
-      <p style="margin-bottom:10px;">3. 带有“代发”或“外链”标记的工具，由第三方提供。作者不对其代码安全性、内容准确性、后续维护及隐私处理负任何责任。请在使用时自行甄别，勿在第三方页面输入敏感信息。</p>
+      <p style="margin-bottom:10px;">3. 带有“代发”标记的工具由第三方提供，本站仅代为发布链接，不对其代码安全性、内容准确性、后续维护及隐私处理负任何责任，请在使用时自行甄别，勿在第三方页面输入敏感信息。带有“外链”标记的工具为本站仓库内托管的自有页面，与主站同样适用下文开源声明；但其内容若涉及第三方服务或素材，仍以相关权利人的条款为准。</p>
       <p style="margin-bottom:10px;">4. 对于占位/未完成工具，请勿在生产环境中进行测试或依赖。</p>
       <p style="margin-bottom:10px;">5. 本站工具均在浏览器本地运行，除标注“需联网”的工具（用于加载 CDN 组件库或访问外部服务）外，不会向任何服务器上传用户输入的数据。本地保存的数据（如待办、打卡记录）仅存于浏览器 localStorage 中，清除浏览器数据后将丢失，请自行备份。</p>
-      <p style="margin-bottom:10px;">6. 本站链接的外部网页内容不代表本站立场，本站对其内容不承担任何责任。</p>
+      <p style="margin-bottom:10px;">6. 本站链接的其他独立网站（如友情链接、参考站点）的内容不代表本站立场，本站对其内容不承担任何责任。上述“外链”标记的本站自有页面不在此列。</p>
       <h3 style="font-size:0.95rem; margin:18px 0 10px;">开源声明</h3>
       <p style="margin-bottom:6px; font-weight:bold;">字体（均为开源字体，通过 <a href="https://fonts.zeoseven.com/" target="_blank" style="text-decoration:underline;">ZeoSeven Fonts</a> 提供分发）</p>
       <p style="margin-bottom:4px;">① 纳米平汉黑 NanoPyongHanHei — <a href="https://github.com/Hansha2011/NanoPyongHanHei/" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
@@ -2429,10 +2439,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('m-drawer-toggle').addEventListener('click', () => mDrawer.classList.toggle('open'));
-    document.getElementById('drawer-fs').addEventListener('click', enterInlineFs);
-    document.getElementById('drawer-exit-fs').addEventListener('click', exitInlineFs);
+    document.getElementById('drawer-fs').addEventListener('click', () => { enterInlineFs(); mDrawer.classList.remove('open'); });
+    document.getElementById('drawer-exit-fs').addEventListener('click', () => { exitInlineFs(); mDrawer.classList.remove('open'); });
     document.getElementById('drawer-close').addEventListener('click', closeToolModal);
-    document.getElementById('drawer-noanim').addEventListener('click', () => applyNoAnim(!document.body.classList.contains('no-anim')));
+    document.getElementById('drawer-noanim').addEventListener('click', () => { applyNoAnim(!document.body.classList.contains('no-anim')); mDrawer.classList.remove('open'); });
 
     document.getElementById("modal-close").addEventListener("click", closeToolModal);
     modal.addEventListener("click", (e) => { if (e.target === modal) closeToolModal(); });
