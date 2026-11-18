@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="https://fontsapi.zeoseven.com/65/main/result.css">
 <link rel="stylesheet" href="https://fontsapi.zeoseven.com/701/main/result.css">
 <link rel="stylesheet" href="https://fontsapi.zeoseven.com/382/main/result.css">
+<link href="https://fontsapi.zeoseven.com/572/main/result.css" onload="this.rel='stylesheet'" rel="preload" as="style" crossorigin />
+<noscript><link rel="stylesheet" href="https://fontsapi.zeoseven.com/572/main/result.css" /></noscript>
 <style>
 /* ================= 全局变量与主题 ================= */
 :root {
@@ -49,6 +51,20 @@ body[data-theme="LXH"] {
   --pattern-opacity: 0.15;
   --pattern-image: radial-gradient(currentColor 1px, transparent 1px);
   --pattern-size: 12px 12px;
+}
+
+body[data-theme="MC"] {
+  --font-family: "Unifont", sans-serif;
+  font-weight: normal;
+  --radius: 0px;
+  --bg: #24301c; --ink: #e8dcc4; --muted: #a89a7e; --line: #5a4632; --border-width: 2px;
+  --card-bg: #2f3d24; --card-hover-bg: #79553d; --card-hover-ink: #f5ecd7;
+  --filter-bg: #2f3d24; --filter-ink: #e8dcc4; --filter-active-bg: #79553d; --filter-active-ink: #f5ecd7;
+  --bg-image: linear-gradient(to right, rgba(0,0,0,0.15) 2px, transparent 2px), linear-gradient(to bottom, rgba(0,0,0,0.15) 2px, transparent 2px);
+  --bg-size: 16px 16px; --bg-shift: 16px; --bg-speed: 6s;
+  --pattern-opacity: 0.12;
+  --pattern-image: conic-gradient(#5a4632 25%, #3a2d20 25% 50%, #5a4632 50% 75%, #3a2d20 75%);
+  --pattern-size: 16px 16px;
 }
 
 body[data-theme="中V"] {
@@ -959,6 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { name: "妖生重开模拟器", tagline: "文字流放置游戏。", longDesc: "LXH 圈层。", url: "#", mark: "GAME", badge: "占位", category: "LXH", platform: ["Web"], year: "2026", status: "placeholder", needsNet: false },
       { name: "救出冬冬", tagline: "根据剧情改编的小型 3D 游戏。", longDesc: "LXH 圈层。", url: "#", mark: "3D", badge: "占位", category: "LXH", platform: ["Web"], year: "2026", status: "placeholder", needsNet: false },
       
+      { name: "Zalith键位制作", tagline: "为Zalith启动器制作键位。", longDesc: "MC 圈层。为 Zalith 启动器制作键位。", url: "https://xigiy.github.io/zalith-keyboard-workshop/", mark: "KEY", badge: "Test", category: "MC", platform: ["Web"], year: "2026", status: "external", needsNet: true },
       { name: "洛天依AiUI", tagline: "内置人设的 AI 聊天 UI。", longDesc: "中V 圈层。代发，不对代码负任何责任。", url: "https://xigiy.github.io/brainthinking", mark: "AI", badge: "代发", category: "中V", platform: ["Web"], year: "2026", status: "external", needsNet: true }
     ];
 
@@ -1130,7 +1147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function buildFilters() {
-      const categories = ['全部', '通用工具', 'v/s', 'LXH', '中V'];
+      const categories = ['全部', '通用工具', 'v/s', 'LXH', '中V', 'MC'];
       
       let html = '';
       categories.forEach(cat => {
