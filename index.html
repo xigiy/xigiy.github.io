@@ -461,19 +461,11 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
 }
 #ifloat-widget.idle { opacity: 0.35; }
 #ifloat-widget:active { cursor: grabbing; }
-#ifloat-widget #fw-ball {
-  width: 38px; height: 38px; border: none; border-radius: 50%;
-  background: linear-gradient(135deg, #4a90d9, #2d6cb5); color: #fff;
-  font-size: 1rem; cursor: pointer; flex: 0 0 auto;
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.4);
-}
-#ifloat-widget #fw-menu { display: none; gap: 2px; }
-#ifloat-widget.expanded #fw-menu { display: flex; }
-#ifloat-widget button:not(#fw-ball) {
-  width: 36px; height: 36px; border: none; border-radius: 50%; background: transparent;
+#ifloat-widget button {
+  width: 38px; height: 38px; border: none; border-radius: 50%; background: transparent;
   color: #fff; font-size: 0.95rem; cursor: pointer; font-family: var(--font-family); flex: 0 0 auto;
 }
-#ifloat-widget button:not(#fw-ball):hover { background: rgba(255,255,255,.16); }
+#ifloat-widget button:hover { background: rgba(255,255,255,.16); }
 #modal.fs-mode .modal-box {
   position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
   max-height: none; border-radius: 0; overflow-y: auto; z-index: 10002;
@@ -791,12 +783,9 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     <button class="btn btn-outline" id="loader-force-close" style="margin-top:8px; font-size:0.75rem;">跳过加载 ›</button>
   </div>
   <div id="ifloat-widget">
-    <button id="fw-ball" title="VoidWaveOS 工具菜单">◈</button>
-    <div id="fw-menu">
-      <button id="fw-open" title="新标签页打开原链">↗</button>
-      <button id="fw-reload" title="刷新">↻</button>
-      <button id="fw-close" title="退出工具">✕</button>
-    </div>
+    <button id="fw-open" title="新标签页打开原链">↗</button>
+    <button id="fw-reload" title="刷新">↻</button>
+    <button id="fw-close" title="退出工具">✕</button>
   </div>
 </div>
 
@@ -2561,9 +2550,10 @@ document.addEventListener('DOMContentLoaded', () => {
       logBox.innerHTML = '';
       clearTimeout(stageLoaderHideTimer);
       loader.classList.remove('hide');
-      fw.classList.remove('expanded', 'idle');
+      fw.classList.remove('idle');
       fw.style.left = '12px'; fw.style.top = '12px'; fw.style.right = 'auto'; fw.style.bottom = 'auto';
       stage.classList.add('active');
+      history.pushState({ vstage: 1 }, '');
       stageLog(`opening ${url}`);
       const started = Date.now();
       iframe.onload = () => {
@@ -2592,7 +2582,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && document.getElementById('iframe-stage').classList.contains('active')) closeIframeStage();
     });
-    /* 悬浮球：点击展开/收起，拖动换位并吸附左右边缘，空闲自动变淡 */
+    /* 悬浮窗：拖动换位并吸附左右边缘，空闲自动变淡；按钮用原生 click，不被拖拽吞掉 */
     (() => {
       const fw = document.getElementById('ifloat-widget');
       let idleTimer = null;
@@ -2602,19 +2592,19 @@ document.addEventListener('DOMContentLoaded', () => {
         idleTimer = setTimeout(() => fw.classList.add('idle'), 3000);
       }
       fw.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return; // 按钮区域交给 click 处理
         requestWidgetIdle();
         const r = fw.getBoundingClientRect();
         const dx = e.clientX - r.left, dy = e.clientY - r.top;
         let moved = false;
-        fw.setPointerCapture(e.pointerId);
         const move = (ev) => {
-          if (Math.abs(ev.clientX - e.clientX) > 5 || Math.abs(ev.clientY - e.clientY) > 5) moved = true;
-          if (!moved) return;
+          if (!moved && Math.abs(ev.clientX - e.clientX) <= 5 && Math.abs(ev.clientY - e.clientY) <= 5) return;
+          if (!moved) { moved = true; fw.setPointerCapture(e.pointerId); }
           fw.style.left = Math.min(window.innerWidth - r.width, Math.max(0, ev.clientX - dx)) + 'px';
           fw.style.top = Math.min(window.innerHeight - r.height, Math.max(0, ev.clientY - dy)) + 'px';
           fw.style.right = 'auto'; fw.style.bottom = 'auto';
         };
-        const up = (ev) => {
+        const up = () => {
           fw.removeEventListener('pointermove', move);
           fw.removeEventListener('pointerup', up);
           if (moved) {
@@ -2622,8 +2612,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = parseFloat(fw.style.left) || 0;
             const snapLeft = x + w / 2 < window.innerWidth / 2;
             fw.style.left = (snapLeft ? 6 : window.innerWidth - w - 6) + 'px';
-          } else if (ev.target.id === 'fw-ball') {
-            fw.classList.toggle('expanded');
           }
           requestWidgetIdle();
         };
@@ -2631,6 +2619,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fw.addEventListener('pointerup', up);
       });
     })();
+    /* 浏览器返回键 = 退出工具，而不是把主站导航走 */
+    window.addEventListener('popstate', () => {
+      if (document.getElementById('iframe-stage').classList.contains('active')) closeIframeStage();
+    });
 
     document.getElementById('m-drawer-toggle').addEventListener('click', () => mDrawer.classList.toggle('open'));
     document.getElementById('drawer-fs').addEventListener('click', () => { enterInlineFs(); mDrawer.classList.remove('open'); });
