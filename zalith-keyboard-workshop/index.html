@@ -1380,57 +1380,99 @@ function switchMobileTab(which) {
   currentMobileTab = which;
 }
 
-/* ============ 导出 / 导入 JSON ============ */
+/* ============ 导出 / 导入 JSON（Zalith2 真实格式） ============ */
+// 万分比换算：position x/y 相对宽/高；buttonSize 百分比统一相对 screen_height
+function makeTextObj(s) { return { default: s || '', matchQueue: [] }; }
+function makeSizeObj(el, sh) {
+  return {
+    type: el.sizeType || 'percentage',
+    widthDp: el.wDp || 50.0,
+    heightDp: el.hDp || 50.0,
+    widthPercentage: Math.round((el.w || 0) / sh * 10000),
+    heightPercentage: Math.round((el.h || 0) / sh * 10000),
+    widthReference: 'screen_height',
+    heightReference: 'screen_height'
+  };
+}
+// 样式主题 → Zalith 完整结构（缺省值对齐官方模板）
+function makeThemeObj(t) {
+  if (!t) t = {};
+  const br = t.borderRadius || { topStart: 0, topEnd: 0, bottomEnd: 0, bottomStart: 0 };
+  const base = {
+    alpha: t.alpha ?? 1.0,
+    pressedAlpha: t.pressedAlpha ?? 1.0,
+    backgroundColor: t.backgroundColor ?? 2147483648,
+    pressedBackgroundColor: t.pressedBackgroundColor ?? 3012069512,
+    contentColor: t.contentColor ?? 4294967295,
+    pressedContentColor: t.pressedContentColor ?? 4294967295,
+    borderWidth: t.borderWidth ?? 0,
+    pressedBorderWidth: t.pressedBorderWidth ?? 0,
+    borderColor: t.borderColor ?? 4294967295,
+    pressedBorderColor: t.pressedBorderColor ?? 4294967295,
+    borderRadius: { topStart: br.topStart || 0, topEnd: br.topEnd || 0, bottomEnd: br.bottomEnd || 0, bottomStart: br.bottomStart || 0 },
+    pressedBorderRadius: { topStart: 0, topEnd: 0, bottomEnd: 0, bottomStart: 0 }
+  };
+  return base;
+}
 function exportJSON() {
   const { w: sw, h: sh } = getScreen();
-  const outLayers = layers.map(l => ({
-    id: l.id, name: l.name, uuid: l.uuid,
-    hide: !!l.hide,
-    visibilityType: l.visibilityType || 'always',
-    hideWhenMouse: !!l.hideWhenMouse,
-    hideWhenGamepad: !!l.hideWhenGamepad,
-    elements: l.elements.map(el => {
-      const o = { elementType: el.elementType, uuid: el.uuid, x: el.x, y: el.y, sizeType: el.sizeType };
-      if (el.elementType === 'joystick') return o;
-      if (el.elementType === 'textbox') {
-        o.text = el.text || '';
-        if (el.textAlign) o.textAlign = el.textAlign;
-        if (el.bold) o.bold = true;
-        if (el.italic) o.italic = true;
-        if (el.underline) o.underline = true;
-        if (el.slideTrigger) o.slideTrigger = true;
-        if (el.moveMouse) o.moveMouse = true;
-        if (el.showLayers) o.showLayers = true;
-        if (el.sizeType === 'percentage') { o.w = el.w; o.h = el.h; }
-        else if (el.sizeType === 'dp') { o.wDp = el.wDp; o.hDp = el.hDp; }
-        if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
-      } else if (el.elementType === 'normal') {
-        o.text = el.text || '';
-        const codes = el.keycodes && el.keycodes.length ? el.keycodes : (el.keyName ? [el.keyName] : ['GLFW_KEY_SPACE']);
-        o.keycodes = codes;
-        o.keyName = codes[0];
-        o.toggleable = !!el.toggleable;
-        if (el.slideTrigger) o.slideTrigger = true;
-        if (el.moveMouse) o.moveMouse = true;
-        if (el.showLayers) o.showLayers = true;
-        if (el.sizeType === 'percentage') { o.w = el.w; o.h = el.h; }
-        else if (el.sizeType === 'dp') { o.wDp = el.wDp; o.hDp = el.hDp; }
-        if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
+
+  const outLayers = layers.map(l => {
+    const layer = {
+      name: l.name, uuid: l.uuid, hide: !!l.hide,
+      visibilityType: l.visibilityType || 'always'
+    };
+    if (l.hideWhenMouse || l.hideWhenGamepad) {
+      layer.hideWhenMouse = !!l.hideWhenMouse;
+      layer.hideWhenGamepad = !!l.hideWhenGamepad;
+    }
+    const normals = [], boxes = [], joys = [];
+    l.elements.forEach(el => {
+      const pos = { x: Math.round(el.x / sw * 10000), y: Math.round(el.y / sh * 10000) };
+      if (el.elementType === 'joystick') {
+        joys.push({ uuid: el.uuid, position: pos });
+        return;
       }
-    })
-  }));
+      const o = {
+        text: makeTextObj(el.text),
+        uuid: el.uuid,
+        position: pos,
+        buttonSize: makeSizeObj(el, sh),
+        visibilityType: 'always'
+      };
+      if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
+      if (el.elementType === 'textbox') {
+        boxes.push(o);
+      } else {
+        o.isSwipple = !!el.slideTrigger;
+        o.isPenetrable = !!el.moveMouse;
+        o.isToggleable = !!el.toggleable;
+        const codes = (el.keycodes && el.keycodes.length) ? el.keycodes : (el.keyName ? [el.keyName] : []);
+        if (codes.length) o.keycodes = codes;
+        normals.push(o);
+      }
+    });
+    if (normals.length) layer.normalButtons = normals;
+    if (boxes.length) layer.textBoxes = boxes;
+    if (joys.length) layer.joystickButtons = joys;
+    return layer;
+  });
 
   const output = {
-    editorVersion: 1,
-    version: 2,
-    name: document.title.replace(' - 键位工坊', '') || 'layout',
-    author: 'editor', description: '',
-    screen: { width: sw, height: sh },
+    info: {
+      name: makeTextObj('我的键位'),
+      author: makeTextObj('editor'),
+      description: makeTextObj(''),
+      versionCode: 0,
+      versionName: '1.0'
+    },
     layers: outLayers,
     styles: styles.map(s => ({
       name: s.name, uuid: s.uuid, animateSwap: !!s.animateSwap,
-      lightStyle: s.lightStyle, darkStyle: s.darkStyle
-    }))
+      lightStyle: makeThemeObj(s.lightStyle),
+      darkStyle: makeThemeObj(s.darkStyle)
+    })),
+    editorVersion: 12
   };
 
   // ===== 直接下载 =====
@@ -1476,10 +1518,15 @@ function importJSON(data) {
   activeLayerId = null; selectedId = null;
   nextElementId = 1; nextLayerId = 1; nextLayerSeq = 1;
 
-  if (data.screen) {
-    if (data.screen.width) screenWInput.value = data.screen.width;
-    if (data.screen.height) screenHInput.value = data.screen.height;
-  }
+  // Zalith2 格式：顶层 info / layers / styles / editorVersion
+  // screen 尺寸从 editor 设置读取（模板里没有 screen 字段）
+  const sw = parseInt(screenWInput.value) || 2400;
+  const sh = parseInt(screenHInput.value) || 1080;
+
+  // 万分比 → 像素
+  const pos2px = (p, ref) => Math.round((p || 0) / 10000 * ref);
+  const pct2pxH = (v) => Math.round((v || 0) / 10000 * sh);  // 尺寸参照 screen_height
+
   if (Array.isArray(data.styles)) {
     data.styles.forEach(s => {
       const ns = createStyle(s.name);
@@ -1492,56 +1539,64 @@ function importJSON(data) {
   }
   if (Array.isArray(data.layers)) {
     data.layers.forEach(l => {
-      const layer = createLayer(l.name, l.visibilityType || 'always');
-      layer.id = l.id || nextLayerId++;
+      const layer = createLayer(typeof l.name === 'object' ? (l.name?.default || '控件层') : (l.name || '控件层'), l.visibilityType || 'always');
+      layer.id = nextLayerId++;
       layer.uuid = l.uuid || randomHex(12);
       layer.hide = !!l.hide;
       layer.hideWhenMouse = !!l.hideWhenMouse;
       layer.hideWhenGamepad = !!l.hideWhenGamepad;
-      if (Array.isArray(l.elements)) {
-        l.elements.forEach(e => {
-          const el = createElementData(e.elementType);
-          el.uuid = e.uuid || randomHex(16);
-          el.x = e.x !== undefined ? e.x : el.x;
-          el.y = e.y !== undefined ? e.y : el.y;
-          el.sizeType = e.sizeType || el.sizeType;
-          if (e.elementType === 'textbox') {
-            el.text = e.text || '文字';
-            if (e.textAlign) el.textAlign = e.textAlign;
-            if (e.bold) el.bold = true;
-            if (e.italic) el.italic = true;
-            if (e.underline) el.underline = true;
-            if (e.slideTrigger) el.slideTrigger = true;
-            if (e.moveMouse) el.moveMouse = true;
-            if (e.showLayers) el.showLayers = true;
-            if (e.w !== undefined) el.w = e.w;
-            if (e.h !== undefined) el.h = e.h;
-            if (e.wDp !== undefined) el.wDp = e.wDp;
-            if (e.hDp !== undefined) el.hDp = e.hDp;
-            if (e.buttonStyle) el.buttonStyle = e.buttonStyle;
-          } else if (e.elementType === 'normal') {
-            el.text = e.text || '按键';
-            if (Array.isArray(e.keycodes) && e.keycodes.length) {
-              el.keycodes = e.keycodes; el.keyName = e.keycodes[0];
-            } else if (e.keyName) {
-              el.keyName = e.keyName; el.keycodes = [e.keyName];
-            } else {
-              el.keycodes = ['GLFW_KEY_SPACE']; el.keyName = 'GLFW_KEY_SPACE';
-            }
-            el.toggleable = !!e.toggleable;
-            if (e.slideTrigger) el.slideTrigger = true;
-            if (e.moveMouse) el.moveMouse = true;
-            if (e.showLayers) el.showLayers = true;
-            if (e.w !== undefined) el.w = e.w;
-            if (e.h !== undefined) el.h = e.h;
-            if (e.wDp !== undefined) el.wDp = e.wDp;
-            if (e.hDp !== undefined) el.hDp = e.hDp;
-            if (e.buttonStyle) el.buttonStyle = e.buttonStyle;
-          }
-          layer.elements.push(el);
-          if (el.id >= nextElementId) nextElementId = el.id + 1;
-        });
-      }
+
+      // 按类型分组解析
+      const parseCommon = (el, e) => {
+        el.uuid = e.uuid || randomHex(16);
+        el.x = pos2px(e.position?.x, sw);
+        el.y = pos2px(e.position?.y, sh);
+        const bs = e.buttonSize || {};
+        el.sizeType = bs.type || 'percentage';
+        el.w = pct2pxH(bs.widthPercentage);
+        el.h = pct2pxH(bs.heightPercentage);
+        if (bs.widthDp) el.wDp = bs.widthDp;
+        if (bs.heightDp) el.hDp = bs.heightDp;
+        if (e.buttonStyle) el.buttonStyle = e.buttonStyle;
+        if (el.w < 20) { el.w = Math.round(sw * 0.125); }
+        if (el.h < 20) { el.h = Math.round(sh * 0.2); }
+      };
+
+      (l.normalButtons || []).forEach(e => {
+        const el = createElementData('normal');
+        parseCommon(el, e);
+        el.text = (typeof e.text === 'object' ? e.text?.default : e.text) || '按键';
+        if (Array.isArray(e.keycodes) && e.keycodes.length) {
+          el.keycodes = e.keycodes; el.keyName = e.keycodes[0];
+        } else if (e.keyName) {
+          el.keyName = e.keyName; el.keycodes = [e.keyName];
+        } else {
+          el.keycodes = []; el.keyName = '';
+        }
+        el.toggleable = !!e.isToggleable;
+        el.slideTrigger = !!e.isSwipple;
+        el.moveMouse = !!e.isPenetrable;
+        layer.elements.push(el);
+        if (el.id >= nextElementId) nextElementId = el.id + 1;
+      });
+      (l.textBoxes || []).forEach(e => {
+        const el = createElementData('textbox');
+        parseCommon(el, e);
+        el.text = (typeof e.text === 'object' ? e.text?.default : e.text) || '文字';
+        if (e.textAlign) el.textAlign = e.textAlign;
+        if (e.bold) el.bold = true;
+        if (e.italic) el.italic = true;
+        if (e.underline) el.underline = true;
+        layer.elements.push(el);
+        if (el.id >= nextElementId) nextElementId = el.id + 1;
+      });
+      (l.joystickButtons || []).forEach(e => {
+        const el = createElementData('joystick');
+        parseCommon(el, e);
+        layer.elements.push(el);
+        if (el.id >= nextElementId) nextElementId = el.id + 1;
+      });
+
       if (layer.id >= nextLayerId) nextLayerId = layer.id + 1;
       layers.push(layer);
     });
