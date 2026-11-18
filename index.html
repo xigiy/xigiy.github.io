@@ -629,7 +629,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
         <div class="boot-progress-bar" id="boot-bar"></div>
       </div>
       <div class="boot-title">VoidWaveOS</div>
-      <div class="boot-version" id="sys-ver">4.0.10 - 000011 - NET.ver-52419e5</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
+      <div class="boot-version" id="sys-ver">4.0.10 - 000012 - NET.ver-d5182a9</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
     </div>
   </div>
 </div>
@@ -2867,6 +2867,149 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     reader.readAsDataURL(file);
   }
+
+  /* ================= 彩蛋 ================= */
+  /* 1. 长按免责声明 → 重启彩蛋（日志变为特殊文本，末尾有退出键） */
+  (function () {
+    const btn = document.getElementById('disclaimer-btn');
+    if (!btn) return;
+    let timer = null, suppress = false;
+    btn.addEventListener('pointerdown', () => {
+      timer = setTimeout(() => { timer = null; suppress = true; launchEggBoot(); }, 800);
+    });
+    const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
+    btn.addEventListener('pointerup', cancel);
+    btn.addEventListener('pointerleave', cancel);
+    btn.addEventListener('pointercancel', cancel);
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    btn.addEventListener('click', (e) => {
+      if (suppress) { e.stopImmediatePropagation(); suppress = false; }
+    }, true);
+  })();
+
+  function launchEggBoot() {
+    if (document.getElementById('egg-boot')) return;
+    const ov = document.createElement('div');
+    ov.id = 'egg-boot';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:20000;background:#0a0a0a;color:#cfcfcf;font-family:ui-monospace,"SF Mono",Menlo,monospace;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;padding:20px;';
+    ov.innerHTML = '<div id="egg-boot-log" style="width:min(90vw,560px);max-height:62vh;overflow:hidden;font-size:0.75rem;line-height:1.8;"></div>';
+    document.body.appendChild(ov);
+    const log = ov.querySelector('#egg-boot-log');
+    const lines = [
+      'voidwave-os: reboot requested (source: long-press @ disclaimer)',
+      'stopping user session............ <span style="color:#4caf50">[ OK ]</span>',
+      'flushing localStorage............ <span style="color:#4caf50">[ OK ]</span> (0 todos lost)',
+      'feeding background particles..... <span style="color:#4caf50">[ OK ]</span>',
+      'LXH: cat found sleeping in /cache, relocating...',
+      'v/s: rewinding 4th dimension..... <span style="color:#4caf50">[ OK ]</span>',
+      '中V: warming up voices........... <span style="color:#4caf50">[ OK ]</span> (104 singers)',
+      'MC: re-laying bedrock............ <span style="color:#4caf50">[ OK ]</span>',
+      'merging worldviews............... 1 conflict found, <span style="color:#c9a227">ignored</span>',
+      'easter egg status: hatched 🥚 → 🐣',
+      'system ready. (this boot was not a drill)'
+    ];
+    lines.forEach((m, i) => setTimeout(() => {
+      const div = document.createElement('div');
+      div.innerHTML = `<span style="color:#555">[${new Date().toLocaleTimeString('en-US', { hour12: false })}]</span> ${m}`;
+      log.appendChild(div);
+      if (i === lines.length - 1) {
+        const b = document.createElement('button');
+        b.textContent = '退出';
+        b.style.cssText = 'display:block;margin-top:12px;padding:6px 22px;background:#fff;color:#000;border:none;font-family:inherit;font-size:0.8rem;cursor:pointer;';
+        b.onclick = () => { ov.style.transition = 'opacity .5s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 500); };
+        log.appendChild(b);
+      }
+    }, 400 * i));
+    setTimeout(() => { const l = document.getElementById('egg-boot-log'); if (l) l.scrollTop = l.scrollHeight; }, 100);
+  }
+
+  /* 2. Android 式彩蛋小游戏：◈ Flappy Void（点击标题/状态栏触发） */
+  function launchEggGame() {
+    if (document.getElementById('egg-game')) return;
+    const ov = document.createElement('div');
+    ov.id = 'egg-game';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:20001;background:#0a0a0a;';
+    ov.innerHTML = `
+      <canvas style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+      <div id="egg-hint" style="position:absolute;top:18px;left:0;right:0;text-align:center;color:#9a9a9a;font-size:0.78rem;font-family:ui-monospace,Menlo,monospace;pointer-events:none;">tap / space = jump · ✕ 退出</div>
+      <button id="egg-close" style="position:absolute;top:10px;right:10px;z-index:2;width:36px;height:36px;border:none;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:1rem;cursor:pointer;">✕</button>`;
+    document.body.appendChild(ov);
+    const cv = ov.querySelector('canvas');
+    const ctx = cv.getContext('2d');
+    let W, H, raf, bird, bars, score, alive, spawned;
+    function reset() {
+      W = cv.width = window.innerWidth; H = cv.height = window.innerHeight;
+      bird = { x: W * 0.25, y: H * 0.45, v: 0 };
+      bars = []; score = 0; alive = true; spawned = 0;
+    }
+    function flap() { if (alive) bird.v = -7.5; }
+    function die() {
+      alive = false;
+      setTimeout(() => { if (document.getElementById('egg-game')) reset(); }, 900);
+    }
+    function tick() {
+      if (!document.getElementById('egg-game')) { cancelAnimationFrame(raf); return; }
+      raf = requestAnimationFrame(tick);
+      ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, W, H);
+      if (alive) {
+        bird.v += 0.45; bird.y += bird.v;
+        if (spawned-- <= 0) {
+          spawned = 95;
+          const gy = 60 + Math.random() * (H - 220);
+          bars.push({ x: W + 40, gy, w: 46, gap: 160, passed: false });
+        }
+        bars.forEach(b => { b.x -= 3.2; });
+        bars = bars.filter(b => b.x + b.w > -10);
+        bars.forEach(b => {
+          if (!b.passed && b.x + b.w < bird.x) { b.passed = true; score++; }
+          if (bird.x + 12 > b.x && bird.x - 12 < b.x + b.w && (bird.y - 12 < b.gy || bird.y + 12 > b.gy + b.gap)) die();
+        });
+        if (bird.y > H - 16 || bird.y < -30) die();
+      }
+      ctx.fillStyle = '#2d6cb5';
+      bars.forEach(b => {
+        ctx.fillRect(b.x, 0, b.w, b.gy);
+        ctx.fillRect(b.x, b.gy + b.gap, b.w, H);
+      });
+      ctx.fillStyle = '#fff';
+      ctx.font = '26px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('◈', bird.x, bird.y);
+      ctx.font = 'bold 15px monospace';
+      ctx.fillText(alive ? String(score) : 'GAME OVER — tap to restart', W / 2, 44);
+    }
+    reset(); tick();
+    ov.addEventListener('pointerdown', (e) => { if (e.target.id !== 'egg-close') { if (!alive) reset(); flap(); } });
+    document.addEventListener('keydown', eggKey);
+    function eggKey(e) { if (e.code === 'Space' && document.getElementById('egg-game')) { e.preventDefault(); if (!alive) reset(); flap(); } else if (e.key === 'Escape') close(); }
+    function close() { document.removeEventListener('keydown', eggKey); cancelAnimationFrame(raf); ov.remove(); }
+    ov.querySelector('#egg-close').addEventListener('click', close);
+  }
+
+  /* 触发器：搜索框输入 voidwave */
+  (function () {
+    const s = document.getElementById('search');
+    if (!s) return;
+    s.addEventListener('input', () => {
+      if (s.value.trim().toLowerCase() === 'voidwave') { s.value = ''; launchEggGame(); }
+    });
+  })();
+  /* 触发器：页脚状态文字连点 3 次 */
+  (function () {
+    const st = document.getElementById('sys-state');
+    if (!st) return;
+    let clicks = [];
+    st.addEventListener('click', () => {
+      const now = Date.now();
+      clicks = clicks.filter(t => now - t < 2000); clicks.push(now);
+      if (clicks.length >= 3) {
+        clicks = [];
+        showToast('✦ ProjectStarfield 彩蛋：世界线已交汇', 'success');
+        document.body.style.transition = 'filter .6s';
+        document.body.style.filter = 'hue-rotate(360deg)';
+        setTimeout(() => { document.body.style.filter = ''; }, 900);
+      }
+    });
+  })();
 });
 </script>
 </body>
