@@ -629,7 +629,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
         <div class="boot-progress-bar" id="boot-bar"></div>
       </div>
       <div class="boot-title">VoidWaveOS</div>
-      <div class="boot-version" id="sys-ver">4.0.10 - 000012 - NET.ver-d5182a9</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
+      <div class="boot-version" id="sys-ver">4.0.10 - 000013 - NET.ver-df23b32</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
     </div>
   </div>
 </div>
@@ -2874,7 +2874,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('disclaimer-btn');
     if (!btn) return;
     let timer = null, suppress = false;
-    btn.addEventListener('pointerdown', () => {
+    // 防止长按时触发文本选择/复制菜单
+    btn.style.userSelect = 'none';
+    btn.style.webkitUserSelect = 'none';
+    btn.style.webkitTouchCallout = 'none';
+    btn.style.webkitTapHighlightColor = 'transparent';
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      try { window.getSelection().removeAllRanges(); } catch (err) {}
       timer = setTimeout(() => { timer = null; suppress = true; launchEggBoot(); }, 800);
     });
     const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
@@ -2936,29 +2943,33 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(ov);
     const cv = ov.querySelector('canvas');
     const ctx = cv.getContext('2d');
-    let W, H, raf, bird, bars, score, alive, spawned;
+    let W, H, raf, bird, bars, score, alive, lastT = 0, spawnT = 0;
+    const speed = 175; // px/s
     function reset() {
       W = cv.width = window.innerWidth; H = cv.height = window.innerHeight;
       bird = { x: W * 0.25, y: H * 0.45, v: 0 };
-      bars = []; score = 0; alive = true; spawned = 0;
+      bars = []; score = 0; alive = true; lastT = 0; spawnT = 400;
     }
-    function flap() { if (alive) bird.v = -7.5; }
     function die() {
       alive = false;
       setTimeout(() => { if (document.getElementById('egg-game')) reset(); }, 900);
     }
-    function tick() {
+    function tick(t) {
       if (!document.getElementById('egg-game')) { cancelAnimationFrame(raf); return; }
       raf = requestAnimationFrame(tick);
+      // 帧率无关的物理：按真实时间步进（120Hz 手机手感一致）
+      const dt = lastT ? Math.min(t - lastT, 40) : 16.7; lastT = t;
       ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, W, H);
       if (alive) {
-        bird.v += 0.45; bird.y += bird.v;
-        if (spawned-- <= 0) {
-          spawned = 95;
+        bird.v += 0.0192 * dt; bird.y += bird.v * dt;
+        spawnT -= dt;
+        if (spawnT <= 0) {
+          spawnT = 1500;
           const gy = 60 + Math.random() * (H - 220);
-          bars.push({ x: W + 40, gy, w: 46, gap: 160, passed: false });
+          bars.push({ x: W + 40, gy, w: 46, gap: Math.max(150, H * 0.22), passed: false });
         }
-        bars.forEach(b => { b.x -= 3.2; });
+        const px = speed * dt;
+        bars.forEach(b => { b.x -= px; });
         bars = bars.filter(b => b.x + b.w > -10);
         bars.forEach(b => {
           if (!b.passed && b.x + b.w < bird.x) { b.passed = true; score++; }
@@ -2977,10 +2988,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.font = 'bold 15px monospace';
       ctx.fillText(alive ? String(score) : 'GAME OVER — tap to restart', W / 2, 44);
     }
-    reset(); tick();
-    ov.addEventListener('pointerdown', (e) => { if (e.target.id !== 'egg-close') { if (!alive) reset(); flap(); } });
+    reset(); raf = requestAnimationFrame(tick);
+    // 输入：点按立即上升，无延迟；长按不做连跳
+    function doFlap(e) {
+      if (e && e.target && e.target.id === 'egg-close') return;
+      if (!alive) { reset(); return; }
+      bird.v = -0.42;
+    }
+    ov.addEventListener('pointerdown', doFlap);
     document.addEventListener('keydown', eggKey);
-    function eggKey(e) { if (e.code === 'Space' && document.getElementById('egg-game')) { e.preventDefault(); if (!alive) reset(); flap(); } else if (e.key === 'Escape') close(); }
+    function eggKey(e) { if (e.code === 'Space' && document.getElementById('egg-game')) { e.preventDefault(); doFlap(); } else if (e.key === 'Escape') close(); }
     function close() { document.removeEventListener('keydown', eggKey); cancelAnimationFrame(raf); ov.remove(); }
     ov.querySelector('#egg-close').addEventListener('click', close);
   }
