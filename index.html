@@ -2364,6 +2364,19 @@ document.addEventListener('DOMContentLoaded', () => {
         mCopyLink.textContent = "复制链接";
         mCopyName.textContent = "复制名称";
         mDesc.style.display = 'block';
+        mInlineTool.style.display = 'block';
+        mInlineTool.innerHTML = `
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap;">
+            <button class="btn" id="iframe-fs" style="padding:4px 12px; font-size:0.75rem;">全屏 ↗</button>
+            <button class="btn btn-outline" id="iframe-reload" style="padding:4px 12px; font-size:0.75rem;">刷新</button>
+            <span style="font-size:0.68rem; color:var(--muted); flex:1; min-width:0;">VoidWaveOS 收录页面 · 代码 MIT 开源 · 同人内容版权归原作者</span>
+          </div>
+          <iframe id="tool-iframe" src="${data.url}" style="width:100%; height:56vh; display:block; border:var(--border-width) var(--border-style) var(--line); background:#fff;" allowfullscreen allow="fullscreen"></iframe>`;
+        document.getElementById('iframe-fs').addEventListener('click', () => window.open(data.url, '_blank', 'noopener'));
+        document.getElementById('iframe-reload').addEventListener('click', () => {
+          const f = document.getElementById('tool-iframe');
+          if (f) f.src = f.src;
+        });
       } else if (data.status === 'placeholder') {
         currentCopyUrl = data.url;
         currentCopyName = data.name;
@@ -2433,6 +2446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeToolModal() {
       exitInlineFs();
       mDrawer.classList.remove('open');
+      mInlineTool.innerHTML = '';
       modal.classList.remove("active");
       if (pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
       if (totpInterval) { clearInterval(totpInterval); totpInterval = null; }
