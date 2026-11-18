@@ -408,6 +408,40 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
 .modal-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .inline-tool-area { margin-bottom: 16px; }
+
+/* ================= 内置工具顶部抽屉 ================= */
+.m-drawer { margin: -4px 0 10px; }
+.m-drawer-toggle {
+  background: transparent; color: var(--muted); border: none;
+  font-size: 0.75rem; cursor: pointer; padding: 4px 0; font-family: var(--font-family);
+}
+.m-drawer-toggle:hover { color: var(--ink); }
+.m-drawer-panel { display: none; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.m-drawer.open .m-drawer-panel { display: flex; }
+#modal.fs-mode .modal-box {
+  position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
+  max-height: none; border-radius: 0; overflow-y: auto; z-index: 10002;
+}
+#modal.fs-mode .inline-tool-area { max-height: none; }
+
+/* 拖拽横条：上拉全屏 / 下拉退出 */
+.tool-dragbar { display: flex; justify-content: center; padding: 8px 0 4px; cursor: grab; touch-action: none; user-select: none; }
+.tool-dragbar:active { cursor: grabbing; }
+.tool-dragbar .drag-pill { width: 56px; height: 5px; border-radius: 3px; background: var(--muted); opacity: 0.6; }
+.tool-dragbar:hover .drag-pill { opacity: 1; }
+
+/* 全屏切入动画：桌面侧边滑入，移动端底部上滑 */
+@media (min-width: 768px) and (hover: hover) {
+  #modal.fs-mode .modal-box { animation: drawerInRight 0.3s ease both; }
+}
+@media (max-width: 767px), (hover: none) {
+  #modal.fs-mode .modal-box { animation: drawerInUp 0.3s ease both; }
+}
+@keyframes drawerInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes drawerInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* 无动画模式 */
+body.no-anim *, body.no-anim *::before, body.no-anim *::after { animation: none !important; transition: none !important; }
 .inline-input {
   width: 100%; padding: 12px; font-family: inherit; font-size: 0.85rem;
   background: var(--bg); color: var(--ink); border: 1px solid var(--line);
@@ -606,11 +640,22 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
 <div id="modal" class="modal-overlay">
   <div class="modal-box">
     <button id="modal-close" class="modal-close">×</button>
+    <div id="m-drawer" class="m-drawer" style="display:none;">
+      <button type="button" id="m-drawer-toggle">≡ 工具操作 ▾</button>
+      <div id="m-drawer-panel" class="m-drawer-panel">
+        <button type="button" id="drawer-fs" class="btn btn-outline btn-sm">全屏模式</button>
+        <button type="button" id="drawer-exit-fs" class="btn btn-outline btn-sm" style="display:none;">退出全屏</button>
+        <button type="button" id="drawer-close" class="btn btn-outline btn-sm">退出工具</button>
+        <button type="button" id="drawer-noanim" class="btn btn-outline btn-sm">无动画模式: 关</button>
+      </div>
+    </div>
     <h2 id="m-title">Title <span id="m-badge" class="badge"></span></h2>
     <div id="m-tagline" class="modal-tagline">Tagline</div>
     
     <div id="m-desc" class="modal-desc">Long description...</div>
     
+    <div id="m-dragbar" class="tool-dragbar" style="display:none;" title="上拉全屏 / 下拉退出"><div class="drag-pill"></div></div>
+
     <div id="m-inline-tool" class="inline-tool-area" style="display:none;"></div>
 
     <div class="modal-actions" id="m-actions">
@@ -641,6 +686,10 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
       <strong>中V (VOCALOID)</strong><br>
       虚拟与创作交织的声音。中文虚拟歌手文化，由 P 主与听众共同构筑的创作生态。
     </div>
+    <div class="about-line">
+      <strong>MC (Minecraft)</strong><br>
+      方块与创造的世界。围绕 Minecraft 相关工具与启动器生态的创作。
+    </div>
   </div>
 </div>
 
@@ -649,13 +698,34 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     <button class="modal-close" onclick="document.getElementById('disclaimer-modal').classList.remove('active')">×</button>
     <h2>免责声明</h2>
     <div class="modal-desc" style="border-left:none; padding-left:0; font-size:0.85rem; line-height:1.8;">
-      <p style="margin-bottom:10px;">1. 本站提供的所有外链工具与内置小工具，其代码均为作者个人编写或代发，仅供交流学习与个人使用。</p>
-      <p style="margin-bottom:10px;">2. 本站部分内容为同人衍生作品（如涉及 v/s、LXH、中V 等圈子），相关版权归属原作者所有。本站不承担任何因使用、分享、修改这些内容而产生的直接或间接责任。</p>
-      <p style="margin-bottom:10px;">3. 带有“代发”或“外链”标记的工具，由第三方提供。作者不对其代码安全性、内容准确性及后续维护负任何责任。请在使用时自行甄别。</p>
-      <p>4. 对于占位/未完成工具，请勿在生产环境中进行测试或依赖。</p>
+      <p style="margin-bottom:10px;">1. 本站提供的所有外链工具与内置小工具，其代码均为作者个人编写或代发，仅供交流学习与个人使用。使用过程中产生的任何直接或间接风险（包括但不限于数据丢失、账号异常、设备问题）由使用者自行承担。</p>
+      <p style="margin-bottom:10px;">2. 本站部分内容为同人衍生作品（如涉及 v/s、LXH、中V、MC 等圈子），相关版权归属原作者所有。本站不承担任何因使用、分享、修改这些内容而产生的直接或间接责任。如原作者要求下架相关内容，请联系站长处理。</p>
+      <p style="margin-bottom:10px;">3. 带有“代发”或“外链”标记的工具，由第三方提供。作者不对其代码安全性、内容准确性、后续维护及隐私处理负任何责任。请在使用时自行甄别，勿在第三方页面输入敏感信息。</p>
+      <p style="margin-bottom:10px;">4. 对于占位/未完成工具，请勿在生产环境中进行测试或依赖。</p>
+      <p style="margin-bottom:10px;">5. 本站工具均在浏览器本地运行，除标注“需联网”的工具（用于加载 CDN 组件库或访问外部服务）外，不会向任何服务器上传用户输入的数据。本地保存的数据（如待办、打卡记录）仅存于浏览器 localStorage 中，清除浏览器数据后将丢失，请自行备份。</p>
+      <p style="margin-bottom:10px;">6. 本站链接的外部网页内容不代表本站立场，本站对其内容不承担任何责任。</p>
+      <h3 style="font-size:0.95rem; margin:18px 0 10px;">开源声明</h3>
+      <p style="margin-bottom:6px; font-weight:bold;">字体（均为开源字体，通过 <a href="https://fonts.zeoseven.com/" target="_blank" style="text-decoration:underline;">ZeoSeven Fonts</a> 提供分发）</p>
+      <p style="margin-bottom:4px;">① 纳米平汉黑 NanoPyongHanHei — <a href="https://github.com/Hansha2011/NanoPyongHanHei/" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
+      <p style="margin-bottom:4px;">② 精品点阵体9×9 BoutiqueBitmap9x9 — <a href="https://github.com/Howevering/BoutiqueBitmap9x9" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
+      <p style="margin-bottom:4px;">③ 内海字体 NaikaiFont — <a href="https://github.com/max32002/naikaifont" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
+      <p style="margin-bottom:4px;">④ 猫啃什锦黑 MaokenAssortedSans — <a href="https://github.com/maoken-fonts/MaokenAssortedSans" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
+      <p style="margin-bottom:10px;">⑤ GNU Unifont — <a href="https://www.unifoundry.com/unifont/index.html" target="_blank" style="text-decoration:underline;">Unifoundry</a> · OFL-1.1 / GPL-2.0 双协议</p>
+      <p style="margin-bottom:6px; font-weight:bold;">组件库</p>
+      <p style="margin-bottom:4px;">① Three.js — <a href="https://github.com/mrdoob/three.js" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
+      <p style="margin-bottom:4px;">② GSAP — <a href="https://github.com/greensock/GSAP" target="_blank" style="text-decoration:underline;">GitHub</a> · GreenSock 自有许可（可免费使用）</p>
+      <p style="margin-bottom:4px;">③ Lenis — <a href="https://github.com/darkroomengineering/lenis" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
+      <p style="margin-bottom:4px;">④ Howler.js — <a href="https://github.com/goldfire/howler.js" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
+      <p style="margin-bottom:4px;">⑤ QRCode.js — <a href="https://github.com/davidshimjs/qrcodejs" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
+      <p style="margin-bottom:4px;">⑥ JsBarcode — <a href="https://github.com/lindell/JsBarcode" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
+      <p style="margin-bottom:10px;">⑦ jsQR — <a href="https://github.com/cozmo/jsQR" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
+      <p style="margin-bottom:10px;">③' 本网页本身的代码，以及所有未标记为“代发”的内置工具页面与外链页面，均以 <strong>MIT 协议</strong>开源（针对代码；部分原创美术资源除外）。你可以在本站仓库中查看、学习、修改与分发这些代码，但请保留原许可声明。</p>
+      <p>④' 同人相关内容（世界观、角色设定等）由原作者保留全部权利，本站中的美术资源或文本仅为引用，用于说明与展示，不用于商业用途。</p>
     </div>
   </div>
 </div>
+
+<div id="back-top" title="回到顶部" style="position:fixed; right:16px; bottom:80px; z-index:900; width:40px; height:40px; display:none; align-items:center; justify-content:center; background:var(--card-bg); color:var(--ink); border:var(--border-width) var(--border-style) var(--line); cursor:pointer; font-size:1rem;">↑</div>
 
 <div id="shortcut-popup" class="shortcut-popup">
   <h4>快捷键 / Shortcuts</h4>
@@ -729,15 +799,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   printLog("VoidWaveOS boot sequence initiated.", "info");
 
+  function applyNoAnim(on) {
+    document.body.classList.toggle('no-anim', on);
+    try { localStorage.setItem('stech_no_anim', on ? '1' : '0'); } catch(e) {}
+    const b = document.getElementById('drawer-noanim');
+    if (b) b.textContent = '无动画模式: ' + (on ? '开' : '关');
+  }
+  applyNoAnim(localStorage.getItem('stech_no_anim') === '1');
+
   const LIBRARIES = [
     { key: 'gsap', label: 'GSAP', url: 'https://cdn.staticfile.net/gsap/3.12.5/gsap.min.js' },
     { key: 'Howl', label: 'Howler', url: 'https://cdn.staticfile.net/howler/2.2.4/howler.min.js' },
     { key: 'Lenis', label: 'Lenis', url: 'https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js' },
-    { key: 'THREE', label: 'Three.js', url: 'https://cdn.staticfile.net/three.js/0.160.0/three.min.js' },
-    { key: 'jsQR', label: 'jsQR', url: 'https://cdn.staticfile.net/jsqr/1.4.0/jsQR.min.js' },
-    { key: 'QRCode', label: 'QRCode', url: 'https://cdn.staticfile.net/qrcodejs/1.0.0/qrcode.min.js' },
-    { key: 'JsBarcode', label: 'JsBarcode', url: 'https://cdn.staticfile.net/jsbarcode/3.11.3/JsBarcode.all.min.js' }
+    { key: 'THREE', label: 'Three.js', url: 'https://cdn.staticfile.net/three.js/0.160.0/three.min.js' }
   ];
+
+  const LAZY_LIBS = {
+    jsQR: { url: 'https://cdn.staticfile.net/jsqr/1.4.0/jsQR.min.js' },
+    QRCode: { url: 'https://cdn.staticfile.net/qrcodejs/1.0.0/qrcode.min.js' },
+    JsBarcode: { url: 'https://cdn.staticfile.net/jsbarcode/3.11.3/JsBarcode.all.min.js' }
+  };
+  const libPromises = {};
+
+  function ensureLib(key) {
+    const lib = LAZY_LIBS[key];
+    if (!lib) return Promise.reject(new Error('unknown lib: ' + key));
+    if (window[key] !== undefined) return Promise.resolve(true);
+    if (!libPromises[key]) {
+      libPromises[key] = loadLibWithCache(lib.url).catch(e => {
+        showToast('组件库加载失败，请检查网络', 'error');
+        delete libPromises[key];
+        throw e;
+      });
+    }
+    return libPromises[key];
+  }
 
   let loadedLibs = 0;
   const totalLibs = LIBRARIES.length;
@@ -888,6 +984,8 @@ document.addEventListener('DOMContentLoaded', () => {
         targetColor.setHex(0x9EB26A); currentSpeed = 0.3; currentAmplitude = 2.0;
       } else if (theme === '中V') {
         targetColor.setHex(0x38bdf8); currentSpeed = 1.5; currentAmplitude = 4.5;
+      } else if (theme === 'MC') {
+        targetColor.setHex(0x7cc35c); currentSpeed = 0.5; currentAmplitude = 2.0;
       } else {
         targetColor.setHex(0x3b82f6); currentSpeed = 0.8; currentAmplitude = 3.0;
       }
@@ -900,6 +998,10 @@ document.addEventListener('DOMContentLoaded', () => {
       currentColor.lerp(targetColor, 0.05);
       material.color.copy(currentColor);
 
+      if (document.body.classList.contains('no-anim')) {
+        renderer.render(scene, camera);
+        return;
+      }
       for (let i = 0; i < AMOUNT; i++) {
         const initX = initialPositions[i * 3];
         const initZ = initialPositions[i * 3 + 2];
@@ -953,6 +1055,11 @@ document.addEventListener('DOMContentLoaded', () => {
       { name: "文本工具箱", tagline: "Base64、URL编码、大小写、字数统计等集合。", longDesc: "整合了常见的文本处理功能，一键完成复杂转换。", url: "#", mark: "TXT", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "text-tools", needsNet: false },
       { name: "进制转换器", tagline: "支持 2 ~ 36 进制任意互转。", longDesc: "输入数字并选择进制，实时输出其他进制结果。", url: "#", mark: "BASE", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "base-conv", needsNet: false },
       { name: "时间戳转换", tagline: "Unix 时间戳与日期互转。", longDesc: "无需打开新页面即可快速转换。", url: "#", mark: "TS", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "timestamp", needsNet: false },
+      { name: "密码生成器", tagline: "本地生成强密码，可定制长度与字符集。", longDesc: "基于 crypto.getRandomValues，纯本地生成，支持大小写、数字与符号。", url: "#", mark: "PWD", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "password", needsNet: false },
+      { name: "颜色转换器", tagline: "HEX / RGB / HSL 互转并实时预览。", longDesc: "输入 HEX 或 RGB 颜色值，即时转换其余格式并预览色块。", url: "#", mark: "CLR", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "color-conv", needsNet: false },
+      { name: "单位换算器", tagline: "长度、重量与温度单位实时互转。", longDesc: "涵盖米/千米/英里/英尺、千克/磅/吨与摄氏/华氏/开尔文。", url: "#", mark: "UNIT", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "unit-conv", needsNet: false },
+      { name: "人民币大写", tagline: "金额转财务大写，发票合同用。", longDesc: "输入数字金额，实时转换为标准中文大写金额。", url: "#", mark: "RMB", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "rmb-upper", needsNet: false },
+      { name: "随机数生成器", tagline: "自定义范围与个数，支持去重。", longDesc: "纯本地生成指定范围的随机数，可选是否允许重复。", url: "#", mark: "RND", badge: "内置", category: "通用工具", group: "文本与开发", platform: ["Web"], year: "2026", status: "inline", inlineType: "rand-num", needsNet: false },
       
       { name: "二维码生成器", tagline: "生成标准二维码、太阳码风格与条形码。", longDesc: "支持 QR Code 与条形码。依赖 CDN 库。", url: "#", mark: "QR", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "qrcode", needsNet: true },
       { name: "图片压缩", tagline: "纯本地 Canvas 图片压缩。", longDesc: "调整质量后立即压缩下载，不上传。", url: "#", mark: "IMG", badge: "内置", category: "通用工具", group: "图像与媒体", platform: ["Web"], year: "2026", status: "inline", inlineType: "image-compress", needsNet: false },
@@ -1003,7 +1110,8 @@ document.addEventListener('DOMContentLoaded', () => {
       '通用工具': '// UTILS_READY',
       'v/s': '//TVO_Client_Running',
       'LXH': '//Guild_Safety_Guarding',
-      '中V': '// 中文VOCALOID_调教中'
+      '中V': '// 中文VOCALOID_调教中',
+      'MC': '// MC_WORLD_READY'
     };
 
     function applyTheme(cat) {
@@ -1022,16 +1130,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (hotWorks.length === 0) { recentSection.style.display = 'none'; return; }
       recentSection.style.display = 'block';
       recentGrid.innerHTML = hotWorks.map(w => `
-        <a class="recent-card" href="javascript:void(0);" onclick="window.openToolByName('${w.name}')">
+        <a class="recent-card" href="javascript:void(0);" data-name="${w.name}">
           <h4>${w.name}</h4><span>常用</span>
         </a>
       `).join('');
     }
 
+    recentGrid.addEventListener('click', (e) => {
+      const card = e.target.closest('.recent-card');
+      if (!card) return;
+      window.openToolByName(card.dataset.name);
+    });
+
     function renderSearchHistory() {
       if (searchHistory.length === 0) { searchHistoryEl.style.display = 'none'; return; }
       searchHistoryEl.style.display = 'flex';
-      searchHistoryEl.innerHTML = searchHistory.map(q => `<span onclick="window.applySearchHistory('${q}')">${q}</span>`).join('');
+      searchHistoryEl.innerHTML = '';
+      searchHistory.forEach(q => {
+        const span = document.createElement('span');
+        span.textContent = q;
+        span.addEventListener('click', () => window.applySearchHistory(q));
+        searchHistoryEl.appendChild(span);
+      });
     }
 
     window.applySearchHistory = function(q) {
@@ -1064,7 +1184,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       list.sort((a, b) => {
         const ya = parseInt(a.year || "0"), yb = parseInt(b.year || "0");
-        return currentSort === 'desc' ? yb - ya : ya - yb;
+        if (yb !== ya) return currentSort === 'desc' ? yb - ya : ya - yb;
+        const ca = clickStore[a.name] || 0, cb = clickStore[b.name] || 0;
+        if (cb !== ca) return currentSort === 'desc' ? cb - ca : ca - cb;
+        return currentSort === 'desc'
+          ? a.name.localeCompare(b.name, 'zh')
+          : b.name.localeCompare(a.name, 'zh');
       });
 
       countEl.textContent = `共 ${list.length} 个工具`;
@@ -1169,6 +1294,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       applyTheme(currentCategory);
+      try { history.replaceState(null, '', '#' + encodeURIComponent(currentCategory)); } catch(e) {}
       renderGridData();
     });
 
@@ -1178,6 +1304,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     searchEl.addEventListener("keydown", (e) => {
       if (e.key === 'Enter') addSearchHistory(currentQuery);
+    });
+
+    const helpBtn = document.getElementById("help-btn");
+    helpBtn.addEventListener("click", () => shortcutPopup.classList.toggle("active"));
+
+    const backTop = document.getElementById("back-top");
+    window.addEventListener('scroll', () => {
+      const show = (window.scrollY || document.documentElement.scrollTop) > 400;
+      backTop.style.display = show ? 'flex' : 'none';
+    }, { passive: true });
+    backTop.addEventListener('click', () => {
+      if (window.lenisInstance) window.lenisInstance.scrollTo(0);
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     viewBtn.addEventListener("click", () => {
@@ -1221,11 +1360,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       mInlineTool.style.display = 'none';
       mActions.style.display = 'flex';
+      exitInlineFs();
+      mDrawer.classList.remove('open');
+      mDrawer.style.display = data.status === 'inline' ? 'block' : 'none';
+      mDragbar.style.display = data.status === 'inline' ? 'flex' : 'none';
 
       if (data.status === 'inline') {
         mActions.style.display = 'none';
         mInlineTool.style.display = 'block';
         mDesc.style.display = 'none';
+        if (isDesktop) enterInlineFs();
 
         if (pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
 
@@ -1302,25 +1446,23 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
           const container = document.getElementById('qr-container');
           const barcodeCanvas = document.getElementById('barcode-canvas');
-          const renderQR = (isSolar) => {
+          const renderQR = async (isSolar) => {
             const text = document.getElementById('qr-input').value.trim();
             if (!text) return;
+            try { await ensureLib('QRCode'); } catch(e) { return; }
             container.innerHTML = '';
             const wrapper = document.createElement('div');
             if (isSolar) wrapper.className = 'solar-qr';
             container.appendChild(wrapper);
-            if (typeof QRCode !== 'undefined') {
-              new QRCode(wrapper, { text: text, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
-            } else { wrapper.textContent = '库未加载'; }
+            new QRCode(wrapper, { text: text, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
           };
           document.getElementById('btn-qr-standard').addEventListener('click', () => renderQR(false));
           document.getElementById('btn-qr-solar').addEventListener('click', () => renderQR(true));
-          document.getElementById('btn-barcode').addEventListener('click', () => {
+          document.getElementById('btn-barcode').addEventListener('click', async () => {
             const text = document.getElementById('qr-input').value.trim();
             if (!text) return;
-            if (typeof JsBarcode !== 'undefined') {
-              try { JsBarcode(barcodeCanvas, text, { format: "CODE128", width: 2, height: 100, displayValue: true }); } catch(e) { showToast('生成失败', 'error'); }
-            } else { showToast('库未加载', 'error'); }
+            try { await ensureLib('JsBarcode'); } catch(e) { return; }
+            try { JsBarcode(barcodeCanvas, text, { format: "CODE128", width: 2, height: 100, displayValue: true }); } catch(e) { showToast('生成失败', 'error'); }
           });
         } else if (data.inlineType === 'uuid') {
           mInlineTool.innerHTML = `
@@ -1480,6 +1622,239 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('base-input').addEventListener('input', doBaseConv);
           document.getElementById('base-from').addEventListener('change', doBaseConv);
           doBaseConv();
+        } else if (data.inlineType === 'password') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+              <span style="font-size:0.8rem; white-space:nowrap;">长度</span>
+              <input type="range" id="pwd-len" min="6" max="64" value="16" style="flex:1;">
+              <span id="pwd-len-val" style="font-size:0.8rem; width:24px; text-align:right;">16</span>
+            </div>
+            <div class="inline-btn-row" style="gap:12px; flex-wrap:wrap;">
+              <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="pwd-upper" checked>A-Z</label>
+              <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="pwd-lower" checked>a-z</label>
+              <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="pwd-digit" checked>0-9</label>
+              <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="pwd-symbol" checked>!@#</label>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <div id="pwd-output" class="inline-output" style="flex:1; word-break:break-all;">等待生成...</div>
+              <button class="copy-btn" id="btn-pwd-copy" style="display:none;">复制</button>
+            </div>
+            <button class="btn" id="btn-pwd-gen" style="width:100%; margin-top:8px;">生成密码</button>
+          `;
+          document.getElementById('pwd-len').addEventListener('input', (e) => {
+            document.getElementById('pwd-len-val').textContent = e.target.value;
+          });
+          document.getElementById('btn-pwd-gen').addEventListener('click', () => {
+            const len = parseInt(document.getElementById('pwd-len').value);
+            let chars = '';
+            if (document.getElementById('pwd-upper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (document.getElementById('pwd-lower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+            if (document.getElementById('pwd-digit').checked) chars += '0123456789';
+            if (document.getElementById('pwd-symbol').checked) chars += '!@#$%^&*()-_=+[]{};:,.<>?';
+            if (!chars) { showToast('请至少选择一种字符集', 'error'); return; }
+            const arr = new Uint32Array(len);
+            crypto.getRandomValues(arr);
+            const pwd = Array.from(arr, n => chars[n % chars.length]).join('');
+            document.getElementById('pwd-output').textContent = pwd;
+            document.getElementById('btn-pwd-copy').style.display = 'inline-block';
+          });
+          document.getElementById('btn-pwd-copy').addEventListener('click', () => copyText(document.getElementById('pwd-output').textContent));
+        } else if (data.inlineType === 'color-conv') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><input type="text" id="clr-input" class="inline-input" placeholder="输入 HEX (#3b82f6) 或 RGB (59,130,246)..." style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+              <div id="clr-preview" style="width:48px; height:48px; border:var(--border-width) var(--border-style) var(--line); background:#3b82f6; flex-shrink:0;"></div>
+              <div id="clr-output" class="inline-output" style="flex:1; line-height:1.8;">HEX: #3b82f6<br>RGB: rgb(59, 130, 246)<br>HSL: hsl(217, 91%, 60%)</div>
+              <button class="copy-btn" id="btn-clr-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          let clrResult = '';
+          const doColor = () => {
+            const v = document.getElementById('clr-input').value.trim();
+            const out = document.getElementById('clr-output');
+            const preview = document.getElementById('clr-preview');
+            document.getElementById('btn-clr-copy').style.display = 'none';
+            if (!v) { out.textContent = '等待输入...'; return; }
+            let r, g, b;
+            const hexM = v.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+            const rgbM = v.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i) || v.match(/^(\d+)\s*,\s*(\d+)\s*,\s*(\d+)$/);
+            if (hexM) {
+              let h = hexM[1];
+              if (h.length === 3) h = h.split('').map(c => c + c).join('');
+              r = parseInt(h.slice(0,2), 16); g = parseInt(h.slice(2,4), 16); b = parseInt(h.slice(4,6), 16);
+            } else if (rgbM) {
+              r = +rgbM[1]; g = +rgbM[2]; b = +rgbM[3];
+            } else { out.textContent = '无法识别的颜色格式'; return; }
+            if (r > 255 || g > 255 || b > 255) { out.textContent = 'RGB 分量需在 0-255 之间'; return; }
+            const hex = '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+            const rn = r/255, gn = g/255, bn = b/255;
+            const max = Math.max(rn,gn,bn), min = Math.min(rn,gn,bn), d = max - min;
+            let h = 0;
+            if (d) {
+              if (max === rn) h = ((gn-bn)/d % 6 + 6) % 6;
+              else if (max === gn) h = (bn-rn)/d + 2;
+              else h = (rn-gn)/d + 4;
+              h *= 60;
+            }
+            const l = (max+min)/2;
+            const s = d ? d / (1 - Math.abs(2*l-1)) : 0;
+            clrResult = `HEX: ${hex.toUpperCase()}\nRGB: rgb(${r}, ${g}, ${b})\nHSL: hsl(${Math.round(h)}, ${Math.round(s*100)}%, ${Math.round(l*100)}%)`;
+            out.innerHTML = clrResult.replace(/\n/g, '<br>');
+            preview.style.background = hex;
+            document.getElementById('btn-clr-copy').style.display = 'inline-block';
+          };
+          document.getElementById('clr-input').addEventListener('input', doColor);
+          document.getElementById('btn-clr-copy').addEventListener('click', () => copyText(clrResult.replace(/\n/g, ' | ')));
+        } else if (data.inlineType === 'unit-conv') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <select id="unit-cat" class="inline-input" style="width:110px; margin:0;">
+                <option value="len">长度</option><option value="weight">重量</option><option value="temp">温度</option>
+              </select>
+              <input type="text" id="unit-val" class="inline-input" style="flex:1; margin:0;" placeholder="输入数值..." value="1">
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <select id="unit-from" class="inline-input" style="flex:1; margin:0;"></select>
+              <span style="align-self:center;">→</span>
+              <select id="unit-to" class="inline-input" style="flex:1; margin:0;"></select>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <div id="unit-out" class="inline-output" style="flex:1;">-</div>
+              <button class="copy-btn" id="btn-unit-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          const UNIT_DEF = {
+            len: { '米': 1, '千米': 1000, '分米': 0.1, '厘米': 0.01, '毫米': 0.001, '英里': 1609.344, '英尺': 0.3048, '英寸': 0.0254, '海里': 1852 },
+            weight: { '千克': 1, '克': 0.001, '吨': 1000, '磅': 0.45359237, '盎司': 0.0283495231, '两': 0.05, '斤': 0.5 },
+            temp: ['摄氏度(°C)', '华氏度(°F)', '开尔文(K)']
+          };
+          const fillUnits = () => {
+            const cat = document.getElementById('unit-cat').value;
+            const from = document.getElementById('unit-from'), to = document.getElementById('unit-to');
+            const keys = cat === 'temp' ? UNIT_DEF.temp : Object.keys(UNIT_DEF[cat]);
+            from.innerHTML = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+            to.innerHTML = from.innerHTML;
+            to.selectedIndex = Math.min(1, keys.length - 1);
+            doUnit();
+          };
+          const toCelsius = (v, u) => u.includes('°F') ? (v - 32) * 5 / 9 : u.includes('K') ? v - 273.15 : v;
+          const fromCelsius = (c, u) => u.includes('°F') ? c * 9 / 5 + 32 : u.includes('K') ? c + 273.15 : c;
+          let unitResult = '';
+          const doUnit = () => {
+            const cat = document.getElementById('unit-cat').value;
+            const v = parseFloat(document.getElementById('unit-val').value);
+            const fu = document.getElementById('unit-from').value, tu = document.getElementById('unit-to').value;
+            const out = document.getElementById('unit-out');
+            document.getElementById('btn-unit-copy').style.display = 'none';
+            if (isNaN(v)) { out.textContent = '等待输入...'; return; }
+            let res;
+            if (cat === 'temp') res = fromCelsius(toCelsius(v, fu), tu);
+            else res = v * UNIT_DEF[cat][fu] / UNIT_DEF[cat][tu];
+            unitResult = `${v} ${fu} = ${res.toPrecision(10).replace(/\.?0+$/, '')} ${tu}`;
+            out.textContent = unitResult;
+            document.getElementById('btn-unit-copy').style.display = 'inline-block';
+          };
+          document.getElementById('unit-cat').addEventListener('change', fillUnits);
+          ['unit-val', 'unit-from', 'unit-to'].forEach(id => document.getElementById(id).addEventListener('input', doUnit));
+          document.getElementById('unit-to').addEventListener('change', doUnit);
+          document.getElementById('btn-unit-copy').addEventListener('click', () => copyText(unitResult));
+          fillUnits();
+        } else if (data.inlineType === 'rmb-upper') {
+          mInlineTool.innerHTML = `
+            <div class="inline-input"><input type="text" id="rmb-input" class="inline-input" placeholder="输入金额，如 1234.56 ..." style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;">
+              <div id="rmb-out" class="inline-output" style="flex:1; line-height:1.8;">等待输入...</div>
+              <button class="copy-btn" id="btn-rmb-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          const rmbUpper = (amount) => {
+            if (!/^\d{1,16}(\.\d{1,2})?$/.test(amount)) return null;
+            let [int, dec] = amount.split('.');
+            dec = (dec || '').padEnd(2, '0');
+            const DIG = '零壹贰叁肆伍陆柒捌玖', UNITS = ['', '拾', '佰', '仟'], BIG = ['', '万', '亿'];
+            const conv4 = (num) => {
+              let out = '', zeroFlag = false;
+              for (let i = 0; i < num.length; i++) {
+                const d = +num[i];
+                if (d === 0) { if (out) zeroFlag = true; }
+                else { if (zeroFlag) { out += '零'; zeroFlag = false; } out += DIG[d] + UNITS[num.length - 1 - i]; }
+              }
+              return out;
+            };
+            let intPart = '';
+            int = int.replace(/^0+(?=\d)/, '');
+            if (int !== '0' && int !== '') {
+              const groups = [];
+              for (let i = int.length; i > 0; i -= 4) groups.unshift(int.slice(Math.max(0, i - 4), i));
+              let out = '';
+              groups.forEach((grp, idx) => {
+                const c = conv4(grp);
+                if (c) out += c + BIG[groups.length - 1 - idx];
+                else if (out && !out.endsWith('零')) out += '零';
+              });
+              intPart = out.replace(/零+$/, '') + '元';
+            }
+            let decPart = '';
+            if (dec[0] === '0' && dec[1] !== '0') decPart = (intPart ? '零' : '零元零') + DIG[+dec[1]] + '分';
+            else {
+              if (dec[0] !== '0') decPart += DIG[+dec[0]] + '角';
+              if (dec[1] !== '0') decPart += (dec[0] === '0' && !intPart ? '' : dec[0] === '0' ? '零' : '') + DIG[+dec[1]] + '分';
+            }
+            if (!decPart) intPart += '整';
+            if (!intPart && decPart === '零分') return '零元整';
+            return (intPart + decPart) || '零元整';
+          };
+          document.getElementById('rmb-input').addEventListener('input', (e) => {
+            const out = document.getElementById('rmb-out');
+            document.getElementById('btn-rmb-copy').style.display = 'none';
+            const v = e.target.value.trim();
+            if (!v) { out.textContent = '等待输入...'; return; }
+            const res = rmbUpper(v);
+            if (res === null) { out.textContent = '请输入有效金额（最多两位小数）'; return; }
+            out.textContent = res;
+            document.getElementById('btn-rmb-copy').style.display = 'inline-block';
+          });
+          document.getElementById('btn-rmb-copy').addEventListener('click', () => copyText(document.getElementById('rmb-out').textContent));
+        } else if (data.inlineType === 'rand-num') {
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <input type="number" id="rnd-min" class="inline-input" style="flex:1; margin:0;" placeholder="最小值" value="1">
+              <input type="number" id="rnd-max" class="inline-input" style="flex:1; margin:0;" placeholder="最大值" value="100">
+              <input type="number" id="rnd-count" class="inline-input" style="width:90px; margin:0;" placeholder="个数" value="5" min="1" max="1000">
+            </div>
+            <div class="inline-btn-row">
+              <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="rnd-unique">不重复</label>
+              <button class="btn" id="btn-rnd-go" style="flex:1;">生成</button>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <div id="rnd-out" class="inline-output" style="flex:1; word-break:break-all;">等待生成...</div>
+              <button class="copy-btn" id="btn-rnd-copy" style="display:none;">复制</button>
+            </div>
+          `;
+          document.getElementById('btn-rnd-go').addEventListener('click', () => {
+            const min = parseInt(document.getElementById('rnd-min').value);
+            const max = parseInt(document.getElementById('rnd-max').value);
+            const count = parseInt(document.getElementById('rnd-count').value) || 1;
+            const unique = document.getElementById('rnd-unique').checked;
+            const out = document.getElementById('rnd-out');
+            document.getElementById('btn-rnd-copy').style.display = 'none';
+            if (isNaN(min) || isNaN(max) || min > max) { showToast('请输入有效的范围', 'error'); return; }
+            const span = max - min + 1;
+            if (unique && count > span) { showToast('范围不足以生成不重复随机数', 'error'); return; }
+            const pool = new Uint32Array(unique ? span : count);
+            crypto.getRandomValues(pool);
+            let result;
+            if (unique) {
+              const arr = Array.from({ length: span }, (_, i) => min + i);
+              for (let i = arr.length - 1; i > 0; i--) { const j = pool[i] % (i + 1); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+              result = arr.slice(0, count);
+            } else {
+              result = Array.from(pool, n => min + (n % span));
+            }
+            out.textContent = result.join(', ');
+            document.getElementById('btn-rnd-copy').style.display = 'inline-block';
+          });
+          document.getElementById('btn-rnd-copy').addEventListener('click', () => copyText(document.getElementById('rnd-out').textContent));
         } else if (data.inlineType === 'html-preview') {
           mInlineTool.innerHTML = `
             <div class="html-preview-tool">
@@ -1834,16 +2209,22 @@ document.addEventListener('DOMContentLoaded', () => {
           let todos = JSON.parse(localStorage.getItem('stech_todos') || '[]');
           const listEl = document.getElementById('todo-list');
           const renderTodo = () => {
-            listEl.innerHTML = todos.map((t, i) => `
-              <div class="todo-item ${t.done ? 'done' : ''}">
-                <span style="cursor:pointer; flex:1;" onclick="toggleTodo(${i})">${t.text}</span>
-                <button onclick="delTodo(${i})">×</button>
-              </div>
-            `).join('');
+            listEl.innerHTML = '';
+            todos.forEach((t, i) => {
+              const item = document.createElement('div');
+              item.className = 'todo-item' + (t.done ? ' done' : '');
+              const text = document.createElement('span');
+              text.style.cssText = 'cursor:pointer; flex:1;';
+              text.textContent = t.text;
+              text.addEventListener('click', () => { todos[i].done = !todos[i].done; renderTodo(); });
+              const del = document.createElement('button');
+              del.textContent = '×';
+              del.addEventListener('click', () => { todos.splice(i, 1); renderTodo(); });
+              item.appendChild(text); item.appendChild(del);
+              listEl.appendChild(item);
+            });
             localStorage.setItem('stech_todos', JSON.stringify(todos));
           };
-          window.toggleTodo = (i) => { todos[i].done = !todos[i].done; renderTodo(); };
-          window.delTodo = (i) => { todos.splice(i, 1); renderTodo(); };
           document.getElementById('btn-todo-add').addEventListener('click', () => {
             const v = document.getElementById('todo-input').value.trim();
             if (!v) return;
@@ -2001,8 +2382,60 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    document.getElementById("modal-close").addEventListener("click", () => modal.classList.remove("active"));
-    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
+    const mDrawer = document.getElementById('m-drawer');
+    const mDragbar = document.getElementById('m-dragbar');
+    const isDesktop = window.matchMedia('(min-width: 768px) and (hover: hover)').matches;
+
+    function enterInlineFs() {
+      modal.classList.add('fs-mode');
+      document.getElementById('drawer-fs').style.display = 'none';
+      document.getElementById('drawer-exit-fs').style.display = '';
+    }
+
+    function exitInlineFs() {
+      modal.classList.remove('fs-mode');
+      document.getElementById('drawer-fs').style.display = '';
+      document.getElementById('drawer-exit-fs').style.display = 'none';
+    }
+
+    // 拖拽横条：上拉进入全屏，下拉退出全屏；单击切换
+    let dragStartY = null, dragMoved = false;
+    mDragbar.addEventListener('pointerdown', (e) => {
+      dragStartY = e.clientY; dragMoved = false;
+      try { mDragbar.setPointerCapture(e.pointerId); } catch(err) {}
+    });
+    mDragbar.addEventListener('pointermove', (e) => {
+      if (dragStartY === null) return;
+      if (Math.abs(e.clientY - dragStartY) > 8) dragMoved = true;
+    });
+    mDragbar.addEventListener('pointerup', (e) => {
+      if (dragStartY === null) return;
+      const dy = e.clientY - dragStartY;
+      dragStartY = null;
+      if (dy < -40 && !modal.classList.contains('fs-mode')) enterInlineFs();
+      else if (dy > 40 && modal.classList.contains('fs-mode')) exitInlineFs();
+    });
+    mDragbar.addEventListener('click', () => {
+      if (dragMoved) { dragMoved = false; return; }
+      if (modal.classList.contains('fs-mode')) exitInlineFs(); else enterInlineFs();
+    });
+
+    function closeToolModal() {
+      exitInlineFs();
+      mDrawer.classList.remove('open');
+      modal.classList.remove("active");
+      if (pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
+      if (totpInterval) { clearInterval(totpInterval); totpInterval = null; }
+    }
+
+    document.getElementById('m-drawer-toggle').addEventListener('click', () => mDrawer.classList.toggle('open'));
+    document.getElementById('drawer-fs').addEventListener('click', enterInlineFs);
+    document.getElementById('drawer-exit-fs').addEventListener('click', exitInlineFs);
+    document.getElementById('drawer-close').addEventListener('click', closeToolModal);
+    document.getElementById('drawer-noanim').addEventListener('click', () => applyNoAnim(!document.body.classList.contains('no-anim')));
+
+    document.getElementById("modal-close").addEventListener("click", closeToolModal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeToolModal(); });
 
     mCopyLink.addEventListener("click", () => {
       copyText(currentCopyUrl);
@@ -2035,7 +2468,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (modal.classList.contains("active") || aboutModal.classList.contains("active") || disclaimerModal.classList.contains("active")) return;
+      if (modal.classList.contains("fs-mode") && e.key === 'Escape') { exitInlineFs(); return; }
+      if (modal.classList.contains("active")) { if (e.key === 'Escape') closeToolModal(); return; }
+      if (aboutModal.classList.contains("active") || disclaimerModal.classList.contains("active")) return;
 
       if (e.key === '/') { e.preventDefault(); searchEl.focus(); return; }
       if (e.key === '?') { e.preventDefault(); shortcutPopup.classList.toggle("active"); return; }
@@ -2064,7 +2499,7 @@ document.addEventListener('DOMContentLoaded', () => {
     buildFilters();
     try {
       const initHash = decodeURIComponent(window.location.hash.replace('#', ''));
-      if (['全部', '通用工具', 'v/s', 'LXH', '中V'].includes(initHash)) {
+      if (['全部', '通用工具', 'v/s', 'LXH', '中V', 'MC'].includes(initHash)) {
         currentCategory = initHash;
         buildFilters();
       }
@@ -2076,7 +2511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGridData(); 
 
     if (typeof Lenis !== 'undefined') {
-      new Lenis({ autoRaf: true, lerp: 0.08 });
+      window.lenisInstance = new Lenis({ autoRaf: true, lerp: 0.08 });
     }
   }
 
@@ -2210,10 +2645,10 @@ document.addEventListener('DOMContentLoaded', () => {
     totpInterval = setInterval(() => { updateTOTPUI(secret); }, 1000);
   }
 
-  function handleQRUpload(input) {
+  async function handleQRUpload(input) {
     const file = input.files[0];
     if (!file) return;
-    if (typeof jsQR === 'undefined') { showToast('二维码解析库未能加载', 'error'); return; }
+    try { await ensureLib('jsQR'); } catch(e) { return; }
 
     const reader = new FileReader();
     reader.onload = (e) => {
