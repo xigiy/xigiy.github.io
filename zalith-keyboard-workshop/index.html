@@ -869,6 +869,7 @@ function createElementData(type) {
   };
   if (type === 'normal') return { ...base, text: '按键', keycodes: ['GLFW_KEY_SPACE'], toggleable: false };
   if (type === 'textbox') return { ...base, text: '文字', sizeType: 'wrap_content', textAlign: 'center', bold: false, italic: false, underline: false };
+  if (type === 'joystick') return { ...base, joyPct: 25 };  // 屏幕高 25%（对齐 Zalith 默认 sizePercentage=2500）
   return base;
 }
 function addElement(type) { addElementToActiveLayer(createElementData(type)); }
@@ -1009,7 +1010,8 @@ function positionNode(el) {
   dom.style.top = (el.y * scaleY) + 'px';
 
   if (el.elementType === 'joystick') {
-    const js = 1562 * scaleY;
+    const { h: sh } = getScreen();
+    const js = (el.joyPct || 25) / 100 * sh * scaleY;
     dom.style.width = js + 'px'; dom.style.height = js + 'px';
   } else {
     dom.style.padding = '2px';
@@ -1080,7 +1082,11 @@ function onDrag(e) {
   let py = p.y - stageRect.top - dragState.offsetY;
 
   let domW = 0, domH = 0;
-  if (el.elementType === 'joystick') { domW = 1562 * scaleY; domH = 1562 * scaleY; }
+  if (el.elementType === 'joystick') {
+    const { h: sh } = getScreen();
+    const jsz = (el.joyPct || 25) / 100 * sh * scaleY;
+    domW = jsz; domH = jsz;
+  }
   else {
     const dom = stage.querySelector(`[data-id="${el.id}"]`);
     if (dom) { domW = dom.offsetWidth; domH = dom.offsetHeight; }
@@ -1324,7 +1330,7 @@ function renderElementInspector(el) {
       <h3>🎮 摇杆</h3>
       ${sliderRow('propXpct', '位置 X（屏幕宽 %）', xp, 0, 100, 0.1)}
       ${sliderRow('propYpct', '位置 Y（屏幕高 %）', yp, 0, 100, 0.1)}
-      <div class="empty-hint" style="text-align:left">摇杆大小由 Zalith 固定。</div>
+      ${sliderRow('propJoySize', '摇杆大小（屏幕高 %）', el.joyPct || 25, 5, 100, 0.5)}
       <button class="delete-btn" onclick="deleteElement(${el.id})">🗑 删除</button>
     `;
   }
@@ -1474,6 +1480,12 @@ function bindInspectorEvents() {
       el.y = snapToGrid(Math.round(v / 100 * sh));
       positionNode(el); updateSelectedBadge(el);
     });
+    if (el.elementType === 'joystick') {
+      bindPctPair('propJoySize', v => {
+        el.joyPct = Math.max(5, v);
+        positionNode(el);
+      });
+    }
     bindPctPair('propWpct', v => {
       el.sizeType = 'percentage';
       el.w = Math.max(20, Math.round(v / 100 * sw));
@@ -1585,7 +1597,8 @@ function exportJSON() {
       const py = Math.round(el.y / Math.max(sh - el.h, 1) * 10000);
       const pos = { x: Math.min(Math.max(px, 0), 10000), y: Math.min(Math.max(py, 0), 10000) };
       if (el.elementType === 'joystick') {
-        joys.push({ uuid: el.uuid, position: pos });
+        // sizePercentage: 万分比，参照 screen_height（默认 2500）
+        joys.push({ uuid: el.uuid, position: pos, sizeType: 'percentage', sizePercentage: Math.round((el.joyPct || 25) * 100) });
         return;
       }
       const o = {
@@ -1755,6 +1768,7 @@ function importJSON(data) {
       (l.joystickButtons || []).forEach(e => {
         const el = createElementData('joystick');
         parseCommon(el, e);
+        if (e.sizePercentage) el.joyPct = Math.max(5, Math.round(e.sizePercentage / 100));
         layer.elements.push(el);
         if (el.id >= nextElementId) nextElementId = el.id + 1;
       });
