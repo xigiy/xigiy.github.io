@@ -121,9 +121,9 @@
     flex: 1; display: flex; flex-direction: column; align-items: center;
     justify-content: center; background: #0a0a0e; position: relative;
     overflow: hidden; padding: 16px; min-width: 0;
-    touch-action: none; user-select: none; -webkit-user-select: none;
+    touch-action: pan-x pan-y; user-select: none; -webkit-user-select: none;
   }
-  .stage-wrap * { touch-action: none; }
+  .stage, .element-node { touch-action: none; }
   .stage-label {
     position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
     font-size: 10px; color: #4a4a58; white-space: nowrap; z-index: 5;
@@ -285,35 +285,131 @@
   }
   .status.show { opacity: 1; }
 
+  /* ============ GeoGebra 风格浅色主题（覆盖层） ============ */
+  body { background: #ececf1; color: #333; }
+  /* 顶栏：白底、扁平、无边框堆叠 */
+  .toolbar {
+    background: #fff; border-bottom: 1px solid #e1e1e6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 6px 10px; gap: 5px;
+  }
+  .toolbar h1 { color: #1e1e24; font-size: 14px; }
+  .toolbar .sep { background: #e1e1e6; height: 18px; }
+  .toolbar button {
+    background: transparent; border: 1px solid transparent; color: #444;
+    border-radius: 6px; padding: 5px 9px;
+  }
+  .toolbar button:hover { background: #eef4ff; color: #1a6de8; }
+  .toolbar button.primary {
+    background: #1a6de8; border-color: #1a6de8; color: #fff; border-radius: 6px;
+  }
+  .toolbar button.primary:hover { background: #3b83ec; color: #fff; }
+  .toolbar input {
+    background: #f2f2f5; border: 1px solid #dcdce3; color: #333;
+    border-radius: 6px;
+  }
+  #scaleLabel { color: #999; }
+  /* 主布局：左右白面板 */
+  .side { background: #fff; border-color: #e1e1e6; }
+  .side.right { border-left-color: #e1e1e6; }
+  .side h3 { color: #999; }
+  .layer-row {
+    background: #f7f7fa; border: 1px solid #ececf1; color: #333;
+  }
+  .layer-row:hover { border-color: #d5d5df; }
+  .layer-row.active { background: #eef4ff; border-color: #1a6de8; }
+  .layer-row .layer-actions button { color: #aaa; }
+  .layer-row .layer-actions button:hover { color: #1a6de8; background: #eef4ff; }
+  .add-layer-btn { background: #fff; border: 1px dashed #c9c9d4; color: #888; }
+  .add-layer-btn:hover { border-color: #1a6de8; color: #1a6de8; }
+  .key-chip { background: #f7f7fa; border: 1px solid #e1e1e6; color: #444; }
+  .key-chip:hover { background: #eef4ff; border-color: #1a6de8; color: #1a6de8; }
+  .key-chip.mouse { border-color: #b8a0d4; color: #7a58a0; }
+  /* 画布区：浅灰底 + 白色舞台区，舞台本身模拟手机屏幕保持深色 */
+  .stage-wrap { background: #ececf1; overflow: auto; }
+  .stage-label { color: #aaa; }
+  .stage {
+    background: #26262e; border: 1px solid #d5d5df;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .stage::before {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  }
+  /* 属性面板 */
+  .field label { color: #777; }
+  .field input, .field select {
+    background: #f7f7fa; border: 1px solid #dcdce3; color: #333; border-radius: 6px;
+  }
+  .field input:focus, .field select:focus { border-color: #1a6de8; }
+  .field-hint { color: #aaa; }
+  .toggle-row { color: #444; }
+  .empty-hint { color: #bbb; }
+  .delete-btn { background: #fdeeee; border: 1px solid #f3cccc; color: #d05050; }
+  .delete-btn:hover { background: #fbdddd; }
+  .slider-row input[type="range"] { background: #dcdce3; }
+  .slider-row span.pct, .slider-row span.val, .pct-row span { color: #888; }
+  .keychip { background: #eef1f6; border: 1px solid #d5d5df; color: #444; }
+  .keylist .keychip:hover { border-color: #1a6de8; color: #1a6de8; }
+  /* 模态：白底 */
+  .modal-box { background: #fff; border-color: #e1e1e6; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .modal-header { border-bottom-color: #e1e1e6; }
+  .modal-header span { color: #1e1e24; }
+  .modal-header button {
+    background: #f2f2f5; border: 1px solid #dcdce3; color: #444; border-radius: 6px;
+  }
+  .modal-textarea { background: #f7f7fa; color: #295; }
+  /* 样式管理器 */
+  .style-list { border-right-color: #e1e1e6; }
+  .style-row { color: #444; }
+  .style-row.sel { background: #eef4ff; }
+  .style-uuid { color: #bbb; }
+  .style-editor label { color: #666; }
+  .style-editor input[type="number"], .style-editor input[type="text"] {
+    background: #f7f7fa; border: 1px solid #dcdce3; color: #333; border-radius: 6px;
+  }
+  .style-actions button { background: #f2f2f5; border: 1px solid #dcdce3; color: #444; border-radius: 6px; }
+  .style-actions button:hover { background: #eef4ff; color: #1a6de8; border-color: #1a6de8; }
+  .style-actions button.danger { color: #d05050; border-color: #f3cccc; }
+  .style-actions button.danger:hover { background: #fdeeee; color: #d05050; border-color: #d05050; }
+  /* 底部 tabs */
+  .mobile-tabs { background: #fff; border-top-color: #e1e1e6; }
+  .mobile-tabs .mtab { color: #888; }
+  .mobile-tabs .mtab.active { color: #1a6de8; border-top-color: #1a6de8; background: #f2f7ff; }
+  .status { background: #1e1e24; color: #fff; }
+  /* 手机端样式管理器：列表横排在上，编辑器在下 */
+  @media (max-width: 720px) {
+    .modal-box { width: 94%; }
+    #styleOverlay .modal-body { flex-direction: column; }
+    .style-list { width: 100%; border-right: none; border-bottom: 1px solid #e1e1e6;
+      display: flex; overflow-x: auto; overflow-y: hidden; padding: 8px; }
+    .style-row { flex-shrink: 0; padding: 6px 10px; }
+    .style-row .style-uuid { display: none; }
+    .style-editor { padding: 10px 12px; }
+  }
+
   /* ============ 响应式 ============ */
   @media (max-width: 720px) {
     body { overflow: hidden; }
     .toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 6px 8px; }
     .toolbar .sep { flex-shrink: 0; }
-    .toolbar h1 { flex-shrink: 0; }
-    .toolbar button { flex-shrink: 0; }
+    .toolbar h1 { flex-shrink: 0; font-size: 12px; }
+    .toolbar button { flex-shrink: 0; padding: 3px 5px; font-size: 10px; }
+    .toolbar input { display: none; }
     .toolbar input#screenW, .toolbar input#screenH { display: block; width: 38px; }
     .toolbar input#canvasScale { display: inline-block; width: 50px; }
     #scaleLabel { display: inline-block; font-size: 9px; width: 28px; }
-    .toolbar h1 { font-size: 12px; }
-    .toolbar button { padding: 3px 5px; font-size: 10px; }
     .main { flex-direction: column; }
-    .side { display: none; width: 100% !important; max-height: 40vh; overflow-y: auto; border-right: none; border-left: none; border-top: 1px solid #2a2a35; }
+    .side { display: none; width: 100% !important; max-height: 40vh; overflow-y: auto; border-right: none; border-left: none; border-top: 1px solid #e1e1e6; }
     .side.active { display: block; }
     .stage-wrap { padding: 10px; flex: 1; min-height: 42vh; }
     .mobile-tabs {
-      display: flex; flex-shrink: 0; background: #14141a;
-      border-top: 1px solid #2a2a35;
+      display: flex; flex-shrink: 0; background: #fff;
+      border-top: 1px solid #e1e1e6;
     }
-    .mobile-tabs .mtab {
-      flex: 1; padding: 10px 0; text-align: center; font-size: 12px;
-      color: #8888a0; cursor: pointer; border: none; background: none;
-      border-top: 2px solid transparent;
-    }
-    .mobile-tabs .mtab.active { color: #4a6cf7; border-top-color: #4a6cf7; background: #1a1a22; }
     /* 横屏 → 桌面模式 */
     @media (orientation: landscape) {
-      .toolbar button, .toolbar input#screenW, .toolbar input#screenH { padding: 5px 7px; font-size: 11px; }
       .stage-wrap { flex: 1; padding: 6px; }
       .side { max-height: 100vh; width: 200px !important; max-height: none; }
       .main { flex-direction: row; }
@@ -341,7 +437,7 @@
   <input id="screenW" type="number" value="2400" title="屏幕宽" style="width:50px">
   <span style="font-size:11px;color:#6b6b7a">×</span>
   <input id="screenH" type="number" value="1080" title="屏幕高" style="width:50px">
-  <input id="canvasScale" type="range" min="30" max="200" value="80" style="width:80px" title="画布缩放">
+  <input id="canvasScale" type="range" min="5" max="300" value="80" style="width:80px" title="画布缩放">
   <span id="scaleLabel" style="font-size:10px;color:#6b6b7a;width:32px">80%</span>
   <div class="sep"></div>
   <button onclick="addElement('normal')">🔘</button>
@@ -930,7 +1026,9 @@ function positionNode(el) {
       }
       dom.style.width = Math.max(8, wPx) + 'px';
       dom.style.height = Math.max(8, hPx) + 'px';
-      dom.style.fontSize = Math.max(8, Math.min(16, wPx * 0.22)) + 'px';
+      // 字号随控件等比缩放（不被绝对像素钳制，避免缩放时改变比例）
+      const fs = Math.max(6, Math.min(wPx * 0.28, hPx * 0.5, wPx * 0.6));
+      dom.style.fontSize = fs + 'px';
     }
   }
 }
