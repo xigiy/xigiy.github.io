@@ -186,6 +186,27 @@ body[data-theme="LXH"] .deco-lxh { opacity: 1; }
 .boot-log .log-err { color: #e53935; }
 .boot-log .log-time { color: #555; margin-right: 6px; }
 
+/* 菜单页常驻日志：与启动日志同款样式 + 启动页元素（标题/版本/进度条） */
+.menu-log {
+  position: fixed; bottom: 8px; left: 12px;
+  max-width: min(74vw, 560px); max-height: 34vh;
+  overflow: hidden; z-index: 2; pointer-events: none;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.menu-log-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.7rem; color: #8a8a8a; margin-bottom: 4px;
+}
+.menu-log-head .ml-title { font-weight: bold; letter-spacing: 1px; }
+.menu-log-head .ml-ver { color: #555; }
+.menu-log-bar {
+  flex: 1; height: 2px; max-width: 90px;
+  background: rgba(255,255,255,0.08); overflow: hidden;
+}
+.menu-log-bar > div { height: 100%; width: 100%; background: #4caf50; transform-origin: left; }
+.menu-log-body { font-size: 0.72rem; line-height: 1.55; color: #7d7d7d; }
+
 /* 中央内容容器 */
 .boot-center {
   display: flex; flex-direction: column; align-items: center;
@@ -629,7 +650,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
         <div class="boot-progress-bar" id="boot-bar"></div>
       </div>
       <div class="boot-title">VoidWaveOS</div>
-      <div class="boot-version" id="sys-ver">4.0.10 - 000013 - NET.ver-df23b32</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
+      <div class="boot-version" id="sys-ver">4.0.10 - 000014 - NET.ver-29704f4</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
     </div>
   </div>
 </div>
@@ -845,6 +866,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('online', updateOfflineState);
   window.addEventListener('offline', updateOfflineState);
   updateOfflineState();
+  const netLogger = () => { if (window.menuLog) window.menuLog(`network: ${navigator.onLine ? 'online' : 'offline'}`, navigator.onLine ? 'ok' : 'warn'); };
+  window.addEventListener('online', netLogger);
+  window.addEventListener('offline', netLogger);
 
   const bootLog = document.getElementById('boot-log');
   const bootBar = document.getElementById('boot-bar');
@@ -992,6 +1016,24 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       bootEl.classList.add('done');
       setTimeout(() => {
+        // 把启动日志迁入菜单页常驻日志（同款样式 + 启动页元素）
+        const menuLog = document.createElement('div');
+        menuLog.id = 'menu-log';
+        const ver = (document.getElementById('sys-ver') || {}).textContent || '';
+        menuLog.innerHTML =
+          `<div class="menu-log-head"><span class="ml-title">VoidWaveOS</span><span class="ml-ver">${ver.split(' - ')[1] || ''} · ${ver.split(' - ')[2] || ''}</span><div class="menu-log-bar"><div></div></div></div>` +
+          `<div class="menu-log-body" id="menu-log-body"></div>`;
+        document.body.appendChild(menuLog);
+        const mBody = document.getElementById('menu-log-body');
+        while (bootLog.firstChild) mBody.appendChild(bootLog.firstChild); // 迁移启动日志内容
+        window.menuLog = (msg, type = 'info') => {
+          const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+          const div = document.createElement('div');
+          div.className = `log-line log-${type}`;
+          div.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+          mBody.appendChild(div);
+          while (mBody.children.length > 30) mBody.removeChild(mBody.firstChild);
+        };
         bootEl.remove();
         document.body.style.overflow = '';
         initMainSite();
@@ -1195,8 +1237,9 @@ document.addEventListener('DOMContentLoaded', () => {
       else document.body.setAttribute("data-theme", cat);
       
       if (sysSig) sysSig.textContent = signatures[cat] || '// UNKNOWN';
-      
+
       if (threeApp) threeApp.setTheme(cat);
+      if (window.menuLog) window.menuLog(`theme switch -> ${cat}`, 'ok');
     }
 
     function renderRecent() {
@@ -1422,6 +1465,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let pomodoroInterval = null;
 
     function openToolModal(data) {
+      if (window.menuLog) window.menuLog(`open tool: ${data.name}`, 'info');
       if (isOffline && data.needsNet) {
         showToast('离线模式下此工具不可用', 'error');
         return;
