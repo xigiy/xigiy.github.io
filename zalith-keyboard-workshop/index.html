@@ -265,9 +265,9 @@
     .toolbar h1 { font-size: 12px; }
     .toolbar button { padding: 3px 5px; font-size: 10px; }
     .main { flex-direction: column; }
-    .side { display: none; width: 100% !important; max-height: 40vh; border-right: none; border-left: none; border-top: 1px solid #2a2a35; }
+    .side { display: none; width: 100% !important; max-height: 40vh; overflow-y: auto; border-right: none; border-left: none; border-top: 1px solid #2a2a35; }
     .side.active { display: block; }
-    .stage-wrap { padding: 10px; flex: 1; }
+    .stage-wrap { padding: 10px; flex: 1; min-height: 42vh; }
     .mobile-tabs {
       display: flex; flex-shrink: 0; background: #14141a;
       border-top: 1px solid #2a2a35;
@@ -576,8 +576,13 @@ function toggleKeyChips() {
 function syncStageSize() {
   const wrap = stageWrap.getBoundingClientRect();
   const { w: sw, h: sh } = getScreen();
-  const availW = wrap.width - 24;
-  const availH = wrap.height - 36;
+  let availW = wrap.width - 24;
+  let availH = wrap.height - 36;
+  // 容器尺寸异常时兜底用窗口
+  if (availW < 60 || availH < 60) {
+    availW = Math.max(availW, window.innerWidth - 32);
+    availH = Math.max(availH, window.innerHeight * 0.45);
+  }
   // 画布缩放：优先用用户滑块，否则自动填满
   const userScaleInput = document.getElementById('canvasScale');
   let scale;
@@ -585,6 +590,7 @@ function syncStageSize() {
     scale = parseInt(userScaleInput.value) / 100;
   } else {
     scale = Math.min(availW / sw, availH / sh, 1);
+    scale = Math.max(scale, 0.05);
     // 自动填入滑块（给用户一个初始值）
     if (userScaleInput) userScaleInput.value = Math.round(scale * 100);
   }
