@@ -430,6 +430,50 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
 }
 .m-drawer-panel button:hover { background: var(--hover-bg); }
 .m-drawer.open .m-drawer-panel { display: flex; }
+/* ============ 外链 iframe 全屏舞台 ============ */
+#iframe-stage { position: fixed; inset: 0; z-index: 10005; display: none; background: var(--bg); }
+#iframe-stage.active { display: block; }
+#iframe-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: var(--bg); }
+#iframe-loader {
+  position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px; background: var(--bg);
+  transition: opacity .3s ease; text-align: center;
+}
+#iframe-loader.hide { opacity: 0; pointer-events: none; }
+#iframe-loader .loader-title { font-size: 1rem; letter-spacing: .2em; color: var(--ink); }
+.loader-bar { width: 180px; height: 4px; background: var(--line); overflow: hidden; }
+.loader-bar i { display: block; height: 100%; width: 40%; background: var(--ink); animation: loadslide 1s linear infinite; }
+@keyframes loadslide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+.stage-log {
+  font-size: 0.68rem; line-height: 1.5; color: var(--muted);
+  max-width: min(72vw, 480px); max-height: 26vh; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.stage-log .log-time { opacity: 0.6; margin-right: 6px; }
+#ifloat-widget {
+  position: fixed; z-index: 10006; left: 12px; top: 12px; display: flex; align-items: center;
+  padding: 4px; gap: 4px; border-radius: 999px;
+  background: rgba(20, 24, 30, .82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.18); box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+  transition: opacity .4s ease;
+}
+#ifloat-widget.idle { opacity: 0.35; }
+#ifloat-widget:active { cursor: grabbing; }
+#ifloat-widget #fw-ball {
+  width: 38px; height: 38px; border: none; border-radius: 50%;
+  background: linear-gradient(135deg, #4a90d9, #2d6cb5); color: #fff;
+  font-size: 1rem; cursor: pointer; flex: 0 0 auto;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.4);
+}
+#ifloat-widget #fw-menu { display: none; gap: 2px; }
+#ifloat-widget.expanded #fw-menu { display: flex; }
+#ifloat-widget button:not(#fw-ball) {
+  width: 36px; height: 36px; border: none; border-radius: 50%; background: transparent;
+  color: #fff; font-size: 0.95rem; cursor: pointer; font-family: var(--font-family); flex: 0 0 auto;
+}
+#ifloat-widget button:not(#fw-ball):hover { background: rgba(255,255,255,.16); }
 #modal.fs-mode .modal-box {
   position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
   max-height: none; border-radius: 0; overflow-y: auto; z-index: 10002;
@@ -733,6 +777,25 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
       <p style="margin-bottom:10px;">⑦ jsQR — <a href="https://github.com/cozmo/jsQR" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
       <p style="margin-bottom:10px;">③' 本网页本身的代码，以及所有未标记为“代发”的内置工具页面与外链页面，均以 <strong>MIT 协议</strong>开源（针对代码；部分原创美术资源除外）。你可以在本站仓库中查看、学习、修改与分发这些代码，但请保留原许可声明。</p>
       <p>④' 同人相关内容（世界观、角色设定等）由原作者保留全部权利，本站中的美术资源或文本仅为引用，用于说明与展示，不用于商业用途。</p>
+    </div>
+  </div>
+</div>
+
+<div id="iframe-stage">
+  <iframe id="stage-iframe" title="VoidWaveOS Tool" allowfullscreen allow="fullscreen"></iframe>
+  <div id="iframe-loader">
+    <div class="loader-title">VoidWaveOS</div>
+    <div class="loader-bar"><i></i></div>
+    <div style="font-size:0.75rem; color:var(--muted);">LOADING TOOL...</div>
+    <div class="stage-log" id="iframe-log"></div>
+    <button class="btn btn-outline" id="loader-force-close" style="margin-top:8px; font-size:0.75rem;">跳过加载 ›</button>
+  </div>
+  <div id="ifloat-widget">
+    <button id="fw-ball" title="VoidWaveOS 工具菜单">◈</button>
+    <div id="fw-menu">
+      <button id="fw-open" title="新标签页打开原链">↗</button>
+      <button id="fw-reload" title="刷新">↻</button>
+      <button id="fw-close" title="退出工具">✕</button>
     </div>
   </div>
 </div>
@@ -2378,6 +2441,20 @@ document.addEventListener('DOMContentLoaded', () => {
         mCopyLink.textContent = "复制链接";
         mCopyName.textContent = "复制名称";
         mDesc.style.display = 'block';
+        if (!isDesktop) {
+          mInlineTool.style.display = 'block';
+          mInlineTool.innerHTML = `<button class="btn" id="iframe-open" style="width:100%;">▶ 打开工具（全屏）</button>`;
+          document.getElementById('iframe-open').addEventListener('click', () => openIframeStage(data.url));
+        } else {
+          mInlineTool.style.display = 'block';
+          mInlineTool.innerHTML = `
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap;">
+              <button class="btn" id="iframe-fs" style="padding:4px 12px; font-size:0.75rem;">全屏 ↗</button>
+              <span style="font-size:0.68rem; color:var(--muted); flex:1; min-width:0;">VoidWaveOS 收录页面 · 代码 MIT 开源 · 同人内容版权归原作者</span>
+            </div>
+            <iframe id="tool-iframe" src="${data.url}" style="width:100%; height:56vh; display:block; border:var(--border-width) var(--border-style) var(--line); background:#fff;" allowfullscreen allow="fullscreen"></iframe>`;
+          document.getElementById('iframe-fs').addEventListener('click', () => window.open(data.url, '_blank', 'noopener'));
+        }
       } else if (data.status === 'placeholder') {
         currentCopyUrl = data.url;
         currentCopyName = data.name;
@@ -2448,12 +2525,113 @@ document.addEventListener('DOMContentLoaded', () => {
       exitInlineFs();
       mDrawer.classList.remove('open');
       mInlineTool.innerHTML = '';
+      closeIframeStage();
       modal.classList.remove("active");
       if (pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
       if (totpInterval) { clearInterval(totpInterval); totpInterval = null; }
     }
 
-    /* ===== 外链 iframe 全屏舞台（已移除） ===== */
+    /* ===== 外链 iframe 全屏舞台（移动端 4399 式，带多重退出保险） ===== */
+    let stageUrl = '';
+    let stageLoaderHideTimer = null;
+    function stageLog(msg) {
+      const box = document.getElementById('iframe-log');
+      if (!box) return;
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const div = document.createElement('div');
+      div.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+    function hideStageLoader(reason) {
+      const loader = document.getElementById('iframe-loader');
+      clearTimeout(stageLoaderHideTimer);
+      if (!loader.classList.contains('hide')) {
+        stageLog(reason);
+        loader.classList.add('hide');
+      }
+    }
+    function openIframeStage(url) {
+      const stage = document.getElementById('iframe-stage');
+      const iframe = document.getElementById('stage-iframe');
+      const loader = document.getElementById('iframe-loader');
+      const fw = document.getElementById('ifloat-widget');
+      const logBox = document.getElementById('iframe-log');
+      stageUrl = url;
+      logBox.innerHTML = '';
+      clearTimeout(stageLoaderHideTimer);
+      loader.classList.remove('hide');
+      fw.classList.remove('expanded', 'idle');
+      fw.style.left = '12px'; fw.style.top = '12px'; fw.style.right = 'auto'; fw.style.bottom = 'auto';
+      stage.classList.add('active');
+      stageLog(`opening ${url}`);
+      const started = Date.now();
+      iframe.onload = () => {
+        const elapsed = Date.now() - started;
+        stageLog(`iframe onload fired in ${elapsed}ms`);
+        const wait = Math.max(0, 1000 - elapsed);
+        stageLoaderHideTimer = setTimeout(() => hideStageLoader('tool ready'), wait);
+      };
+      iframe.src = url;
+      stageLoaderHideTimer = setTimeout(() => hideStageLoader('timeout fallback (8s)'), 8000);
+    }
+    function closeIframeStage() {
+      const stage = document.getElementById('iframe-stage');
+      if (!stage.classList.contains('active')) return;
+      clearTimeout(stageLoaderHideTimer);
+      stage.classList.remove('active');
+      document.getElementById('stage-iframe').src = 'about:blank';
+    }
+    document.getElementById('fw-open').addEventListener('click', () => { if (stageUrl) window.open(stageUrl, '_blank', 'noopener'); });
+    document.getElementById('fw-reload').addEventListener('click', () => {
+      const f = document.getElementById('stage-iframe');
+      if (stageUrl && f) { f.src = stageUrl; stageLog('reload requested'); }
+    });
+    document.getElementById('fw-close').addEventListener('click', closeIframeStage);
+    document.getElementById('loader-force-close').addEventListener('click', () => hideStageLoader('skipped by user'));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('iframe-stage').classList.contains('active')) closeIframeStage();
+    });
+    /* 悬浮球：点击展开/收起，拖动换位并吸附左右边缘，空闲自动变淡 */
+    (() => {
+      const fw = document.getElementById('ifloat-widget');
+      let idleTimer = null;
+      function requestWidgetIdle() {
+        fw.classList.remove('idle');
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => fw.classList.add('idle'), 3000);
+      }
+      fw.addEventListener('pointerdown', (e) => {
+        requestWidgetIdle();
+        const r = fw.getBoundingClientRect();
+        const dx = e.clientX - r.left, dy = e.clientY - r.top;
+        let moved = false;
+        fw.setPointerCapture(e.pointerId);
+        const move = (ev) => {
+          if (Math.abs(ev.clientX - e.clientX) > 5 || Math.abs(ev.clientY - e.clientY) > 5) moved = true;
+          if (!moved) return;
+          fw.style.left = Math.min(window.innerWidth - r.width, Math.max(0, ev.clientX - dx)) + 'px';
+          fw.style.top = Math.min(window.innerHeight - r.height, Math.max(0, ev.clientY - dy)) + 'px';
+          fw.style.right = 'auto'; fw.style.bottom = 'auto';
+        };
+        const up = (ev) => {
+          fw.removeEventListener('pointermove', move);
+          fw.removeEventListener('pointerup', up);
+          if (moved) {
+            const w = fw.getBoundingClientRect().width;
+            const x = parseFloat(fw.style.left) || 0;
+            const snapLeft = x + w / 2 < window.innerWidth / 2;
+            fw.style.left = (snapLeft ? 6 : window.innerWidth - w - 6) + 'px';
+          } else if (ev.target.id === 'fw-ball') {
+            fw.classList.toggle('expanded');
+          }
+          requestWidgetIdle();
+        };
+        fw.addEventListener('pointermove', move);
+        fw.addEventListener('pointerup', up);
+      });
+    })();
+
     document.getElementById('m-drawer-toggle').addEventListener('click', () => mDrawer.classList.toggle('open'));
     document.getElementById('drawer-fs').addEventListener('click', () => { enterInlineFs(); mDrawer.classList.remove('open'); });
     document.getElementById('drawer-exit-fs').addEventListener('click', () => { exitInlineFs(); mDrawer.classList.remove('open'); });
