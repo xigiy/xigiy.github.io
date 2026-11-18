@@ -171,18 +171,20 @@ body[data-theme="LXH"] .deco-lxh { opacity: 1; }
   position: relative;
 }
 
-/* 日志：左下角缩小变灰作为背景 */
+/* 日志：固定在屏幕左下角，内容尽可能详细 */
 .boot-log {
-  position: absolute; bottom: 24px; left: 24px;
-  font-size: 0.7rem; line-height: 1.5;
-  color: #555; max-width: 280px;
-  pointer-events: none;
+  position: fixed; bottom: 8px; left: 12px;
+  font-size: 0.72rem; line-height: 1.55;
+  color: #7d7d7d; max-width: min(74vw, 560px);
+  max-height: 46vh; overflow: hidden;
+  pointer-events: none; z-index: 2;
+  display: flex; flex-direction: column; justify-content: flex-end;
 }
-.boot-log .log-line { margin-bottom: 1px; word-break: break-all; opacity: 0.8; }
-.boot-log .log-ok { color: #2e7d32; }
-.boot-log .log-warn { color: #b28704; }
-.boot-log .log-err { color: #c62828; }
-.boot-log .log-time { color: #444; margin-right: 6px; }
+.boot-log .log-line { margin-bottom: 1px; word-break: break-all; opacity: 0.95; }
+.boot-log .log-ok { color: #4caf50; }
+.boot-log .log-warn { color: #c9a227; }
+.boot-log .log-err { color: #e53935; }
+.boot-log .log-time { color: #555; margin-right: 6px; }
 
 /* 中央内容容器 */
 .boot-center {
@@ -443,15 +445,30 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
 .loader-bar i { display: block; height: 100%; width: 40%; background: var(--ink); animation: loadslide 1s linear infinite; }
 @keyframes loadslide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
 #ifloat-widget {
-  position: fixed; z-index: 10006; left: 12px; top: 12px; display: flex; gap: 2px;
-  padding: 4px; background: var(--card-bg); border: var(--border-width) var(--border-style) var(--line);
+  position: fixed; z-index: 10006; left: 12px; top: 12px; display: flex; align-items: center;
+  padding: 3px; background: var(--card-bg); border: var(--border-width) var(--border-style) var(--line);
   touch-action: none; cursor: grab; user-select: none; box-shadow: 0 4px 14px rgba(0,0,0,.22);
+  transition: opacity .4s ease;
 }
+#ifloat-widget.idle { opacity: 0.4; }
 #ifloat-widget:active { cursor: grabbing; }
-#ifloat-widget button {
+#ifloat-widget #fw-ball {
+  width: 34px; height: 34px; border: none; border-radius: 50%;
+  background: var(--ink); color: var(--bg); font-size: 0.95rem; cursor: pointer;
+}
+#ifloat-widget #fw-menu { display: none; gap: 2px; }
+#ifloat-widget.expanded #fw-menu { display: flex; }
+#ifloat-widget button:not(#fw-ball) {
   width: 36px; height: 36px; border: none; background: transparent;
   color: var(--ink); font-size: 1rem; cursor: pointer; font-family: var(--font-family);
 }
+.stage-log {
+  font-size: 0.68rem; line-height: 1.5; color: var(--muted);
+  max-width: min(72vw, 480px); max-height: 30vh; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.stage-log .log-time { opacity: 0.6; margin-right: 6px; }
 #modal.fs-mode .modal-box {
   position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
   max-height: none; border-radius: 0; overflow-y: auto; z-index: 10002;
@@ -765,11 +782,15 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     <div class="loader-title">VoidWaveOS</div>
     <div class="loader-bar"><i></i></div>
     <div style="font-size:0.75rem; color:var(--muted);">LOADING TOOL...</div>
+    <div class="stage-log" id="iframe-log"></div>
   </div>
   <div id="ifloat-widget">
-    <button id="fw-open" title="打开原链">↗</button>
-    <button id="fw-reload" title="刷新">↻</button>
-    <button id="fw-close" title="关闭">✕</button>
+    <button id="fw-ball" title="VoidWaveOS 工具菜单">◈</button>
+    <div id="fw-menu">
+      <button id="fw-open" title="打开原链">↗</button>
+      <button id="fw-reload" title="刷新">↻</button>
+      <button id="fw-close" title="关闭">✕</button>
+    </div>
   </div>
 </div>
 
@@ -845,7 +866,9 @@ document.addEventListener('DOMContentLoaded', () => {
     bootLog.scrollTop = bootLog.scrollHeight;
   }
 
+  const bootStart = Date.now();
   printLog("VoidWaveOS boot sequence initiated.", "info");
+  printLog(`kernel ${navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'} · viewport ${window.innerWidth}x${window.innerHeight}`, "info");
 
   function applyNoAnim(on) {
     document.body.classList.toggle('no-anim', on);
@@ -900,6 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const script = document.createElement('script');
           script.text = cached;
           document.head.appendChild(script);
+          printLog(`cache hit ${url.split('/').pop()} (localStorage)`, "info");
           resolve(true);
           return;
         } catch (e) {
@@ -909,11 +933,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
+      printLog(`GET ${url.split('/').pop()} (cache miss)`, "info");
       xhr.onload = function() {
         if (this.status >= 200 && this.status < 300) {
           const code = this.responseText;
           try {
             localStorage.setItem(cacheKey, code);
+            printLog(`stored ${url.split('/').pop()} → localStorage cache (${Math.round(code.length/1024)}KB)`, "info");
           } catch (e) { console.warn("Cache limit exceeded"); }
           
           const script = document.createElement('script');
@@ -943,10 +969,15 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const lib of LIBRARIES) {
       try {
         if (!window[lib.key]) {
+          let host = lib.url;
+          try { host = new URL(lib.url).hostname; } catch (e) {}
+          printLog(`fetch ${lib.label} <- https://${host} [${lib.url.split('/').pop()}]`, "info");
           await loadLibWithCache(lib.url);
+        } else {
+          printLog(`${lib.label} already present in runtime, skip download`, "info");
         }
         loadedLibs++;
-        printLog(`Loaded ${lib.label}`, "ok");
+        printLog(`ok ${lib.label} mounted (${loadedLibs}/${totalLibs})`, "ok");
         updateProgress();
       } catch (e) {
         printLog(`Failed to load ${lib.label}`, "err");
@@ -954,6 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgress();
       }
     }
+    printLog(`mount complete in ${Date.now() - bootStart}ms`, "ok");
+    printLog("starting window manager: particles / lenis smooth / audio", "info");
     finishBoot();
   }
 
@@ -2502,21 +2535,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ===== 外链 iframe 全屏舞台（移动端 4399 式） ===== */
     let stageUrl = '';
+    function stageLog(msg) {
+      const box = document.getElementById('iframe-log');
+      if (!box) return;
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const div = document.createElement('div');
+      div.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
     function openIframeStage(url) {
       const stage = document.getElementById('iframe-stage');
       const iframe = document.getElementById('stage-iframe');
       const loader = document.getElementById('iframe-loader');
       const fw = document.getElementById('ifloat-widget');
+      const logBox = document.getElementById('iframe-log');
       stageUrl = url;
+      logBox.innerHTML = '';
       loader.classList.remove('hide');
+      fw.classList.remove('expanded');
       fw.style.left = '12px'; fw.style.top = '12px'; fw.style.right = 'auto'; fw.style.bottom = 'auto';
       stage.classList.add('active');
+      stageLog(`opening ${url}`);
+      stageLog(`iframe attach, min-display policy: 1000ms`);
       const started = Date.now();
       iframe.onload = () => {
-        const wait = Math.max(0, 1000 - (Date.now() - started));
-        setTimeout(() => loader.classList.add('hide'), wait);
+        const elapsed = Date.now() - started;
+        const wait = Math.max(0, 1000 - elapsed);
+        stageLog(`iframe onload fired in ${elapsed}ms`);
+        if (wait > 0) stageLog(`hold loader ${wait}ms to guarantee paint`);
+        setTimeout(() => {
+          loader.classList.add('hide');
+          stageLog('loader faded, tool ready');
+        }, wait);
       };
       iframe.src = url;
+      requestWidgetIdle();
     }
     function closeIframeStage() {
       const stage = document.getElementById('iframe-stage');
@@ -2527,22 +2581,44 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fw-open').addEventListener('click', () => { if (stageUrl) window.open(stageUrl, '_blank', 'noopener'); });
     document.getElementById('fw-reload').addEventListener('click', () => {
       const f = document.getElementById('stage-iframe');
-      if (stageUrl && f) f.src = stageUrl;
+      if (stageUrl && f) { f.src = stageUrl; stageLog('reload requested'); }
     });
     document.getElementById('fw-close').addEventListener('click', closeIframeStage);
+    /* 悬浮球：点击展开/收起，拖动换位并吸附左右边缘，空闲自动变淡 */
     (() => {
       const fw = document.getElementById('ifloat-widget');
+      let idleTimer = null;
+      function requestWidgetIdle() {
+        fw.classList.remove('idle');
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => fw.classList.add('idle'), 3000);
+      }
       fw.addEventListener('pointerdown', (e) => {
-        if (e.target.tagName === 'BUTTON') return;
+        requestWidgetIdle();
         const r = fw.getBoundingClientRect();
         const dx = e.clientX - r.left, dy = e.clientY - r.top;
+        let moved = false;
         fw.setPointerCapture(e.pointerId);
         const move = (ev) => {
-          fw.style.left = Math.min(window.innerWidth - 60, Math.max(0, ev.clientX - dx)) + 'px';
-          fw.style.top = Math.min(window.innerHeight - 60, Math.max(0, ev.clientY - dy)) + 'px';
+          if (Math.abs(ev.clientX - e.clientX) > 5 || Math.abs(ev.clientY - e.clientY) > 5) moved = true;
+          if (!moved) return;
+          fw.style.left = Math.min(window.innerWidth - r.width, Math.max(0, ev.clientX - dx)) + 'px';
+          fw.style.top = Math.min(window.innerHeight - r.height, Math.max(0, ev.clientY - dy)) + 'px';
           fw.style.right = 'auto'; fw.style.bottom = 'auto';
         };
-        const up = () => { fw.removeEventListener('pointermove', move); fw.removeEventListener('pointerup', up); };
+        const up = (ev) => {
+          fw.removeEventListener('pointermove', move);
+          fw.removeEventListener('pointerup', up);
+          if (moved) {
+            const w = fw.getBoundingClientRect().width;
+            const x = parseFloat(fw.style.left) || 0;
+            const snapLeft = x + w / 2 < window.innerWidth / 2;
+            fw.style.left = (snapLeft ? 6 : window.innerWidth - w - 6) + 'px';
+          } else if (ev.target.id === 'fw-ball') {
+            fw.classList.toggle('expanded');
+          }
+          requestWidgetIdle();
+        };
         fw.addEventListener('pointermove', move);
         fw.addEventListener('pointerup', up);
       });
