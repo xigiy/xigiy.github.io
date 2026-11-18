@@ -21,6 +21,36 @@
     background: #1a1a22; border-bottom: 1px solid #2a2a35; flex-shrink: 0;
     flex-wrap: wrap;
   }
+  /* 样式管理器 */
+  .style-list { width: 200px; border-right: 1px solid #2a2a35; overflow-y: auto; flex-shrink: 0; padding: 6px; }
+  .style-row {
+    display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px;
+    cursor: pointer; font-size: 12px; color: #c8c8d4;
+  }
+  .style-row.sel { background: #2a2a3d; }
+  .style-swatch {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px; font-size: 12px; flex-shrink: 0;
+  }
+  .style-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .style-uuid { font-size: 9px; color: #55556a; }
+  .style-editor { flex: 1; padding: 12px 14px; overflow-y: auto; }
+  .style-editor label {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 10px; font-size: 12px; color: #a0a0b4;
+  }
+  .style-editor input[type="color"] { width: 46px; height: 28px; border: none; background: none; cursor: pointer; }
+  .style-editor input[type="number"], .style-editor input[type="text"] {
+    background: #24242e; border: 1px solid #35353f; color: #e8e8ed;
+    padding: 4px 8px; border-radius: 5px; font-size: 12px; width: 90px;
+  }
+  .style-editor input[type="range"] { width: 130px; }
+  .style-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .style-actions button {
+    background: #2d2d3a; border: 1px solid #3d3d4a; color: #e8e8ed;
+    padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;
+  }
+  .style-actions button.danger { color: #ff7a7a; border-color: #5a2d2d; }
   .toolbar h1 { font-size: 14px; font-weight: 600; color: #c8c8d4; white-space: nowrap; }
   .toolbar input {
     background: #24242e; border: 1px solid #35353f; color: #e8e8ed;
@@ -258,7 +288,10 @@
   /* ============ 响应式 ============ */
   @media (max-width: 720px) {
     body { overflow: hidden; }
-    .toolbar input { display: none; }
+    .toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 6px 8px; }
+    .toolbar .sep { flex-shrink: 0; }
+    .toolbar h1 { flex-shrink: 0; }
+    .toolbar button { flex-shrink: 0; }
     .toolbar input#screenW, .toolbar input#screenH { display: block; width: 38px; }
     .toolbar input#canvasScale { display: inline-block; width: 50px; }
     #scaleLabel { display: inline-block; font-size: 9px; width: 28px; }
@@ -314,6 +347,7 @@
   <button onclick="addElement('normal')">🔘</button>
   <button onclick="addElement('joystick')">🕹</button>
   <button onclick="addElement('textbox')">📝</button>
+  <button onclick="openStyleManager()" title="样式管理器">🎨</button>
   <div class="sep"></div>
   <button onclick="showImport()">📥</button>
   <button class="primary" onclick="exportJSON()">📤 下载</button>
@@ -360,6 +394,20 @@
       </div>
     </div>
     <textarea id="jsonArea" class="modal-textarea" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<!-- 样式管理器浮层 -->
+<div class="modal-overlay" id="styleOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>样式管理器</span>
+      <button onclick="closeStyleManager()">关闭</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div class="style-list" id="styleList"></div>
+      <div class="style-editor" id="styleEditor"></div>
+    </div>
   </div>
 </div>
 
@@ -1434,7 +1482,10 @@ function exportJSON() {
     }
     const normals = [], boxes = [], joys = [];
     l.elements.forEach(el => {
-      const pos = { x: Math.round(el.x / sw * 10000), y: Math.round(el.y / sh * 10000) };
+      // Zalith 渲染公式: px = (screen - widget) * pct/10000，即百分比按"可移动行程"计算
+      const px = Math.round(el.x / Math.max(sw - el.w, 1) * 10000);
+      const py = Math.round(el.y / Math.max(sh - el.h, 1) * 10000);
+      const pos = { x: Math.min(Math.max(px, 0), 10000), y: Math.min(Math.max(py, 0), 10000) };
       if (el.elementType === 'joystick') {
         joys.push({ uuid: el.uuid, position: pos });
         return;
@@ -1448,13 +1499,17 @@ function exportJSON() {
       };
       if (el.buttonStyle) o.buttonStyle = el.buttonStyle;
       if (el.elementType === 'textbox') {
+        if (el.textAlign) o.textAlignment = el.textAlign === 'center' ? 'Center' : (el.textAlign === 'right' ? 'Right' : 'Left');
+        if (el.bold) o.textBold = true;
+        if (el.italic) o.textItalic = true;
+        if (el.underline) o.textUnderline = true;
         boxes.push(o);
       } else {
         o.isSwipple = !!el.slideTrigger;
         o.isPenetrable = !!el.moveMouse;
         o.isToggleable = !!el.toggleable;
         const codes = (el.keycodes && el.keycodes.length) ? el.keycodes : (el.keyName ? [el.keyName] : []);
-        if (codes.length) o.keycodes = codes;
+        if (codes.length) o.clickEvents = codes.map(k => ({ type: 'key', key: k }));
         normals.push(o);
       }
     });
@@ -1529,9 +1584,8 @@ function importJSON(data) {
   const sw = parseInt(screenWInput.value) || 2400;
   const sh = parseInt(screenHInput.value) || 1080;
 
-  // 万分比 → 像素
-  const pos2px = (p, ref) => Math.round((p || 0) / 10000 * ref);
-  const pct2pxH = (v) => Math.round((v || 0) / 10000 * sh);  // 尺寸参照 screen_height
+  // 万分比 → 像素（尺寸参照 screen_height）
+  const pct2pxH = (v) => Math.round((v || 0) / 10000 * sh);
 
   if (Array.isArray(data.styles)) {
     data.styles.forEach(s => {
@@ -1555,8 +1609,6 @@ function importJSON(data) {
       // 按类型分组解析
       const parseCommon = (el, e) => {
         el.uuid = e.uuid || randomHex(16);
-        el.x = pos2px(e.position?.x, sw);
-        el.y = pos2px(e.position?.y, sh);
         const bs = e.buttonSize || {};
         el.sizeType = bs.type || 'percentage';
         el.w = pct2pxH(bs.widthPercentage);
@@ -1566,16 +1618,21 @@ function importJSON(data) {
         if (e.buttonStyle) el.buttonStyle = e.buttonStyle;
         if (el.w < 20) { el.w = Math.round(sw * 0.125); }
         if (el.h < 20) { el.h = Math.round(sh * 0.2); }
+        // Zalith: px = (screen - widget) * pct/10000
+        el.x = Math.round((e.position?.x || 0) / 10000 * Math.max(sw - el.w, 1));
+        el.y = Math.round((e.position?.y || 0) / 10000 * Math.max(sh - el.h, 1));
       };
 
       (l.normalButtons || []).forEach(e => {
         const el = createElementData('normal');
         parseCommon(el, e);
         el.text = (typeof e.text === 'object' ? e.text?.default : e.text) || '按键';
-        if (Array.isArray(e.keycodes) && e.keycodes.length) {
+        // clickEvents: [{type:"key", key:"GLFW_KEY_..."}]
+        const keyEvents = (e.clickEvents || []).filter(ev => ev.type === 'key' && ev.key).map(ev => ev.key);
+        if (keyEvents.length) {
+          el.keycodes = keyEvents; el.keyName = keyEvents[0];
+        } else if (Array.isArray(e.keycodes) && e.keycodes.length) {
           el.keycodes = e.keycodes; el.keyName = e.keycodes[0];
-        } else if (e.keyName) {
-          el.keyName = e.keyName; el.keycodes = [e.keyName];
         } else {
           el.keycodes = []; el.keyName = '';
         }
@@ -1589,10 +1646,11 @@ function importJSON(data) {
         const el = createElementData('textbox');
         parseCommon(el, e);
         el.text = (typeof e.text === 'object' ? e.text?.default : e.text) || '文字';
-        if (e.textAlign) el.textAlign = e.textAlign;
-        if (e.bold) el.bold = true;
-        if (e.italic) el.italic = true;
-        if (e.underline) el.underline = true;
+        const al = e.textAlignment || 'Left';
+        el.textAlign = al === 'Center' ? 'center' : (al === 'Right' ? 'right' : 'left');
+        if (e.textBold) el.bold = true;
+        if (e.textItalic) el.italic = true;
+        if (e.textUnderline) el.underline = true;
         layer.elements.push(el);
         if (el.id >= nextElementId) nextElementId = el.id + 1;
       });
@@ -1610,6 +1668,95 @@ function importJSON(data) {
   }
   fixOutOfBoundsElements();
   renderAll(); syncStageSize();
+}
+
+/* ============ 样式管理器 UI ============ */
+function escHtmlS(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function intToHexColor(v) { const u = (v >>> 0) & 0xFFFFFF; return '#' + u.toString(16).padStart(6, '0'); }
+function intToCssColor(v) { const u = v >>> 0; const a = ((u >>> 24) & 255) / 255; return `rgba(${(u>>>16)&255},${(u>>>8)&255},${u&255},${a})`; }
+function hexWithAlpha(hexInt, keepAlphaByte) {
+  const a = keepAlphaByte === undefined ? 0xFF : keepAlphaByte;
+  return ((a << 24) | hexInt) >>> 0;
+}
+let styleEditingUuid = null;
+function openStyleManager() {
+  if (!styles.length) { const ns = createStyle('样式1'); styles.push(ns); }
+  if (!styles.find(x => x.uuid === styleEditingUuid)) styleEditingUuid = styles[0].uuid;
+  renderStyleManager();
+  document.getElementById('styleOverlay').classList.add('show');
+}
+function closeStyleManager() { document.getElementById('styleOverlay').classList.remove('show'); renderAll(); }
+function renderStyleManager() {
+  const list = document.getElementById('styleList');
+  list.innerHTML = '';
+  styles.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'style-row' + (s.uuid === styleEditingUuid ? ' sel' : '');
+    div.onclick = () => { styleEditingUuid = s.uuid; renderStyleManager(); };
+    div.innerHTML = `<span class="style-swatch" style="background:${intToCssColor(s.lightStyle.backgroundColor)};color:${intToCssColor(s.lightStyle.contentColor)}">按</span>`
+      + `<span class="style-name">${escHtmlS(s.name)}</span>`
+      + `<span class="style-uuid">${escHtmlS(s.uuid.slice(0, 6))}</span>`;
+    list.appendChild(div);
+  });
+  const ed = document.getElementById('styleEditor');
+  const s = styles.find(x => x.uuid === styleEditingUuid);
+  if (!s) { ed.innerHTML = '<span style="color:#666;font-size:12px">无样式</span>'; return; }
+  const t = s.lightStyle;
+  const br = t.borderRadius || {};
+  ed.innerHTML = `
+    <label>名称 <input type="text" value="${escHtmlS(s.name)}" onchange="updStyle('name', this.value)"></label>
+    <label>不透明度 <span><input type="range" min="0" max="100" value="${Math.round((t.alpha ?? 1) * 100)}" oninput="updStyle('alpha', this.value/100)"> ${Math.round((t.alpha ?? 1) * 100)}%</span></label>
+    <label>背景色 <input type="color" value="${intToHexColor(t.backgroundColor)}" onchange="updStyle('bg', this.value)"></label>
+    <label>文字色 <input type="color" value="${intToHexColor(t.contentColor)}" onchange="updStyle('fg', this.value)"></label>
+    <label>边框色 <input type="color" value="${intToHexColor(t.borderColor)}" onchange="updStyle('bc', this.value)"></label>
+    <label>边框宽 <input type="number" min="0" max="50" value="${t.borderWidth || 0}" onchange="updStyle('bw', +this.value)"></label>
+    <label>圆角 <input type="number" min="0" max="50" value="${br.topStart || 0}" onchange="updStyle('radius', +this.value)"></label>
+    <div class="style-actions">
+      <button onclick="applyStyleToSelected()">应用到选中控件</button>
+      <button onclick="addStyleUI()">＋新建</button>
+      <button class="danger" onclick="delStyleUI()">删除</button>
+    </div>`;
+}
+function updStyle(field, val) {
+  const s = styles.find(x => x.uuid === styleEditingUuid);
+  if (!s) return;
+  if (field === 'name') s.name = val;
+  else {
+    ['lightStyle', 'darkStyle'].forEach(k => {
+      const t = s[k];
+      if (!t) return;
+      if (field === 'alpha') t.alpha = val;
+      else if (field === 'bg') t.backgroundColor = hexWithAlpha(parseInt(val.slice(1), 16), (t.backgroundColor >>> 24) & 255);
+      else if (field === 'fg') t.contentColor = hexWithAlpha(parseInt(val.slice(1), 16), (t.contentColor >>> 24) & 255);
+      else if (field === 'bc') t.borderColor = hexWithAlpha(parseInt(val.slice(1), 16), (t.borderColor >>> 24) & 255);
+      else if (field === 'bw') t.borderWidth = val;
+      else if (field === 'radius') t.borderRadius = { topStart: val, topEnd: val, bottomEnd: val, bottomStart: val };
+    });
+  }
+  renderStyleManager();
+}
+function applyStyleToSelected() {
+  if (!selectedId) { showStatus('请先选中一个控件'); return; }
+  const el = layers.flatMap(l => l.elements).find(e => e.id === selectedId);
+  if (!el || el.elementType === 'joystick') { showStatus('摇杆不支持按钮样式'); return; }
+  el.buttonStyle = styleEditingUuid;
+  renderAll();
+  showStatus('✓ 样式已应用');
+}
+function addStyleUI() {
+  const ns = createStyle('样式' + (styles.length + 1));
+  styles.push(ns);
+  styleEditingUuid = ns.uuid;
+  renderStyleManager();
+}
+function delStyleUI() {
+  const idx = styles.findIndex(x => x.uuid === styleEditingUuid);
+  if (idx < 0) return;
+  styles.splice(idx, 1);
+  layers.forEach(l => l.elements.forEach(el => { if (el.buttonStyle === styleEditingUuid) el.buttonStyle = ''; }));
+  styleEditingUuid = styles[Math.max(0, idx - 1)]?.uuid || null;
+  renderStyleManager();
+  renderAll();
 }
 
 /* ============ 样式管理（保留逻辑，不再暴露） ============ */
