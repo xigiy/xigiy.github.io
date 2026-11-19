@@ -466,6 +466,12 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
   color: var(--ink); font-size: 0.95rem; cursor: pointer; font-family: var(--font-family); flex: 0 0 auto;
 }
 #ifloat-widget button:hover { background: var(--hover-bg, rgba(128,128,128,.25)); }
+#ifloat-widget #fw-info {
+  font-size: 0.7rem; color: var(--muted); max-width: 110px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 4px;
+}
+#ifloat-widget.min { padding: 0; gap: 0; width: 14px; height: 14px; border-radius: 50%; }
+#ifloat-widget.min #fw-info, #ifloat-widget.min button { display: none; }
 #modal.fs-mode .modal-box {
   position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
   max-height: none; border-radius: 0; overflow-y: auto; z-index: 10002;
@@ -668,6 +674,10 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
       <button type="button" id="help-btn" class="icon-btn" title="快捷键">?</button>
     </div>
   </div>
+
+  <div style="margin-top:6px;">
+    <button type="button" id="noanim-toggle" class="btn btn-outline" style="padding:4px 14px; font-size:0.78rem;">无动画模式: 关</button>
+  </div>
   
   <div id="search-history" class="search-history"></div>
   <div id="tool-count" class="tool-count">共 26 个工具</div>
@@ -735,15 +745,35 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
 <div id="disclaimer-modal" class="modal-overlay">
   <div class="modal-box">
     <button class="modal-close" onclick="document.getElementById('disclaimer-modal').classList.remove('active')">×</button>
-    <h2>免责声明</h2>
+    <h2>免责声明 / Disclaimer</h2>
     <div class="modal-desc" style="border-left:none; padding-left:0; font-size:0.85rem; line-height:1.8;">
-      <p style="margin-bottom:10px;">1. 本站提供的所有外链工具与内置小工具，其代码均为作者个人编写或代发，仅供交流学习与个人使用。使用过程中产生的任何直接或间接风险（包括但不限于数据丢失、账号异常、设备问题）由使用者自行承担。</p>
-      <p style="margin-bottom:10px;">2. 本站部分内容为同人衍生作品（如涉及 v/s、LXH、中V、MC 等圈子），相关版权归属原作者所有。本站不承担任何因使用、分享、修改这些内容而产生的直接或间接责任。如原作者要求下架相关内容，请联系站长处理。</p>
-      <p style="margin-bottom:10px;">3. 带有“代发”标记的工具由第三方提供，本站仅代为发布链接，不对其代码安全性、内容准确性、后续维护及隐私处理负任何责任，请在使用时自行甄别，勿在第三方页面输入敏感信息。带有“外链”标记的工具为本站仓库内托管的自有页面，与主站同样适用下文开源声明；但其内容若涉及第三方服务或素材，仍以相关权利人的条款为准。</p>
-      <p style="margin-bottom:10px;">4. 对于占位/未完成工具，请勿在生产环境中进行测试或依赖。</p>
-      <p style="margin-bottom:10px;">5. 本站工具均在浏览器本地运行，除标注“需联网”的工具（用于加载 CDN 组件库或访问外部服务）外，不会向任何服务器上传用户输入的数据。本地保存的数据（如待办、打卡记录）仅存于浏览器 localStorage 中，清除浏览器数据后将丢失，请自行备份。</p>
-      <p style="margin-bottom:10px;">6. 本站链接的其他独立网站（如友情链接、参考站点）的内容不代表本站立场，本站对其内容不承担任何责任。上述“外链”标记的本站自有页面不在此列。</p>
-      <h3 style="font-size:0.95rem; margin:18px 0 10px;">开源声明</h3>
+      <p style="color:var(--muted); font-size:0.75rem;">站点：https://xigiy.github.io · 最后更新：2026年11月19日 · 本声明与仓库中的 DISCLAIMER.md 内容一致。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">1. 适用范围</h3>
+      <p style="margin-bottom:10px;">本声明适用于本站所有页面、功能、内容、清单、推荐、链接、卡片、iframe 嵌入、截图/缩略图、文字描述，以及未来新增的"网页记录/推荐"功能。所称"第三方内容"，指任何非本站运营者创作或控制的网页、服务、文本、图片、视频、商标、Logo、软件、AI 生成内容及其他材料。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">2. MIT 许可证边界</h3>
+      <p style="margin-bottom:10px;">本站源代码依据仓库中的 LICENSE 文件（MIT 许可证）授权。MIT 许可证仅适用于本站源代码。第三方内容不在 MIT 许可证授权范围内；本站不通过 MIT 许可证或本声明对任何第三方内容授予许可。本站原创文字、图片、清单编排等如无单独许可标注，其版权归本站作者所有；此条不改变 MIT 许可证对源代码的授权。若希望站内文字也开源，请另行标注 CC BY 等许可。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">3. 收录与推荐的性质</h3>
+      <p style="margin-bottom:10px;">本站的收录、推荐、排序和描述，均基于运营者个人主观判断，仅为信息整理与个人偏好表达，不构成对任何第三方网页、服务、商品、观点、安全性或合法性的认可、背书、验证、赞助、关联或专业建议。除非具体条目显著标注，本站未收取第三方报酬；未来如存在赞助、联盟链接或其他利益关系，将在相关页面显著披露。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">4. 标注说明：代发、外链与内置工具</h3>
+      <p style="margin-bottom:10px;">带有"代发"标记的工具由第三方提供，本站仅代为发布链接，不对其代码安全性、内容准确性、后续维护及隐私处理负任何责任，请在使用时自行甄别，勿在第三方页面输入敏感信息。带有"外链"标记的工具为本站仓库内托管的自有页面，与主站同样适用下文开源声明；但其内容若涉及第三方服务或素材，仍以相关权利人的条款为准。对于占位/未完成工具，请勿在生产环境中进行测试或依赖。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">5. 本地运行与数据存储</h3>
+      <p style="margin-bottom:10px;">本站工具均在浏览器本地运行，除标注"需联网"的工具（用于加载 CDN 组件库或访问外部服务）外，不会向任何服务器上传用户输入的数据。本地保存的数据（如待办、打卡记录）仅存于浏览器 localStorage 中，清除浏览器数据后将丢失，请自行备份。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">6. 不控制、不监控、不保证</h3>
+      <p style="margin-bottom:10px;">第三方内容由第三方独立提供。本站不控制、不编辑、不监控第三方内容，亦不保证其准确性、完整性、合法性、安全性、可用性、及时性、无病毒、无恶意代码、不侵权或适合特定目的。第三方内容可能随时变更、失效、被限制访问或禁止嵌入；本站对第三方内容的描述也可能过时。本站无义务持续监控第三方内容，但保留随时删除任何收录的权利。本站链接的其他独立网站（如友情链接、参考站点）的内容不代表本站立场，本站对其内容不承担任何责任；上述"外链"标记的本站自有页面不在此列。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">7. iframe 与链接的技术说明</h3>
+      <p style="margin-bottom:10px;">通过 iframe 展示时，第三方页面由第三方服务器直接向用户浏览器加载。本站不存储、不复制、不镜像、不再分发第三方网页的实质性内容；为识别和说明所必需的标题、URL、简短个人描述及可能的缩略标识除外。本站不绕过、也不应被用于绕过 X-Frame-Options、CSP、付费墙、登录限制、地域限制或其他访问控制。若第三方服务条款明确禁止框架嵌入，本站应移除相关嵌入或降级为普通链接。第三方可能通过 iframe 设置 Cookie、运行脚本、进行跟踪、登录或支付，这些均受第三方条款和隐私政策约束，本站无法控制。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">8. 用户责任</h3>
+      <p style="margin-bottom:10px;">用户访问第三方内容、通过 iframe 与第三方交互、注册、支付、下载或使用第三方服务，均系用户与第三方之间的法律关系，风险由用户自行承担。用户应自行阅读并遵守第三方的服务条款、隐私政策、版权规则及其他适用规定。本站不是任何第三方的代理人、合伙人、代表、保证人或交易参与方。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">9. 知识产权与商标</h3>
+      <p style="margin-bottom:10px;">第三方网页、内容、商标、Logo、名称等权利归各自所有者。本站提及第三方名称、商标或 Logo，仅为识别、说明和推荐目的，不构成权利主张或授权。本站部分内容为同人衍生作品（如涉及 v/s、LXH、中V、MC 等圈子），相关世界观、角色设定等权利由原作者保留全部权利，本站中的美术资源或文本仅为引用，用于说明与展示，不用于商业用途；如原作者要求下架相关内容，请联系站长处理。若权利人认为本站的收录、嵌入、描述或缩略图侵犯其权利或违反其服务条款，请按第 11 条通知本站；本站核实后将尽快移除或调整。通知即删不构成对侵权指控的承认。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">10. 免责与责任限制</h3>
+      <p style="margin-bottom:10px;">在适用法律允许的最大范围内，本站按"现状"和"现有"提供，明确拒绝所有明示或默示担保，包括但不限于所有权、不侵权、适销性、特定用途适用性、准确性、安全性、无病毒和不中断。本站不对因使用或无法使用本站、第三方内容、外部链接、iframe 或第三方服务而导致的任何直接、间接、附带、特殊、惩罚性、后果性损害，或数据、利润、商誉损失承担责任，即使本站已被告知该等损害可能发生。依法不可排除或限制的责任除外。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">11. 通知与移除</h3>
+      <p style="margin-bottom:10px;">权利人可通过本站公开联系方式或仓库 Issue 提交通知，建议包含：权利人身份或授权证明、联系方式、权属证明、具体 URL、请求移除的范围及善意声明。本站收到有效通知后，将在合理时间内核实并移除、替换为普通链接或调整相关内容。本站保留不经事先通知删除任何收录的权利。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">12. 本站自身与开源衍生</h3>
+      <p style="margin-bottom:10px;">本站可能因托管平台、网络、维护或第三方服务中断而变更或不可用。本站开源仓库可被他人 fork、镜像、修改或再发布；本站不对任何第三方 fork、镜像、衍生站点或修改版本负责。本声明不改变仓库 LICENSE 对源代码的授权。</p>
+      <h3 style="font-size:0.95rem; margin:18px 0 10px;">13. 开源声明</h3>
+      <p style="margin-bottom:10px;">本网页本身的代码，以及所有未标记为"代发"的内置工具页面与外链页面，均以 <strong>MIT 协议</strong>开源（针对代码；部分原创美术资源除外）。你可以在本站仓库中查看、学习、修改与分发这些代码，但请保留原许可声明。以下为本站使用的开源字体与组件库：</p>
       <p style="margin-bottom:6px; font-weight:bold;">字体（均为开源字体，通过 <a href="https://fonts.zeoseven.com/" target="_blank" style="text-decoration:underline;">ZeoSeven Fonts</a> 提供分发）</p>
       <p style="margin-bottom:4px;">① 纳米平汉黑 NanoPyongHanHei — <a href="https://github.com/Hansha2011/NanoPyongHanHei/" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
       <p style="margin-bottom:4px;">② 精品点阵体9×9 BoutiqueBitmap9x9 — <a href="https://github.com/Howevering/BoutiqueBitmap9x9" target="_blank" style="text-decoration:underline;">GitHub</a> · OFL-1.1</p>
@@ -758,8 +788,9 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
       <p style="margin-bottom:4px;">⑤ QRCode.js — <a href="https://github.com/davidshimjs/qrcodejs" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
       <p style="margin-bottom:4px;">⑥ JsBarcode — <a href="https://github.com/lindell/JsBarcode" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
       <p style="margin-bottom:10px;">⑦ jsQR — <a href="https://github.com/cozmo/jsQR" target="_blank" style="text-decoration:underline;">GitHub</a> · MIT</p>
-      <p style="margin-bottom:10px;">③' 本网页本身的代码，以及所有未标记为“代发”的内置工具页面与外链页面，均以 <strong>MIT 协议</strong>开源（针对代码；部分原创美术资源除外）。你可以在本站仓库中查看、学习、修改与分发这些代码，但请保留原许可声明。</p>
-      <p>④' 同人相关内容（世界观、角色设定等）由原作者保留全部权利，本站中的美术资源或文本仅为引用，用于说明与展示，不用于商业用途。</p>
+      <h3 style="font-size:0.95rem; margin:14px 0 8px;">14. 其他</h3>
+      <p style="margin-bottom:10px;">本声明不构成法律意见。本站保留随时更新本声明的权利，更新后自发布之日起生效。若任何条款被认定无效，其余条款仍有效；未行使任何权利不构成弃权。继续使用本站视为知悉本声明，但依法不可免除的责任不受影响。</p>
+      <p style="color:var(--muted); font-size:0.75rem;">联系方式：GitHub Issues · https://github.com/xigiy/xigiy.github.io/issues</p>
     </div>
   </div>
 </div>
@@ -774,8 +805,11 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     <button class="btn btn-outline" id="loader-force-close" style="margin-top:8px; font-size:0.75rem;">跳过加载 ›</button>
   </div>
   <div id="ifloat-widget">
+    <span id="fw-info">工具</span>
     <button id="fw-open" title="新标签页打开原链">↗</button>
     <button id="fw-reload" title="刷新">↻</button>
+    <button id="fw-doc" title="免责声明与应用信息">ⓘ</button>
+    <button id="fw-min" title="最小化">–</button>
     <button id="fw-close" title="退出工具">✕</button>
   </div>
 </div>
@@ -859,7 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyNoAnim(on) {
     document.body.classList.toggle('no-anim', on);
     try { localStorage.setItem('stech_no_anim', on ? '1' : '0'); } catch(e) {}
-    const b = document.getElementById('drawer-noanim');
+    const b = document.getElementById('noanim-toggle');
     if (b) b.textContent = '无动画模式: ' + (on ? '开' : '关');
   }
   applyNoAnim(localStorage.getItem('stech_no_anim') === '1');
@@ -2422,7 +2456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isDesktop) {
           mInlineTool.style.display = 'block';
           mInlineTool.innerHTML = `<button class="btn" id="iframe-open" style="width:100%;">▶ 打开工具（全屏）</button>`;
-          document.getElementById('iframe-open').addEventListener('click', () => openIframeStage(data.url));
+          document.getElementById('iframe-open').addEventListener('click', () => openIframeStage(data.name, data.url));
         } else {
           mInlineTool.style.display = 'block';
           mInlineTool.innerHTML = `
@@ -2523,17 +2557,18 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.classList.add('hide');
       }
     }
-    function openIframeStage(url) {
+    function openIframeStage(name, url) {
       const stage = document.getElementById('iframe-stage');
       const iframe = document.getElementById('stage-iframe');
       const loader = document.getElementById('iframe-loader');
       const fw = document.getElementById('ifloat-widget');
       const logBox = document.getElementById('iframe-log');
       stageUrl = url;
+      document.getElementById('fw-info').textContent = name || '工具';
       logBox.innerHTML = '';
       clearTimeout(stageLoaderHideTimer);
       loader.classList.remove('hide');
-      fw.classList.remove('idle');
+      fw.classList.remove('idle', 'min');
       fw.style.left = '12px'; fw.style.top = '12px'; fw.style.right = 'auto'; fw.style.bottom = 'auto';
       stage.classList.add('active');
       history.pushState({ vstage: 1 }, '');
@@ -2561,6 +2596,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (stageUrl && f) { f.src = stageUrl; stageLog('reload requested'); }
     });
     document.getElementById('fw-close').addEventListener('click', closeIframeStage);
+    document.getElementById('fw-min').addEventListener('click', () => document.getElementById('ifloat-widget').classList.add('min'));
+    document.getElementById('fw-doc').addEventListener('click', () => {
+      closeIframeStage();
+      document.getElementById('disclaimer-btn').click();
+    });
     document.getElementById('loader-force-close').addEventListener('click', () => hideStageLoader('skipped by user'));
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && document.getElementById('iframe-stage').classList.contains('active')) closeIframeStage();
@@ -2596,6 +2636,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = parseFloat(fw.style.left) || 0;
             const snapLeft = x + w / 2 < window.innerWidth / 2;
             fw.style.left = (snapLeft ? 6 : window.innerWidth - w - 6) + 'px';
+          } else if (fw.classList.contains('min')) {
+            fw.classList.remove('min'); // 点小圆点恢复
           }
           requestWidgetIdle();
         };
@@ -2610,6 +2652,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("modal-close").addEventListener("click", closeToolModal);
+    document.getElementById('noanim-toggle').addEventListener('click', () => applyNoAnim(!document.body.classList.contains('no-anim')));
     modal.addEventListener("click", (e) => { if (e.target === modal) closeToolModal(); });
 
     mCopyLink.addEventListener("click", () => {
