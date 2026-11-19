@@ -682,27 +682,18 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     </div>
     <span style="cursor:pointer; text-decoration:underline;" id="disclaimer-btn">免责声明</span>
     <span>© 2026 Starfield Technology</span>
+    <p style="margin-top:8px; font-size:0.68rem; line-height:1.6; opacity:0.75; max-width:860px;">本站收录与推荐均为个人主观整理，不构成背书、验证或专业建议。第三方网页内容版权归各自所有者，不在本站 MIT 许可证范围内。iframe 内容由第三方直接提供，本站不控制、不保证其合法性、安全性、准确性或可用性，亦不承担相关责任。权利人如认为收录或嵌入不妥，请联系本站，核实后将立即移除或降级为普通链接。完整声明见「免责声明」。</p>
   </footer>
 </div>
 
 <div id="modal" class="modal-overlay">
   <div class="modal-box">
     <button id="modal-close" class="modal-close">×</button>
-    <div id="m-drawer" class="m-drawer" style="display:none;">
-      <button type="button" id="m-drawer-toggle">≡ 工具操作 ▾</button>
-      <div id="m-drawer-panel" class="m-drawer-panel">
-        <button type="button" id="drawer-fs" class="btn btn-outline btn-sm">全屏模式</button>
-        <button type="button" id="drawer-exit-fs" class="btn btn-outline btn-sm" style="display:none;">退出全屏</button>
-        <button type="button" id="drawer-close" class="btn btn-outline btn-sm">退出工具</button>
-        <button type="button" id="drawer-noanim" class="btn btn-outline btn-sm">无动画模式: 关</button>
-      </div>
-    </div>
+    <div id="m-dragbar" class="tool-dragbar" style="display:none;" title="上拉全屏 / 下拉退出"><div class="drag-pill"></div></div>
     <h2 id="m-title">Title <span id="m-badge" class="badge"></span></h2>
     <div id="m-tagline" class="modal-tagline">Tagline</div>
-    
+
     <div id="m-desc" class="modal-desc">Long description...</div>
-    
-    <div id="m-dragbar" class="tool-dragbar" style="display:none;" title="上拉全屏 / 下拉退出"><div class="drag-pill"></div></div>
 
     <div id="m-inline-tool" class="inline-tool-area" style="display:none;"></div>
 
@@ -1437,8 +1428,6 @@ document.addEventListener('DOMContentLoaded', () => {
       mInlineTool.style.display = 'none';
       mActions.style.display = 'flex';
       exitInlineFs();
-      mDrawer.classList.remove('open');
-      mDrawer.style.display = data.status === 'inline' ? 'block' : 'none';
       mDragbar.style.display = data.status === 'inline' ? 'flex' : 'none';
 
       if (data.status === 'inline') {
@@ -2472,20 +2461,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    const mDrawer = document.getElementById('m-drawer');
     const mDragbar = document.getElementById('m-dragbar');
     const isDesktop = window.matchMedia('(min-width: 768px) and (hover: hover)').matches;
 
     function enterInlineFs() {
       modal.classList.add('fs-mode');
-      document.getElementById('drawer-fs').style.display = 'none';
-      document.getElementById('drawer-exit-fs').style.display = '';
     }
 
     function exitInlineFs() {
       modal.classList.remove('fs-mode');
-      document.getElementById('drawer-fs').style.display = '';
-      document.getElementById('drawer-exit-fs').style.display = 'none';
     }
 
     // 拖拽横条：上拉进入全屏，下拉退出全屏；单击切换
@@ -2512,7 +2496,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeToolModal() {
       exitInlineFs();
-      mDrawer.classList.remove('open');
       mInlineTool.innerHTML = '';
       closeIframeStage();
       modal.classList.remove("active");
@@ -2625,12 +2608,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('popstate', () => {
       if (document.getElementById('iframe-stage').classList.contains('active')) closeIframeStage();
     });
-
-    document.getElementById('m-drawer-toggle').addEventListener('click', () => mDrawer.classList.toggle('open'));
-    document.getElementById('drawer-fs').addEventListener('click', () => { enterInlineFs(); mDrawer.classList.remove('open'); });
-    document.getElementById('drawer-exit-fs').addEventListener('click', () => { exitInlineFs(); mDrawer.classList.remove('open'); });
-    document.getElementById('drawer-close').addEventListener('click', closeToolModal);
-    document.getElementById('drawer-noanim').addEventListener('click', () => { applyNoAnim(!document.body.classList.contains('no-anim')); mDrawer.classList.remove('open'); });
 
     document.getElementById("modal-close").addEventListener("click", closeToolModal);
     modal.addEventListener("click", (e) => { if (e.target === modal) closeToolModal(); });
