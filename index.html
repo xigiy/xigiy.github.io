@@ -174,6 +174,7 @@ body[data-theme="LXH"] .deco-lxh { opacity: 1; }
 /* 日志：固定在屏幕左下角，内容尽可能详细 */
 .boot-log {
   position: fixed; bottom: 8px; left: 12px;
+  font-family: var(--font-family);
   font-size: 0.72rem; line-height: 1.55;
   color: #7d7d7d; max-width: min(74vw, 560px);
   max-height: 46vh; overflow: hidden;
@@ -278,6 +279,7 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
 .search-box::placeholder { color: var(--muted); }
 .icon-btn { cursor: pointer; width: 44px; padding: 0; font-weight: bold; }
 .icon-btn:hover { background: var(--filter-active-bg); color: var(--filter-active-ink); }
+.icon-btn.on { background: var(--filter-active-bg); color: var(--filter-active-ink); border-color: var(--ink); }
 .tool-count { font-size: 0.7rem; color: var(--muted); width: 100%; text-align: right; margin-top: 4px; margin-bottom: 12px; }
 
 .search-history { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; font-size: 0.7rem; color: var(--muted); }
@@ -448,7 +450,7 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
   font-size: 0.68rem; line-height: 1.5; color: var(--muted);
   max-width: min(72vw, 480px); max-height: 26vh; overflow: hidden;
   display: flex; flex-direction: column; justify-content: flex-end;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: var(--font-family);
 }
 .stage-log .log-time { opacity: 0.6; margin-right: 6px; }
 #ifloat-widget {
@@ -466,12 +468,17 @@ header nav a:hover, header nav button.nav-btn:hover { background: var(--ink); co
   color: var(--ink); font-size: 0.95rem; cursor: pointer; font-family: var(--font-family); flex: 0 0 auto;
 }
 #ifloat-widget button:hover { background: var(--hover-bg, rgba(128,128,128,.25)); }
-#ifloat-widget #fw-info {
-  font-size: 0.7rem; color: var(--muted); max-width: 110px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 4px;
+#ifloat-widget #fw-card { pointer-events: none; min-width: 150px; max-width: 220px; }
+#ifloat-widget #fw-name { font-size: 0.78rem; color: var(--ink); font-weight: bold; padding: 2px 6px 0; }
+#ifloat-widget #fw-desc {
+  font-size: 0.66rem; color: var(--muted); line-height: 1.4; padding: 2px 6px 6px;
+  border-bottom: 1px solid var(--line); margin-bottom: 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-#ifloat-widget.min { padding: 0; gap: 0; width: 14px; height: 14px; border-radius: 50%; }
-#ifloat-widget.min #fw-info, #ifloat-widget.min button { display: none; }
+#ifloat-widget #fw-btns { display: flex; gap: 2px; }
+#ifloat-widget #fw-btns button { flex: 1; }
+#ifloat-widget.min { padding: 0; width: 14px; height: 14px; border-radius: 50%; }
+#ifloat-widget.min #fw-card { display: none; }
 #modal.fs-mode .modal-box {
   position: fixed; inset: 0; width: 100%; max-width: none; height: 100%;
   max-height: none; border-radius: 0; overflow-y: auto; z-index: 10002;
@@ -588,7 +595,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
 .sys-status { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .status-dot-sys { display: inline-block; width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-.sys-sig { font-family: monospace; letter-spacing: 0; }
+.sys-sig { font-family: var(--font-family); letter-spacing: 0; }
 
 .shortcut-popup { position: fixed; bottom: 24px; right: 24px; z-index: 10000; background: var(--card-bg); color: var(--ink); border: var(--border-width) var(--border-style) var(--line); border-radius: var(--radius); padding: 16px; font-size: 0.8rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
 .shortcut-popup.active { display: block; opacity: 1; transform: translateY(0); }
@@ -671,12 +678,9 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
       <input type="text" id="search" class="search-box" placeholder="搜索工具... ( / )" autocomplete="off">
       <button type="button" id="view-btn" class="icon-btn" title="切换视图">网格</button>
       <button type="button" id="sort-btn" class="icon-btn" title="切换排序"><span id="sort-text">↓</span></button>
+      <button type="button" id="noanim-toggle" class="icon-btn" title="无动画模式（禁用所有动画）">动</button>
       <button type="button" id="help-btn" class="icon-btn" title="快捷键">?</button>
     </div>
-  </div>
-
-  <div style="margin-top:6px;">
-    <button type="button" id="noanim-toggle" class="btn btn-outline" style="padding:4px 14px; font-size:0.78rem;">无动画模式: 关</button>
   </div>
   
   <div id="search-history" class="search-history"></div>
@@ -805,12 +809,17 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
     <button class="btn btn-outline" id="loader-force-close" style="margin-top:8px; font-size:0.75rem;">跳过加载 ›</button>
   </div>
   <div id="ifloat-widget">
-    <span id="fw-info">工具</span>
-    <button id="fw-open" title="新标签页打开原链">↗</button>
-    <button id="fw-reload" title="刷新">↻</button>
-    <button id="fw-doc" title="免责声明与应用信息">ⓘ</button>
-    <button id="fw-min" title="最小化">–</button>
-    <button id="fw-close" title="退出工具">✕</button>
+    <div id="fw-card">
+      <div id="fw-name">工具</div>
+      <div id="fw-desc"></div>
+      <div id="fw-btns">
+        <button id="fw-open" title="新标签页打开原链">↗</button>
+        <button id="fw-reload" title="刷新">↻</button>
+        <button id="fw-doc" title="免责声明">ⓘ</button>
+        <button id="fw-min" title="最小化为圆点">–</button>
+        <button id="fw-close" title="退出工具">✕</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -894,7 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.toggle('no-anim', on);
     try { localStorage.setItem('stech_no_anim', on ? '1' : '0'); } catch(e) {}
     const b = document.getElementById('noanim-toggle');
-    if (b) b.textContent = '无动画模式: ' + (on ? '开' : '关');
+    if (b) { b.textContent = on ? '動' : '动'; b.classList.toggle('on', on); }
   }
   applyNoAnim(localStorage.getItem('stech_no_anim') === '1');
 
@@ -2456,7 +2465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isDesktop) {
           mInlineTool.style.display = 'block';
           mInlineTool.innerHTML = `<button class="btn" id="iframe-open" style="width:100%;">▶ 打开工具（全屏）</button>`;
-          document.getElementById('iframe-open').addEventListener('click', () => openIframeStage(data.name, data.url));
+          document.getElementById('iframe-open').addEventListener('click', () => openIframeStage(data.name, data.url, data.tagline));
         } else {
           mInlineTool.style.display = 'block';
           mInlineTool.innerHTML = `
@@ -2557,14 +2566,15 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.classList.add('hide');
       }
     }
-    function openIframeStage(name, url) {
+    function openIframeStage(name, url, desc) {
       const stage = document.getElementById('iframe-stage');
       const iframe = document.getElementById('stage-iframe');
       const loader = document.getElementById('iframe-loader');
       const fw = document.getElementById('ifloat-widget');
       const logBox = document.getElementById('iframe-log');
       stageUrl = url;
-      document.getElementById('fw-info').textContent = name || '工具';
+      document.getElementById('fw-name').textContent = name || '工具';
+      document.getElementById('fw-desc').textContent = desc || '';
       logBox.innerHTML = '';
       clearTimeout(stageLoaderHideTimer);
       loader.classList.remove('hide');
