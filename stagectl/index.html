@@ -25,7 +25,8 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   font-family:"Microsoft YaHei","PingFang SC",sans-serif;
-  -webkit-user-select:none;user-select:none;}
+  -webkit-user-select:none;user-select:none;
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;}
 
 /* 舞台：固定1600×1200，JS缩放居中——任何设备都看到同一4:3构图 */
 #stage{position:absolute;left:50%;top:50%;width:1600px;height:1200px;
@@ -160,6 +161,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
     radial-gradient(ellipse at 50% -10%,var(--glow),transparent 50%);}
 #play.show{display:flex;}
 
+/* 播放页舞台：同样 1600×1200 4:3 基准，JS 缩放 */
+#playStage{position:absolute;left:50%;top:50%;width:1600px;height:1200px;
+  transform:translate(-50%,-50%);transform-origin:center center;
+  display:flex;align-items:center;justify-content:center;}
+
 /* 音游式过场：两块斜切面板扫屏 */
 #wipe{position:absolute;inset:0;z-index:60;pointer-events:none;display:none;overflow:hidden;}
 .wp{position:absolute;left:-8%;top:-40%;bottom:-40%;width:116%;
@@ -167,20 +173,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 .wp.a{background:linear-gradient(110deg,var(--sel),var(--bg2) 85%);}
 .wp.b{background:var(--bg2);}
 
-/* 节目卡片 */
-#card{position:relative;z-index:10;width:min(1180px,94vw,(100vh - 250px)*4/3);
+/* 节目卡片（舞台坐标：1060宽，头部+4:3画面≈880高） */
+#card{position:relative;z-index:10;width:1060px;
   background:var(--panel);border:2px solid var(--line);
   border-radius:22px;overflow:hidden;
   box-shadow:0 30px 80px -20px rgba(0,0,0,.25),0 0 60px -24px var(--sel);
   backdrop-filter:blur(12px);}
 #cardHead{display:flex;align-items:center;gap:18px;padding:16px 24px;
   border-bottom:1px solid var(--line);}
-#cardNum{font-size:28px;color:var(--sel);font-weight:bold;
+#cardNum{font-size:38px;color:var(--sel);font-weight:bold;
   font-variant-numeric:tabular-nums;flex-shrink:0;}
-#cardTitle{flex:1;min-width:0;font-size:23px;color:var(--ink);
+#cardTitle{flex:1;min-width:0;font-size:30px;color:var(--ink);
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-#cardType{font-size:14px;letter-spacing:4px;color:var(--dim);
-  border:1px solid var(--line);padding:5px 12px;border-radius:8px;flex-shrink:0;}
+#cardType{font-size:19px;letter-spacing:4px;color:var(--dim);
+  border:1px solid var(--line);padding:6px 16px;border-radius:8px;flex-shrink:0;}
 #cardBody{position:relative;width:100%;aspect-ratio:4/3;background:#000;overflow:hidden;}
 #cardBody video,#cardBody img{width:100%;height:100%;object-fit:contain;display:none;}
 #cardBody iframe{width:100%;height:100%;border:none;display:none;}
@@ -190,45 +196,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 
 /* 音频封面态 */
 #audioArt{position:absolute;inset:0;display:none;flex-direction:column;
-  align-items:center;justify-content:center;gap:26px;
+  align-items:center;justify-content:center;gap:30px;
   background:linear-gradient(160deg,var(--bg1),var(--bg2));}
-#audioArt .disc{width:130px;height:130px;border-radius:50%;flex-shrink:0;
-  border:6px solid var(--line);
+#audioArt .disc{width:200px;height:200px;border-radius:50%;flex-shrink:0;
+  border:8px solid var(--line);
   background:radial-gradient(circle at 50% 50%,var(--bg2) 0 18%,var(--sel) 19% 60%,var(--bg1) 61%);
   animation:spin 6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-#audioArt .nm{font-size:25px;color:var(--ink);max-width:80%;
+#audioArt .nm{font-size:30px;color:var(--ink);max-width:80%;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
 #card.audio #audioArt{display:flex;}
 #card.audio #video{display:none !important;}
 #play.paused .disc,#play.paused .eq i{animation-play-state:paused;}
 
-/* 播控栏：玻璃胶囊 */
-#playBar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:55;
-  display:flex;align-items:center;gap:14px;padding:13px 24px;
+/* 播控栏：玻璃胶囊（舞台坐标） */
+#playBar{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);z-index:55;
+  display:flex;align-items:center;gap:16px;padding:16px 30px;
   background:var(--ctlbg);border:2px solid var(--line);
-  border-radius:60px;backdrop-filter:blur(10px);
-  min-width:min(760px,94vw);box-sizing:border-box;
+  border-radius:70px;backdrop-filter:blur(10px);
+  width:900px;box-sizing:border-box;
   box-shadow:0 16px 50px -12px rgba(0,0,0,.3);}
-.pbtn{width:60px;height:60px;border-radius:50%;flex-shrink:0;
+.pbtn{width:78px;height:78px;border-radius:50%;flex-shrink:0;
   border:2px solid var(--line);background:var(--panel);
-  color:var(--ink);font-size:22px;display:flex;align-items:center;justify-content:center;
+  color:var(--ink);font-size:28px;display:flex;align-items:center;justify-content:center;
   cursor:pointer;touch-action:manipulation;}
-.pbtn.main{width:70px;height:70px;background:var(--sel);
-  border-color:transparent;color:#fff;font-size:26px;
+.pbtn.main{width:90px;height:90px;background:var(--sel);
+  border-color:transparent;color:#fff;font-size:32px;
   box-shadow:0 0 26px -6px var(--sel);}
 .pbtn.exit{border-color:rgba(232,60,140,.5);color:#d6367f;}
 .pbtn:active{transform:scale(.9);}
-#pbar{flex:1;height:10px;background:var(--rowbg);
-  border-radius:5px;cursor:pointer;position:relative;}
-#pfill{height:100%;background:var(--sel);border-radius:5px;width:0%;
+#pbar{flex:1;height:14px;background:var(--rowbg);
+  border-radius:7px;cursor:pointer;position:relative;}
+#pfill{height:100%;background:var(--sel);border-radius:7px;width:0%;
   box-shadow:0 0 12px var(--sel);position:relative;}
-#pfill::after{content:"";position:absolute;right:-9px;top:50%;
-  width:18px;height:18px;border-radius:50%;background:#fff;
+#pfill::after{content:"";position:absolute;right:-11px;top:50%;
+  width:22px;height:22px;border-radius:50%;background:#fff;
   transform:translateY(-50%);box-shadow:0 0 10px var(--sel);}
-#ptime{font-size:19px;color:var(--dim);font-variant-numeric:tabular-nums;flex-shrink:0;}
-#linkTip{position:absolute;bottom:130px;left:0;right:0;text-align:center;
-  color:var(--dim);font-size:20px;z-index:56;display:none;}
+#ptime{font-size:25px;color:var(--dim);font-variant-numeric:tabular-nums;flex-shrink:0;}
+#linkTip{position:absolute;bottom:180px;left:0;right:0;text-align:center;
+  color:var(--dim);font-size:24px;z-index:56;display:none;}
 
 #dropHint{position:fixed;inset:0;z-index:950;display:none;
   align-items:center;justify-content:center;background:rgba(8,12,34,.9);
@@ -353,30 +359,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   </div>
 </div>
 
-<!-- 全屏层不缩放，直接铺满真实视口 -->
+<!-- 全屏层不缩放；内部playStage按4:3舞台缩放 -->
 <div id="play">
   <div id="wipe"><div class="wp a"></div><div class="wp b"></div></div>
-  <div id="card">
-    <div id="cardHead">
-      <span id="cardNum">--</span>
-      <div id="cardTitle">—</div>
-      <span id="cardType">VIDEO</span>
+  <div id="playStage">
+    <div id="card">
+      <div id="cardHead">
+        <span id="cardNum">--</span>
+        <div id="cardTitle">—</div>
+        <span id="cardType">VIDEO</span>
+      </div>
+      <div id="cardBody">
+        <video id="video" playsinline></video>
+        <div id="audioArt"><div class="disc"></div><div class="nm" id="audioName">—</div></div>
+        <img id="image" style="display:none" alt="">
+        <iframe id="frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+      </div>
     </div>
-    <div id="cardBody">
-      <video id="video" playsinline></video>
-      <div id="audioArt"><div class="disc"></div><div class="nm" id="audioName">—</div></div>
-      <img id="image" style="display:none" alt="">
-      <iframe id="frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    <div id="linkTip">外链播放中 · 点 ✕ 返回</div>
+    <div id="playBar">
+      <div class="pbtn" id="pPrev">⏮</div>
+      <div class="pbtn main" id="pPlay">⏸</div>
+      <div class="pbtn" id="pNext">⏭</div>
+      <div id="pbar"><div id="pfill"></div></div>
+      <span id="ptime">0:00</span>
+      <div class="pbtn exit" id="pBack">✕</div>
     </div>
-  </div>
-  <div id="linkTip">外链播放中 · 点 ✕ 返回</div>
-  <div id="playBar">
-    <div class="pbtn" id="pPrev">⏮</div>
-    <div class="pbtn main" id="pPlay">⏸</div>
-    <div class="pbtn" id="pNext">⏭</div>
-    <div id="pbar"><div id="pfill"></div></div>
-    <span id="ptime">0:00</span>
-    <div class="pbtn exit" id="pBack">✕</div>
   </div>
 </div>
 
@@ -393,6 +401,8 @@ function fitStage(){
   const s=Math.min(innerWidth/BASE_W,innerHeight/BASE_H);
   const st=document.getElementById("stage");
   st.style.transform=`translate(-50%,-50%) scale(${s})`;
+  const ps=document.getElementById("playStage");
+  ps.style.transform=`translate(-50%,-50%) scale(${s})`;
 }
 addEventListener("resize",fitStage);
 addEventListener("orientationchange",()=>setTimeout(fitStage,100));
@@ -802,8 +812,8 @@ function playTransition(mode,media){
       el.card.style.opacity=1;el.playBar.style.opacity=1;
       G.fromTo(el.card,{opacity:0,scale:.86,y:52},
         {opacity:1,scale:1,y:0,duration:.55,ease:"back.out(1.7)",overwrite:"auto"});
-      G.fromTo(el.playBar,{opacity:0,y:40},
-        {opacity:1,y:0,duration:.45,delay:.18,ease:"power2.out",overwrite:"auto"});
+      G.fromTo(el.playBar,{opacity:0},
+        {opacity:1,duration:.45,delay:.18,ease:"power2.out",overwrite:"auto"});
     })
     .to(B,{xPercent:135,duration:.5,ease:"power3.inOut"},"+=.04")
     .to(A,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.38");
