@@ -223,16 +223,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   background:radial-gradient(circle at 50% 50%,var(--bg2) 0 18%,var(--sel) 19% 60%,var(--bg1) 61%);
   background-size:cover;background-position:center;
   animation:spin 6s linear infinite;}
-#eqCv{width:560px;height:130px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 #audioArt .nm{font-size:30px;color:var(--ink);max-width:80%;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
 #card.audio #audioArt{display:flex;}
 #card.audio #video{display:none !important;}
 #play.paused .disc,#play.paused .eq i{animation-play-state:paused;}
-/* 视频模式频谱条（画面底部） */
-#eqV{position:absolute;left:0;right:0;bottom:0;width:100%;height:90px;
-  display:none;pointer-events:none;}
+/* 播放层背景区：单色频谱 + 粒子（铺满补屏，位于卡片之下） */
+#eqBg,#playPtc{position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;}
+#eqBg{opacity:.55;}
 
 /* 幕布（开场/中场休息）：背景铺满补屏，内容4:3居中 */
 #curtain{position:fixed;inset:0;z-index:960;display:none;
@@ -331,6 +331,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   font-size:18px;font-family:inherit;cursor:pointer;touch-action:manipulation;}
 .seg button.on{border-color:var(--sel);color:var(--sel);
   box-shadow:0 0 12px -4px var(--sel);}
+#cfg .btns{display:flex;gap:22px;align-items:center;}
+#cfgReset{height:80px;padding:0 36px;border-radius:18px;
+  border:2px solid var(--line);color:var(--dim);background:transparent;
+  font-size:22px;letter-spacing:4px;text-indent:4px;font-family:inherit;
+  cursor:pointer;touch-action:manipulation;}
 #cfgGo{height:80px;padding:0 70px;border-radius:18px;
   border:3px solid var(--sel);color:var(--sel);background:#fff;
   font-size:28px;letter-spacing:8px;text-indent:8px;font-family:inherit;
@@ -451,7 +456,10 @@ body.noidle #audioArt .disc{animation:none;}
         <button data-v="off">关闭</button><button data-v="on">开启</button>
       </div>
     </div>
-    <button id="cfgGo">进入系统</button>
+    <div class="btns">
+      <button id="cfgReset">恢复默认</button>
+      <button id="cfgGo">进入系统</button>
+    </div>
     <div class="note">进入后自动全屏 · 界面按 4:3 裁剪居中 · 配置自动保存</div>
   </div>
 </div>
@@ -459,6 +467,8 @@ body.noidle #audioArt .disc{animation:none;}
 <!-- 全屏层不缩放；内部playStage按4:3舞台缩放 -->
 <div id="play">
   <div id="playFrame"></div>
+  <canvas id="eqBg"></canvas>
+  <canvas id="playPtc"></canvas>
   <div id="wipe"><div class="wp a"></div><div class="wp c"></div><div class="wp b"></div></div>
   <div id="playStage">
     <div id="card">
@@ -469,17 +479,22 @@ body.noidle #audioArt .disc{animation:none;}
       </div>
       <div id="cardBody">
         <video id="video" playsinline></video>
-        <canvas id="eqV"></canvas>
-        <div id="audioArt"><div class="disc"></div><canvas id="eqCv"></canvas><div class="nm" id="audioName">—</div></div>
+        <div id="audioArt"><div class="disc"></div><div class="nm" id="audioName">—</div></div>
         <img id="image" style="display:none" alt="">
         <iframe id="frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
       </div>
     </div>
     <div id="linkTip">外链播放中 · 点 ✕ 返回</div>
     <div id="playBar">
-      <div class="pbtn" id="pPrev">⏮</div>
-      <div class="pbtn main" id="pPlay">⏸</div>
-      <div class="pbtn" id="pNext">⏭</div>
+      <div class="pbtn" id="pPrev">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7 6h2.4v12H7zM20 6v12l-9.6-6z"/></svg>
+      </div>
+      <div class="pbtn main" id="pPlay">
+        <svg viewBox="0 0 24 24" width="28" height="28"><path id="pPlayPath" fill="currentColor" d="M8 5h3.4v14H8zM12.6 5H16v14h-3.4z"/></svg>
+      </div>
+      <div class="pbtn" id="pNext">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M14.6 6H17v12h-2.4zM4 6v12l9.6-6z"/></svg>
+      </div>
       <div id="pbar"><div id="pfill"></div></div>
       <span id="ptime">0:00</span>
       <div class="pbtn" id="pMute">
@@ -614,8 +629,8 @@ const el={rows:$("rows"),now:$("now"),empty:$("empty"),
   time:$("time"),toast:$("toast"),dropHint:$("dropHint"),
   fileInput:$("fileInput"),dirInput:$("dirInput"),
   menu:$("menu"),menuBtn:$("menuBtn"),menuMask:$("menuMask"),
-  grid:$("grid"),horizon:$("horizon"),eqCv:$("eqCv"),cMain:$("cMain"),
-  eqV:$("eqV"),curtain:$("curtain"),curtCv:$("curtCv"),
+  grid:$("grid"),horizon:$("horizon"),cMain:$("cMain"),
+  eqBg:$("eqBg"),playPtc:$("playPtc"),curtain:$("curtain"),curtCv:$("curtCv"),
   cTitle:$("cTitle"),cSub:$("cSub"),cKick:$("cKick"),pVol:$("pVol"),pSpd:$("pSpd"),
   btnPrev:$("btnPrev"),btnGo:$("btnGo"),btnNext:$("btnNext")};
 
@@ -643,10 +658,10 @@ const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
       c:Math.random()<.7?TH.main:TH.sub};},
   start(){if(this.on||CFG.fx!=="on")return;this.on=true;
     for(let i=0;i<45;i++)this.ps.push(this.spawn(
-      Math.random()*BASE_W,Math.random()*BASE_H,false));
+      Math.random()*this.cv.width,Math.random()*this.cv.height,false));
     this.loop();},
   loop(){if(!this.on)return;
-    const c=this.ctx;c.clearRect(0,0,BASE_W,BASE_H);
+    const c=this.ctx;c.clearRect(0,0,this.cv.width,this.cv.height);
     const lv=AU.an?AU.level():0;   /* 音乐能量驱动粒子 */
     for(let i=this.ps.length-1;i>=0;i--){
       const p=this.ps[i];
@@ -657,15 +672,20 @@ const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
     }
     const cap=70+lv*140;
     if(this.ps.length<cap&&Math.random()<.25+lv*1.2)
-      this.ps.push(this.spawn(Math.random()*BASE_W,Math.random()*BASE_H,false));
+      this.ps.push(this.spawn(Math.random()*this.cv.width,
+        Math.random()*this.cv.height,false));
     if(lv>.55&&Math.random()<lv*.4)   /* 重拍爆发 */
-      this.burst(BASE_W/2+(Math.random()-.5)*800,
-                 BASE_H/2+(Math.random()-.5)*400,8);
+      this.burst(this.cv.width/2+(Math.random()-.5)*this.cv.width*.5,
+                 this.cv.height/2+(Math.random()-.5)*this.cv.height*.35,8);
     this.raf=requestAnimationFrame(()=>this.loop());},
   stop(){this.on=false;cancelAnimationFrame(this.raf);this.ps=[];},
   burst(x,y,n){if(CFG.fx!=="on")return;
     for(let i=0;i<n;i++)this.ps.push(this.spawn(x,y,true));}
 };
+/* 播放层背景粒子：与主舞台同款逻辑，独立画布 */
+const P2=Object.create(PT);
+P2.init=function(){this.cv=$("playPtc");this.ctx=this.cv.getContext("2d");
+  this.cv.width=BASE_W;this.cv.height=BASE_H;};
 
 /* ================= 音频分析（频谱/律动） ================= */
 const AU={ctx:null,an:null,data:null,
@@ -688,38 +708,38 @@ const AU={ctx:null,an:null,data:null,
   }
 };
 el.video.addEventListener("play",()=>{AU.ctx&&AU.ctx.resume();});
-/* 音频/视频频谱绘制（持续循环；分析器不可用或静默时自动模拟律动） */
-const EQ={raf:0,fb:new Array(40).fill(4),
+/* 背景频谱：全屏画布置于播放层背景区，单色、渐隐条 */
+const EQ={raf:0,fb:new Array(48).fill(4),
   start(){
     cancelAnimationFrame(this.raf);
+    const cv=$("eqBg"),ctx=cv.getContext("2d");
     const tick=()=>{
       if(!el.play.classList.contains("show"))return;
-      const vm=el.card.classList.contains("video");
-      const cv=vm?el.eqV:el.eqCv,ctx=cv.getContext("2d");
-      cv.width=560;cv.height=vm?90:130;
+      if(cv.width!==innerWidth)cv.width=innerWidth;
+      if(cv.height!==innerHeight)cv.height=innerHeight;
       ctx.clearRect(0,0,cv.width,cv.height);
-      const n=40,bw=cv.width/n;let vals=null,mx=0;
+      const n=48,bw=cv.width/n;let vals=null,mx=0;
       if(AU.an){
         AU.an.getByteFrequencyData(AU.data);
-        for(let i=0;i<40;i++){const v=AU.data[i*2];if(v>mx)mx=v;}
-        if(mx>0)vals=Array.from({length:40},(_,i)=>AU.data[i*2]/255);
+        for(let i=0;i<n;i++){const v=AU.data[i*2];if(v>mx)mx=v;}
+        if(mx>0)vals=Array.from({length:n},(_,i)=>AU.data[i*2]/255);
       }
       if(!vals){ /* 兜底：模拟律动（暂停时自然衰减） */
         for(let i=0;i<n;i++){
-          const t=performance.now()/300+i*.6;
+          const t=performance.now()/300+i*.55;
           const target=(Math.sin(t)*.5+.5)*(.3+.7*Math.random());
-          this.fb[i]=Math.max(4,this.fb[i]*.8+target*cv.height*.6);
+          this.fb[i]=Math.max(3,this.fb[i]*.8+target*cv.height*.28);
         }
         vals=this.fb.map(v=>v/cv.height);
       }
+      ctx.fillStyle=TH.main;   /* 单色：统一主题主色 */
       for(let i=0;i<n;i++){
-        const h=Math.max(3,vals[i]*cv.height);
-        ctx.globalAlpha=vm?.5:.35+.65*(h/cv.height);
-        ctx.fillStyle=i<n/3?TH.main:TH.sub;
-        ctx.fillRect(i*bw+2,cv.height-h,bw-4,h);
+        const h=Math.max(4,vals[i]*cv.height*.42);
+        ctx.globalAlpha=.14+.42*vals[i];
+        ctx.fillRect(i*bw+bw*.18,cv.height-h,bw*.64,h);
       }
       ctx.globalAlpha=1;
-      if(!vm&&AU.an){
+      if(!el.card.classList.contains("video")&&AU.an){
         const lv=AU.level();
         el.audioArt.style.transform=`scale(${1+lv*.06})`;
       }
@@ -969,6 +989,7 @@ $("mBlack").addEventListener("click",()=>{
   if(el.play.classList.contains("show")&&el.play.dataset.mode==="black"){hidePlay();}
   else{
     el.video.pause();
+    P2.stop();   /* 黑场保持纯黑 */
     el.play.dataset.mode="black";
     ["video","image","frame"].forEach(k=>
       el[k].classList.remove("solo"));
@@ -1193,7 +1214,6 @@ function showLayer(w){
   el.frame.classList.toggle("solo",w==="frame");
   el.card.classList.toggle("audio",w==="audio");
   el.card.classList.toggle("video",w==="video");
-  el.eqV.style.display=w==="video"?"block":"none";
   el.linkTip.style.display=w==="frame"?"block":"none";
   el.playBar.style.display=(w==="video"||w==="audio")?"flex":"none";
   if(w!=="video"&&w!=="audio")el.video.pause();
@@ -1243,6 +1263,7 @@ function playTransition(mode,media){
 function startCurrent(){
   if(!N())return;
   BGM.stop();
+  P2.init();P2.start();   /* 播放层背景粒子 */
   sel=Math.max(0,Math.min(sel,N()-1));now=sel;
   const t=tracks[sel];
   const mode=t.type==="link"?"frame":t.type;
@@ -1310,9 +1331,9 @@ el.video.addEventListener("timeupdate",()=>{
 el.video.addEventListener("ended",()=>{
   el.play.classList.add("paused");   /* 播完停在末帧，点 ▶ 重新播放 */
 });
-el.video.addEventListener("play",()=>{el.pPlay.textContent="⏸";
+el.video.addEventListener("play",()=>{$("pPlayPath").setAttribute("d","M8 5h3.4v14H8zM12.6 5H16v14h-3.4z");
   el.play.classList.remove("paused");});
-el.video.addEventListener("pause",()=>{el.pPlay.textContent="▶";
+el.video.addEventListener("pause",()=>{$("pPlayPath").setAttribute("d","M8 5l11 7-11 7z");
   el.play.classList.add("paused");});
 el.video.addEventListener("error",()=>{
   if(el.video.src)toast("视频无法解码：浏览器可能不支持该编码格式");
@@ -1335,7 +1356,7 @@ function stopMedia(){
 /* 关闭播放页：卡片缩回 → 扫屏收尾（与打开时同款音游过场） */
 function hidePlay(){
   if(!el.play.classList.contains("show")||hidePlay._r)return;
-  const doHide=()=>{stopMedia();if(now>=0)sel=now;render();BGM.start();};
+  const doHide=()=>{stopMedia();P2.stop();if(now>=0)sel=now;render();BGM.start();};
   if(!(G&&CFG.animLv>0)||el.play.dataset.mode==="black"){doHide();return;}
   hidePlay._r=true;
   const A=el.wipeA,B=el.wipeB,C=el.wipeC;
@@ -1402,6 +1423,7 @@ el.cfg.addEventListener("pointerdown",e=>{
 });
 $("cfgGo").addEventListener("click",()=>{
   saveCfg();
+  localStorage.setItem("stageCTLcfgDone","1");   /* 配置完不再自动进配置页 */
   requestFs();
   const done=()=>{
     el.cfg.classList.remove("show");G&&G.set(el.cfg,{opacity:1});
@@ -1412,6 +1434,12 @@ $("cfgGo").addEventListener("click",()=>{
   };
   if(G&&CFG.animLv>0)G.to(el.cfg,{opacity:0,duration:.25,onComplete:done});
   else done();
+});
+/* 恢复默认配置：清除全部持久化设置并刷新 */
+$("cfgReset").addEventListener("click",()=>{
+  localStorage.removeItem("stageCTL");
+  localStorage.removeItem("stageCTLcfgDone");
+  location.reload();
 });
 
 /* 键盘调试 */
@@ -1438,8 +1466,10 @@ buildRows();
 render();
 syncCfgUI();
 CURT.open("open");   /* 开场幕布（文案来自文件夹中的TXT） */
-el.cfg.classList.add("show");
-if(G&&CFG.animLv>0)G.fromTo(el.cfg,{opacity:0},{opacity:1,duration:.3});
+/* 首次使用才显示配置页；默认配置可直接进入 */
+if(!localStorage.getItem("stageCTLcfgDone"))el.cfg.classList.add("show");
+if(el.cfg.classList.contains("show")&&G&&CFG.animLv>0)
+  G.fromTo(el.cfg,{opacity:0},{opacity:1,duration:.3});
 </script>
 </body>
 </html>
