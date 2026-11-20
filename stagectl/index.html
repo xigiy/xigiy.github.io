@@ -151,12 +151,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #menuMask.on{display:block;}
 
 /* ===== 播放层（全屏层：脱离stage缩放，直接铺满视口） ===== */
-#play{position:fixed;inset:0;background:#05070f;z-index:900;display:none;
+#play{position:fixed;inset:0;z-index:900;display:none;
   align-items:center;justify-content:center;flex-direction:column;gap:30px;
-  overflow:hidden;}
+  overflow:hidden;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));}
 #play::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse at 50% 115%,var(--glow),transparent 55%),
-    radial-gradient(ellipse at 50% -10%,rgba(255,255,255,.05),transparent 50%);}
+    radial-gradient(ellipse at 50% -10%,var(--glow),transparent 50%);}
 #play.show{display:flex;}
 
 /* 音游式过场：两块斜切面板扫屏 */
@@ -164,24 +165,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 .wp{position:absolute;left:-8%;top:-40%;bottom:-40%;width:116%;
   transform:skewX(-14deg);will-change:transform;}
 .wp.a{background:linear-gradient(110deg,var(--sel),var(--bg2) 85%);}
-.wp.b{background:#05070f;}
+.wp.b{background:var(--bg2);}
 
 /* 节目卡片 */
-#card{position:relative;z-index:10;width:min(1180px,94vw);
-  background:rgba(16,20,38,.86);border:2px solid rgba(255,255,255,.12);
+#card{position:relative;z-index:10;width:min(1180px,94vw,(100vh - 250px)*4/3);
+  background:var(--panel);border:2px solid var(--line);
   border-radius:22px;overflow:hidden;
-  box-shadow:0 30px 80px -20px rgba(0,0,0,.8),0 0 60px -20px var(--sel);
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.25),0 0 60px -24px var(--sel);
   backdrop-filter:blur(12px);}
-#cardHead{display:flex;align-items:center;gap:18px;padding:18px 26px;
-  border-bottom:1px solid rgba(255,255,255,.08);}
-#cardNum{font-size:32px;color:var(--sel);font-weight:bold;
+#cardHead{display:flex;align-items:center;gap:18px;padding:16px 24px;
+  border-bottom:1px solid var(--line);}
+#cardNum{font-size:28px;color:var(--sel);font-weight:bold;
   font-variant-numeric:tabular-nums;flex-shrink:0;}
-#cardTitle{flex:1;min-width:0;font-size:26px;color:#fff;
+#cardTitle{flex:1;min-width:0;font-size:23px;color:var(--ink);
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-#cardType{font-size:14px;letter-spacing:4px;color:rgba(255,255,255,.5);
-  border:1px solid rgba(255,255,255,.22);padding:6px 12px;border-radius:8px;flex-shrink:0;}
-#cardBody{position:relative;width:100%;aspect-ratio:16/9;
-  max-height:calc(100vh - 260px);background:#000;overflow:hidden;}
+#cardType{font-size:14px;letter-spacing:4px;color:var(--dim);
+  border:1px solid var(--line);padding:5px 12px;border-radius:8px;flex-shrink:0;}
+#cardBody{position:relative;width:100%;aspect-ratio:4/3;background:#000;overflow:hidden;}
 #cardBody video,#cardBody img{width:100%;height:100%;object-fit:contain;display:none;}
 #cardBody iframe{width:100%;height:100%;border:none;display:none;}
 #cardBody video.solo{display:block;}
@@ -190,14 +190,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 
 /* 音频封面态 */
 #audioArt{position:absolute;inset:0;display:none;flex-direction:column;
-  align-items:center;justify-content:center;gap:30px;
-  background:linear-gradient(160deg,#10142c,#1c1036 60%,#251041);}
-#audioArt .disc{width:150px;height:150px;border-radius:50%;flex-shrink:0;
-  border:6px solid rgba(255,255,255,.14);
+  align-items:center;justify-content:center;gap:26px;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));}
+#audioArt .disc{width:130px;height:130px;border-radius:50%;flex-shrink:0;
+  border:6px solid var(--line);
   background:radial-gradient(circle at 50% 50%,var(--bg2) 0 18%,var(--sel) 19% 60%,var(--bg1) 61%);
   animation:spin 6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-#audioArt .nm{font-size:28px;color:#fff;max-width:80%;
+#audioArt .nm{font-size:25px;color:var(--ink);max-width:80%;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
 #card.audio #audioArt{display:flex;}
 #card.audio #video{display:none !important;}
@@ -205,30 +205,30 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 
 /* 播控栏：玻璃胶囊 */
 #playBar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:55;
-  display:flex;align-items:center;gap:16px;padding:14px 26px;
-  background:rgba(10,14,30,.72);border:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:center;gap:14px;padding:13px 24px;
+  background:var(--ctlbg);border:2px solid var(--line);
   border-radius:60px;backdrop-filter:blur(10px);
   min-width:min(760px,94vw);box-sizing:border-box;
-  box-shadow:0 16px 50px -12px rgba(0,0,0,.7);}
-.pbtn{width:62px;height:62px;border-radius:50%;flex-shrink:0;
-  border:2px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
-  color:#fff;font-size:23px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 16px 50px -12px rgba(0,0,0,.3);}
+.pbtn{width:60px;height:60px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--line);background:var(--panel);
+  color:var(--ink);font-size:22px;display:flex;align-items:center;justify-content:center;
   cursor:pointer;touch-action:manipulation;}
-.pbtn.main{width:72px;height:72px;background:var(--sel);
-  border-color:transparent;color:#fff;font-size:27px;
+.pbtn.main{width:70px;height:70px;background:var(--sel);
+  border-color:transparent;color:#fff;font-size:26px;
   box-shadow:0 0 26px -6px var(--sel);}
-.pbtn.exit{border-color:rgba(232,60,140,.5);color:#ff7ab8;}
+.pbtn.exit{border-color:rgba(232,60,140,.5);color:#d6367f;}
 .pbtn:active{transform:scale(.9);}
-#pbar{flex:1;height:10px;background:rgba(255,255,255,.18);
+#pbar{flex:1;height:10px;background:var(--rowbg);
   border-radius:5px;cursor:pointer;position:relative;}
 #pfill{height:100%;background:var(--sel);border-radius:5px;width:0%;
   box-shadow:0 0 12px var(--sel);position:relative;}
 #pfill::after{content:"";position:absolute;right:-9px;top:50%;
   width:18px;height:18px;border-radius:50%;background:#fff;
   transform:translateY(-50%);box-shadow:0 0 10px var(--sel);}
-#ptime{font-size:20px;color:#bbb;font-variant-numeric:tabular-nums;flex-shrink:0;}
+#ptime{font-size:19px;color:var(--dim);font-variant-numeric:tabular-nums;flex-shrink:0;}
 #linkTip{position:absolute;bottom:130px;left:0;right:0;text-align:center;
-  color:#888;font-size:20px;z-index:56;display:none;}
+  color:var(--dim);font-size:20px;z-index:56;display:none;}
 
 #dropHint{position:fixed;inset:0;z-index:950;display:none;
   align-items:center;justify-content:center;background:rgba(8,12,34,.9);
@@ -795,18 +795,18 @@ function playTransition(mode,media){
   el.wipe.style.display="block";
   const tl=G.timeline({onComplete:()=>{el.wipe.style.display="none";}});
   tl.set([A,B],{xPercent:-135,display:"block"})
-    .to(A,{xPercent:0,duration:.3,ease:"power3.in"})
-    .to(B,{xPercent:0,duration:.3,ease:"power3.in"},"-=.14")
+    .to(A,{xPercent:0,duration:.26,ease:"power3.in"})
+    .to(B,{xPercent:0,duration:.28,ease:"power3.in"},"-=.1")
     .add(()=>{
       showLayer(mode);media();
       el.card.style.opacity=1;el.playBar.style.opacity=1;
-      G.fromTo(el.card,{opacity:0,scale:.88,y:46},
-        {opacity:1,scale:1,y:0,duration:.5,ease:"back.out(1.4)",overwrite:"auto"});
-      G.fromTo(el.playBar,{opacity:0,y:34},
-        {opacity:1,y:0,duration:.4,delay:.12,ease:"power2.out",overwrite:"auto"});
+      G.fromTo(el.card,{opacity:0,scale:.86,y:52},
+        {opacity:1,scale:1,y:0,duration:.55,ease:"back.out(1.7)",overwrite:"auto"});
+      G.fromTo(el.playBar,{opacity:0,y:40},
+        {opacity:1,y:0,duration:.45,delay:.18,ease:"power2.out",overwrite:"auto"});
     })
-    .to(B,{xPercent:135,duration:.45,ease:"power3.out"},"+=.06")
-    .to(A,{xPercent:135,duration:.45,ease:"power3.out"},"-=.3");
+    .to(B,{xPercent:135,duration:.5,ease:"power3.inOut"},"+=.04")
+    .to(A,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.38");
 }
 function startCurrent(){
   if(!N())return;
@@ -818,9 +818,6 @@ function startCurrent(){
       el.image.src=t.url;
       el.time.innerHTML="<b>IMG</b>";el.ptime.textContent="图片";
       clearTimeout(startCurrent._img);
-      startCurrent._img=setTimeout(()=>{
-        if(now===sel&&el.play.dataset.mode==="media")autoNext();
-      },4000);
     }else if(mode==="frame"){
       el.frame.src=t.url;
       el.time.innerHTML="<b>LINK</b>";
@@ -834,10 +831,6 @@ function startCurrent(){
   });
   render();
 }
-function autoNext(){
-  if(now<N()-1){sel=now+1;startCurrent();}
-  else{hidePlay();now=-1;render();}
-}
 el.video.addEventListener("loadedmetadata",()=>{
   const f=s=>`${s/60|0}:${String(s%60|0).padStart(2,"0")}`;
   el.ptime.textContent="0:00 / "+f(el.video.duration||0);
@@ -849,7 +842,9 @@ el.video.addEventListener("timeupdate",()=>{
   el.ptime.textContent=f(el.video.currentTime)+" / "+f(el.video.duration);
   el.time.innerHTML=`<b>${f(el.video.currentTime)}</b> / ${f(el.video.duration)}`;
 });
-el.video.addEventListener("ended",autoNext);
+el.video.addEventListener("ended",()=>{
+  el.play.classList.add("paused");   /* 播完停在末帧，点 ▶ 重新播放 */
+});
 el.video.addEventListener("play",()=>{el.pPlay.textContent="⏸";
   el.play.classList.remove("paused");});
 el.video.addEventListener("pause",()=>{el.pPlay.textContent="▶";
@@ -863,6 +858,7 @@ el.play.addEventListener("pointerdown",e=>{
   if(e.target.closest("#cardBody")&&el.video.src)
     el.video.paused?el.video.play():el.video.pause();
 });
+press("pBack",hidePlay);
 function stopMedia(){
   el.video.pause();el.video.removeAttribute("src");el.video.load();
   el.frame.src="about:blank";el.image.removeAttribute("src");
