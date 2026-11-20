@@ -208,10 +208,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #audioArt{position:absolute;inset:0;display:none;flex-direction:column;
   align-items:center;justify-content:center;gap:30px;
   background:linear-gradient(160deg,var(--bg1),var(--bg2));}
-#audioArt .disc{width:200px;height:200px;border-radius:50%;flex-shrink:0;
+#audioArt .disc{width:190px;height:190px;border-radius:50%;flex-shrink:0;
   border:8px solid var(--line);
   background:radial-gradient(circle at 50% 50%,var(--bg2) 0 18%,var(--sel) 19% 60%,var(--bg1) 61%);
+  background-size:cover;background-position:center;
   animation:spin 6s linear infinite;}
+#eqCv{width:560px;height:130px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 #audioArt .nm{font-size:30px;color:var(--ink);max-width:80%;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
@@ -259,6 +261,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #cfg h1 em{color:var(--sel);font-style:normal;}
 #cfg .grid{display:grid;grid-template-columns:auto auto;gap:18px 40px;align-items:center;}
 #cfg .cl{font-size:20px;color:var(--dim);text-align:right;}
+#cfg .cl2{display:flex;align-items:center;gap:10px;}
+#cMain{width:120px;height:52px;border:2px solid var(--line);border-radius:10px;
+  background:#fff;cursor:pointer;padding:4px;}
 .seg{display:flex;gap:8px;flex-wrap:wrap;}
 .seg button{height:52px;padding:0 20px;border-radius:10px;
   border:2px solid var(--line);background:#fff;color:var(--dim);
@@ -352,6 +357,15 @@ body.noidle #audioArt .disc{animation:none;}
       <div class="seg" data-key="theme">
         <button data-v="white">极简白</button><button data-v="starfield">星空黑</button>
         <button data-v="neon">霓虹粉</button><button data-v="emerald">翡翠绿</button>
+        <button data-v="sunset">日落橙</button><button data-v="deep">深空紫</button>
+        <button data-v="custom">自定义</button>
+      </div>
+      <div class="cl">自定义主色</div>
+      <div class="cl2"><input type="color" id="cMain" value="#ff7043"></div>
+      <div class="cl">图片轮播</div>
+      <div class="seg" data-key="imgSec">
+        <button data-v="0">关</button><button data-v="5">5秒</button>
+        <button data-v="10">10秒</button><button data-v="15">15秒</button>
       </div>
       <div class="cl">双击灵敏度</div>
       <div class="seg" data-key="dblMs">
@@ -383,7 +397,7 @@ body.noidle #audioArt .disc{animation:none;}
       </div>
       <div id="cardBody">
         <video id="video" playsinline></video>
-        <div id="audioArt"><div class="disc"></div><div class="nm" id="audioName">—</div></div>
+        <div id="audioArt"><div class="disc"></div><canvas id="eqCv"></canvas><div class="nm" id="audioName">—</div></div>
         <img id="image" style="display:none" alt="">
         <iframe id="frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
       </div>
@@ -421,7 +435,8 @@ addEventListener("orientationchange",()=>setTimeout(fitStage,100));
 fitStage();
 
 /* ================= 配置 ================= */
-const DEF={panelSide:"right",startPos:"mid",theme:"white",dblMs:320,animLv:1,fx:"on"};
+const DEF={panelSide:"right",startPos:"mid",theme:"white",dblMs:320,animLv:1,fx:"on",
+  imgSec:0,customMain:"#ff7043"};
 let CFG;
 try{CFG=Object.assign({},DEF,JSON.parse(localStorage.getItem("stageCTL")||"{}"));}
 catch(e){CFG=Object.assign({},DEF);}
@@ -449,6 +464,21 @@ const THEMES={
             rowbg:"rgba(255,255,255,.05)",rowOn:"rgba(10,184,138,.14)",
             line:"rgba(255,255,255,.22)",ctlbg:"rgba(4,14,10,.9)",
             glow:"rgba(10,184,138,.16)",dark:true},
+  sunset:  {main:"#ff7043",sub:"#ffb300",bg1:"#1c0f0a",bg2:"#3a1c12",
+            ink:"#ffe9dc",dim:"#b98a70",panel:"rgba(58,28,18,.72)",
+            rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(255,112,67,.15)",
+            line:"rgba(255,255,255,.22)",ctlbg:"rgba(20,9,5,.9)",
+            glow:"rgba(255,112,67,.18)",dark:true},
+  deep:    {main:"#9d7bff",sub:"#57c8ff",bg1:"#0d0a1e",bg2:"#1c1440",
+            ink:"#ece6ff",dim:"#7f6ab8",panel:"rgba(28,20,64,.72)",
+            rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(157,123,255,.16)",
+            line:"rgba(255,255,255,.22)",ctlbg:"rgba(9,6,24,.9)",
+            glow:"rgba(157,123,255,.18)",dark:true},
+  custom:  {main:CFG.customMain||"#ff7043",sub:"#57c8ff",bg1:"#12141c",bg2:"#1d2230",
+            ink:"#eef1ff",dim:"#8a93b0",panel:"rgba(29,34,48,.72)",
+            rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(255,255,255,.12)",
+            line:"rgba(255,255,255,.22)",ctlbg:"rgba(10,12,20,.9)",
+            glow:"rgba(255,255,255,.12)",dark:true},
 };
 let TH=THEMES[CFG.theme]||THEMES.white;
 
@@ -468,7 +498,7 @@ const el={rows:$("rows"),now:$("now"),empty:$("empty"),
   time:$("time"),toast:$("toast"),dropHint:$("dropHint"),
   fileInput:$("fileInput"),dirInput:$("dirInput"),
   menu:$("menu"),menuBtn:$("menuBtn"),menuMask:$("menuMask"),
-  grid:$("grid"),horizon:$("horizon"),
+  grid:$("grid"),horizon:$("horizon"),eqCv:$("eqCv"),cMain:$("cMain"),
   btnPrev:$("btnPrev"),btnGo:$("btnGo"),btnNext:$("btnNext")};
 
 let tracks=[],sel=0,now=-1;
@@ -499,6 +529,7 @@ const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
     this.loop();},
   loop(){if(!this.on)return;
     const c=this.ctx;c.clearRect(0,0,BASE_W,BASE_H);
+    const lv=AU.an?AU.level():0;   /* 音乐能量驱动粒子 */
     for(let i=this.ps.length-1;i>=0;i--){
       const p=this.ps[i];
       p.x+=p.vx;p.y+=p.vy;p.life-=p.dec;
@@ -506,13 +537,97 @@ const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
       c.globalAlpha=p.life*.8;c.fillStyle=p.c;
       c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();
     }
-    if(this.ps.length<70&&Math.random()<.25)
+    const cap=70+lv*140;
+    if(this.ps.length<cap&&Math.random()<.25+lv*1.2)
       this.ps.push(this.spawn(Math.random()*BASE_W,Math.random()*BASE_H,false));
+    if(lv>.55&&Math.random()<lv*.4)   /* 重拍爆发 */
+      this.burst(BASE_W/2+(Math.random()-.5)*800,
+                 BASE_H/2+(Math.random()-.5)*400,8);
     this.raf=requestAnimationFrame(()=>this.loop());},
   stop(){this.on=false;cancelAnimationFrame(this.raf);this.ps=[];},
   burst(x,y,n){if(CFG.fx!=="on")return;
     for(let i=0;i<n;i++)this.ps.push(this.spawn(x,y,true));}
 };
+
+/* ================= 音频分析（频谱/律动） ================= */
+const AU={ctx:null,an:null,data:null,
+  init(){
+    if(this.ctx){this.ctx.resume&&this.ctx.resume();return;}
+    try{
+      this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+      const src=this.ctx.createMediaElementSource(el.video);
+      this.an=this.ctx.createAnalyser();this.an.fftSize=256;
+      src.connect(this.an);this.an.connect(this.ctx.destination);
+      this.data=new Uint8Array(this.an.frequencyBinCount);
+    }catch(e){}
+  },
+  level(){
+    if(!this.an)return 0;
+    this.an.getByteFrequencyData(this.data);
+    let s=0;for(let i=0;i<this.data.length;i++)s+=this.data[i];
+    return s/this.data.length/255;
+  }
+};
+/* 音频卡片频谱绘制 */
+const EQ={raf:0,
+  start(){
+    cancelAnimationFrame(this.raf);
+    const cv=el.eqCv,ctx=cv.getContext("2d");
+    cv.width=560;cv.height=130;
+    const tick=()=>{
+      if(!el.play.classList.contains("show")||
+         !el.card.classList.contains("audio"))return;
+      ctx.clearRect(0,0,cv.width,cv.height);
+      if(AU.an){
+        AU.an.getByteFrequencyData(AU.data);
+        const n=40,bw=cv.width/n;
+        for(let i=0;i<n;i++){
+          const h=Math.max(3,AU.data[i*2]/255*cv.height);
+          ctx.globalAlpha=.35+.65*(h/cv.height);
+          ctx.fillStyle=i<n/3?TH.main:TH.sub;
+          ctx.fillRect(i*bw+2,cv.height-h,bw-4,h);
+        }
+        const lv=AU.level();
+        el.audioArt.style.transform=`scale(${1+lv*.06})`;
+      }
+      this.raf=requestAnimationFrame(tick);
+    };
+    tick();
+  }
+};
+/* ID3 APIC 封面解析 */
+async function audioCover(url){
+  try{
+    const buf=await(await fetch(url)).arrayBuffer();
+    const v=new DataView(buf),u8=new Uint8Array(buf);
+    if(v.getUint8(0)!==0x49||v.getUint8(1)!==0x44||v.getUint8(2)!==0x33)return null;
+    const size=(v.getUint8(6)&127)*2097152+(v.getUint8(7)&127)*16384+
+               (v.getUint8(8)&127)*128+(v.getUint8(9)&127);
+    let p=10;
+    while(p<Math.min(10+size-10,buf.byteLength-10)){
+      const id=String.fromCharCode(u8[p],u8[p+1],u8[p+2],u8[p+3]);
+      if(!/^[A-Z0-9]{4}$/.test(id))break;
+      const fs=v.getUint8(p+4)<<21|v.getUint8(p+5)<<14|
+               v.getUint8(p+6)<<7|v.getUint8(p+7);
+      if(id==="APIC"&&fs>16){
+        let q=p+10;const enc=u8[q];q++;
+        let ms=q;while(u8[q]!==0)q++;
+        const mime=String.fromCharCode(...u8.slice(ms,q));q++;
+        q++;
+        if(enc===1){while(!(u8[q]===0&&u8[q+1]===0))q+=2;q+=2;}
+        else{while(u8[q]!==0)q++;q++;}
+        const data=u8.slice(q,p+10+fs);
+        return URL.createObjectURL(new Blob([data],{type:mime||"image/jpeg"}));
+      }
+      p+=10+fs;
+    }
+  }catch(e){}
+  return null;
+}
+function applyCover(){
+  const d=document.querySelector("#audioArt .disc"),t=tracks[sel];
+  d.style.backgroundImage=t&&t.cover?`url(${t.cover})`:"";
+}
 
 /* ================= 主题/布局 ================= */
 function applyTheme(){
@@ -623,6 +738,27 @@ el.panel.addEventListener("touchstart",e=>{
 },{passive:false});
 el.panel.addEventListener("mousedown",e=>handleTap(e.clientY));
 el.panel.addEventListener("click",e=>e.stopPropagation(),true);
+
+/* 滚轮 + 惯性 */
+let wAcc=0,wVel=0,wStop=0,wRaf=0;
+function wheelInertia(){
+  if(Math.abs(wVel)<1){wRaf=0;return;}
+  wAcc+=wVel;wVel*=.92;
+  while(Math.abs(wAcc)>=70&&N()){
+    move(wAcc>0?1:-1);wAcc-=70*Math.sign(wAcc);
+  }
+  wRaf=requestAnimationFrame(wheelInertia);
+}
+el.panel.addEventListener("wheel",e=>{
+  e.preventDefault();if(!N())return;
+  wAcc+=e.deltaY;
+  while(Math.abs(wAcc)>=70){
+    move(wAcc>0?1:-1);wAcc-=70*Math.sign(wAcc);
+  }
+  wVel=e.deltaY;
+  clearTimeout(wStop);
+  wStop=setTimeout(()=>{if(!wRaf)wRaf=requestAnimationFrame(wheelInertia);},90);
+},{passive:false});
 
 /* ================= 按钮 ================= */
 function press(id,fn){
@@ -801,6 +937,7 @@ function fillCard(){
   el.cardTitle.textContent=t.name;
   el.audioName.textContent=t.name;
   el.cardType.textContent=TNAME[t.type];
+  if(t.type==="audio")applyCover();
 }
 /* 音游式过场：斜切色板扫屏清屏 → 暗幕下换内容 → 卡片弹入 */
 function playTransition(mode,media){
@@ -846,11 +983,24 @@ function startCurrent(){
       el.image.src=t.url;
       el.time.innerHTML="<b>IMG</b>";el.ptime.textContent="图片";
       clearTimeout(startCurrent._img);
+      if(+CFG.imgSec>0&&N()>1)
+        startCurrent._img=setTimeout(()=>{
+          if(now===sel&&el.play.dataset.mode==="media"){
+            sel=(sel+1)%N();startCurrent();
+          }
+        },+CFG.imgSec*1000);
     }else if(mode==="frame"){
       el.frame.src=t.url;
       el.time.innerHTML="<b>LINK</b>";
     }else{
+      AU.init();
       el.video.src=t.url;
+      if(mode==="audio"){
+        EQ.start();
+        if(!t.cover)audioCover(t.url).then(u=>{
+          if(u&&tracks[sel]===t){t.cover=u;applyCover();}
+        });
+      }
       el.video.play().catch(()=>{
         el.video.muted=true;
         el.video.play().catch(()=>toast("点击画面开始播放"));
@@ -904,13 +1054,19 @@ function syncCfgUI(){
     seg.querySelectorAll("button").forEach(b=>
       b.classList.toggle("on",String(CFG[k])===b.dataset.v));
   });
+  el.cMain.value=CFG.customMain||"#ff7043";
 }
+el.cMain.addEventListener("input",()=>{
+  CFG.customMain=el.cMain.value;saveCfg();
+  if(CFG.theme==="custom"){TH=THEMES.custom;applyTheme();}
+});
 function pick(b){
   const k=b.closest(".seg").dataset.key;
   let v=b.dataset.v;
-  if(k==="dblMs"||k==="animLv")v=+v;
+  if(k==="dblMs"||k==="animLv"||k==="imgSec")v=+v;
   CFG[k]=v;saveCfg();
   TH=THEMES[CFG.theme]||TH;
+  if(CFG.theme==="custom")TH=THEMES.custom;
   applyTheme();applyLayout();applyFx();render();syncCfgUI();
   if(G&&CFG.animLv>0&&k==="theme"){
     const r=b.getBoundingClientRect();
