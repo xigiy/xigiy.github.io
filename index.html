@@ -80,15 +80,18 @@ body[data-theme="中V"] {
 
 /* 原创外链：与"全部"同字体同风格，深紫底白字白网格白卡片 */
 body[data-theme="原创外链"] {
-  --font-family: "BoutiqueBitmap9x9", sans-serif;
+  --font-family: "NanoPyongHanHei", -apple-system, sans-serif;
   --radius: 0px;
-  --bg: #160d26; --ink: #ffffff; --muted: #b9a8e0; --line: #ffffff;
-  --card-bg: #1d1233; --card-hover-bg: #ffffff; --card-hover-ink: #160d26;
-  --filter-bg: #1d1233; --filter-ink: #ffffff; --filter-active-bg: #ffffff; --filter-active-ink: #160d26;
-  --bg-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
-  --pattern-opacity: 0.1;
-  --pattern-image: repeating-linear-gradient(-45deg, #fff 0, #fff 1px, transparent 1px, transparent 6px);
-  --pattern-size: auto;
+  --bg: #2b1b4d; --ink: #ffffff; --muted: #c9bcf0; --line: #ffffff;
+  --card-bg: #35235f; --card-hover-bg: #ffffff; --card-hover-ink: #2b1b4d;
+  --filter-bg: #35235f; --filter-ink: #ffffff; --filter-active-bg: #ffffff; --filter-active-ink: #2b1b4d;
+  --bg-image:
+    linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px);
+  --bg-size: 24px 24px; --bg-shift: 24px; --bg-speed: 3s;
+  --pattern-opacity: 0.08;
+  --pattern-image: linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);
+  --pattern-size: 8px 8px;
 }
 
 /* ================= 基础 ================= */
@@ -656,7 +659,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: var(--border-width) va
         <div class="boot-progress-bar" id="boot-bar"></div>
       </div>
       <div class="boot-title">VoidWaveOS</div>
-      <div class="boot-version" id="sys-ver">4.0.10 - 000018 - NET.ver-b68ec29</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
+      <div class="boot-version" id="sys-ver">4.0.10 - 000019 - NET.ver-b68ec29</div><!-- 版本规则：每次更新中间 000xxx 加一；NET.ver 后接发布时的 GitHub commit 短哈希 -->
     </div>
   </div>
 </div>
