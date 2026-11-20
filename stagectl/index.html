@@ -362,6 +362,10 @@ body.noidle #audioArt .disc{animation:none;}
       </div>
       <div class="cl">自定义主色</div>
       <div class="cl2"><input type="color" id="cMain" value="#ff7043"></div>
+      <div class="cl">深浅模式</div>
+      <div class="seg" data-key="themeMode">
+        <button data-v="dark">黑夜</button><button data-v="light">浅色</button>
+      </div>
       <div class="cl">图片轮播</div>
       <div class="seg" data-key="imgSec">
         <button data-v="0">关</button><button data-v="5">5秒</button>
@@ -436,7 +440,7 @@ fitStage();
 
 /* ================= 配置 ================= */
 const DEF={panelSide:"right",startPos:"mid",theme:"white",dblMs:320,animLv:1,fx:"on",
-  imgSec:0,customMain:"#ff7043"};
+  imgSec:0,customMain:"#ff7043",modes:{}};
 let CFG;
 try{CFG=Object.assign({},DEF,JSON.parse(localStorage.getItem("stageCTL")||"{}"));}
 catch(e){CFG=Object.assign({},DEF);}
@@ -448,39 +452,59 @@ const THEMES={
             ink:"#1c2440",dim:"#8390b8",panel:"rgba(255,255,255,.78)",
             rowbg:"rgba(28,36,64,.05)",rowOn:"rgba(47,125,246,.09)",
             line:"rgba(28,36,64,.18)",ctlbg:"rgba(255,255,255,.88)",
-            glow:"rgba(47,125,246,.12)",dark:false},
+            glow:"rgba(47,125,246,.12)",dark:false,mode:"light"},
   starfield:{main:"#39c5ff",sub:"#9d7bff",bg1:"#0a0e2a",bg2:"#101741",
             ink:"#e8ecff",dim:"#5a6aa8",panel:"rgba(16,23,65,.72)",
             rowbg:"rgba(255,255,255,.05)",rowOn:"rgba(57,197,255,.14)",
             line:"rgba(255,255,255,.25)",ctlbg:"rgba(5,7,22,.9)",
-            glow:"rgba(57,197,255,.16)",dark:true},
+            glow:"rgba(57,197,255,.16)",dark:true,mode:"dark"},
   neon:    {main:"#ff7ab8",sub:"#7b5cff",bg1:"#1a0a1e",bg2:"#2d1b69",
             ink:"#ffe8f4",dim:"#a87bb8",panel:"rgba(45,27,105,.72)",
             rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(255,122,184,.15)",
             line:"rgba(255,255,255,.25)",ctlbg:"rgba(15,5,20,.9)",
-            glow:"rgba(255,122,184,.16)",dark:true},
+            glow:"rgba(255,122,184,.16)",dark:true,mode:"dark"},
   emerald: {main:"#0ab88a",sub:"#3c9ce8",bg1:"#0a1a14",bg2:"#122a21",
             ink:"#e0fff2",dim:"#6aa890",panel:"rgba(18,42,33,.72)",
             rowbg:"rgba(255,255,255,.05)",rowOn:"rgba(10,184,138,.14)",
             line:"rgba(255,255,255,.22)",ctlbg:"rgba(4,14,10,.9)",
-            glow:"rgba(10,184,138,.16)",dark:true},
+            glow:"rgba(10,184,138,.16)",dark:true,mode:"dark"},
   sunset:  {main:"#ff7043",sub:"#ffb300",bg1:"#1c0f0a",bg2:"#3a1c12",
             ink:"#ffe9dc",dim:"#b98a70",panel:"rgba(58,28,18,.72)",
             rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(255,112,67,.15)",
             line:"rgba(255,255,255,.22)",ctlbg:"rgba(20,9,5,.9)",
-            glow:"rgba(255,112,67,.18)",dark:true},
+            glow:"rgba(255,112,67,.18)",dark:true,mode:"dark"},
   deep:    {main:"#9d7bff",sub:"#57c8ff",bg1:"#0d0a1e",bg2:"#1c1440",
             ink:"#ece6ff",dim:"#7f6ab8",panel:"rgba(28,20,64,.72)",
             rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(157,123,255,.16)",
             line:"rgba(255,255,255,.22)",ctlbg:"rgba(9,6,24,.9)",
-            glow:"rgba(157,123,255,.18)",dark:true},
+            glow:"rgba(157,123,255,.18)",dark:true,mode:"dark"},
   custom:  {main:CFG.customMain||"#ff7043",sub:"#57c8ff",bg1:"#12141c",bg2:"#1d2230",
             ink:"#eef1ff",dim:"#8a93b0",panel:"rgba(29,34,48,.72)",
             rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(255,255,255,.12)",
             line:"rgba(255,255,255,.22)",ctlbg:"rgba(10,12,20,.9)",
-            glow:"rgba(255,255,255,.12)",dark:true},
+            glow:"rgba(255,255,255,.12)",dark:true,mode:"dark"},
 };
-let TH=THEMES[CFG.theme]||THEMES.white;
+/* 深浅双模式：非原生模式用主题主色生成对应调色板（保证字体对比度正常） */
+const hexA=(hex,a)=>{const n=parseInt(hex.slice(1),16);
+  return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;};
+function palette(main,sub,mode){
+  return mode==="dark"
+    ?{main,sub,bg1:"#0b0e1e",bg2:"#141a34",ink:"#e8ecff",dim:"#6c7aa8",
+      panel:"rgba(20,26,52,.72)",rowbg:"rgba(255,255,255,.05)",
+      rowOn:hexA(main,.14),line:"rgba(255,255,255,.22)",
+      ctlbg:"rgba(5,8,20,.9)",glow:hexA(main,.16),dark:true,mode}
+    :{main,sub,bg1:"#f4f7fd",bg2:"#e2eaf8",ink:"#1c2440",dim:"#7d8ab0",
+      panel:"rgba(255,255,255,.8)",rowbg:"rgba(28,36,64,.05)",
+      rowOn:hexA(main,.1),line:"rgba(28,36,64,.18)",
+      ctlbg:"rgba(255,255,255,.9)",glow:hexA(main,.12),dark:false,mode};
+}
+function nativeMode(){const t=THEMES[CFG.theme]||THEMES.white;return t.mode||"dark";}
+function getTH(){
+  const t=THEMES[CFG.theme]||THEMES.white;
+  const mode=(CFG.modes&&CFG.modes[CFG.theme])||t.mode||"dark";
+  return mode===t.mode?t:palette(t.main,t.sub,mode);
+}
+let TH=getTH();
 
 const $=id=>document.getElementById(id);
 const el={rows:$("rows"),now:$("now"),empty:$("empty"),
@@ -559,7 +583,8 @@ const AU={ctx:null,an:null,data:null,
       this.an=this.ctx.createAnalyser();this.an.fftSize=256;
       src.connect(this.an);this.an.connect(this.ctx.destination);
       this.data=new Uint8Array(this.an.frequencyBinCount);
-    }catch(e){}
+      this.ctx.resume();   /* GSAP回调不在手势栈里，必须显式唤醒 */
+    }catch(e){this.ctx=null;this.an=null;}
   },
   level(){
     if(!this.an)return 0;
@@ -568,19 +593,21 @@ const AU={ctx:null,an:null,data:null,
     return s/this.data.length/255;
   }
 };
+el.video.addEventListener("play",()=>{AU.ctx&&AU.ctx.resume();});
 /* 音频卡片频谱绘制 */
-const EQ={raf:0,
+const EQ={raf:0,fb:0,
   start(){
     cancelAnimationFrame(this.raf);
     const cv=el.eqCv,ctx=cv.getContext("2d");
     cv.width=560;cv.height=130;
+    this.fb=new Array(40).fill(4);
     const tick=()=>{
       if(!el.play.classList.contains("show")||
          !el.card.classList.contains("audio"))return;
       ctx.clearRect(0,0,cv.width,cv.height);
+      const n=40,bw=cv.width/n;
       if(AU.an){
         AU.an.getByteFrequencyData(AU.data);
-        const n=40,bw=cv.width/n;
         for(let i=0;i<n;i++){
           const h=Math.max(3,AU.data[i*2]/255*cv.height);
           ctx.globalAlpha=.35+.65*(h/cv.height);
@@ -589,6 +616,16 @@ const EQ={raf:0,
         }
         const lv=AU.level();
         el.audioArt.style.transform=`scale(${1+lv*.06})`;
+      }else{
+        /* 无分析器兜底：模拟律动条 */
+        for(let i=0;i<n;i++){
+          const t=performance.now()/300+i*.6;
+          const target=(Math.sin(t)*.5+.5)*(.3+.7*Math.random());
+          this.fb[i]=Math.max(4,this.fb[i]*.8+target*cv.height*.6);
+          ctx.globalAlpha=.5;
+          ctx.fillStyle=i<n/3?TH.main:TH.sub;
+          ctx.fillRect(i*bw+2,cv.height-this.fb[i],bw-4,this.fb[i]);
+        }
       }
       this.raf=requestAnimationFrame(tick);
     };
@@ -1045,28 +1082,55 @@ function stopMedia(){
   el.time.innerHTML="<b>--:--</b>";el.pfill.style.width="0%";
   clearTimeout(startCurrent._img);
 }
-function hidePlay(){stopMedia();if(now>=0)sel=now;render();}
+/* 关闭播放页：卡片缩回 → 扫屏收尾（与打开时同款音游过场） */
+function hidePlay(){
+  if(!el.play.classList.contains("show")||hidePlay._r)return;
+  const doHide=()=>{stopMedia();if(now>=0)sel=now;render();};
+  if(!(G&&CFG.animLv>0)||el.play.dataset.mode==="black"){doHide();return;}
+  hidePlay._r=true;
+  const A=el.wipeA,B=el.wipeB,C=el.wipeC;
+  const tl=G.timeline({
+    onComplete:()=>{el.wipe.style.display="none";hidePlay._r=false;}
+  });
+  tl.to(el.card,{opacity:0,scale:.88,y:36,duration:.28,ease:"power2.in"})
+    .to(el.playBar,{opacity:0,duration:.2},"<")
+    .set([A,B,C],{xPercent:-135})
+    .to(el.wipe,{display:"block"},">")
+    .to(A,{xPercent:0,duration:.26,ease:"power3.in"})
+    .to(B,{xPercent:0,duration:.28,ease:"power3.in"},"-=.1")
+    .add(doHide)
+    .to(B,{xPercent:135,duration:.5,ease:"power3.inOut"},"+=.04")
+    .to(C,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.44")
+    .to(A,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.44");
+}
 
 /* ================= 配置面板 ================= */
 function syncCfgUI(){
   document.querySelectorAll(".seg").forEach(seg=>{
     const k=seg.dataset.key;
+    const v=k==="themeMode"?(CFG.modes&&CFG.modes[CFG.theme])||nativeMode():CFG[k];
     seg.querySelectorAll("button").forEach(b=>
-      b.classList.toggle("on",String(CFG[k])===b.dataset.v));
+      b.classList.toggle("on",String(v)===b.dataset.v));
   });
   el.cMain.value=CFG.customMain||"#ff7043";
 }
 el.cMain.addEventListener("input",()=>{
   CFG.customMain=el.cMain.value;saveCfg();
-  if(CFG.theme==="custom"){TH=THEMES.custom;applyTheme();}
+  THEMES.custom.main=CFG.customMain;
+  if(CFG.theme==="custom"){TH=getTH();applyTheme();}
 });
 function pick(b){
   const k=b.closest(".seg").dataset.key;
   let v=b.dataset.v;
+  if(k==="themeMode"){   /* 深浅模式按主题各自记忆 */
+    CFG.modes=CFG.modes||{};
+    CFG.modes[CFG.theme]=v;saveCfg();
+    TH=getTH();applyTheme();applyLayout();applyFx();render();syncCfgUI();
+    return;
+  }
   if(k==="dblMs"||k==="animLv"||k==="imgSec")v=+v;
   CFG[k]=v;saveCfg();
-  TH=THEMES[CFG.theme]||TH;
-  if(CFG.theme==="custom")TH=THEMES.custom;
+  TH=getTH();
   applyTheme();applyLayout();applyFx();render();syncCfgUI();
   if(G&&CFG.animLv>0&&k==="theme"){
     const r=b.getBoundingClientRect();
