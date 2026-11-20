@@ -682,11 +682,12 @@ const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
   burst(x,y,n){if(CFG.fx!=="on")return;
     for(let i=0;i<n;i++)this.ps.push(this.spawn(x,y,true));}
 };
-/* 播放层背景粒子：与主舞台同款逻辑，独立画布+独立状态（不能共享on/ps/raf） */
+/* 播放层背景粒子：与主舞台同款逻辑；私有状态必须在定义时建立，
+   否则 stop() 在 init 之前调用会继承 PT 的 raf 句柄，误杀主舞台粒子循环 */
 const P2=Object.create(PT);
+P2.on=false;P2.ps=[];P2.raf=0;
 P2.init=function(){this.cv=$("playPtc");this.ctx=this.cv.getContext("2d");
-  this.cv.width=BASE_W;this.cv.height=BASE_H;
-  this.on=false;this.ps=[];this.raf=0;};
+  this.cv.width=BASE_W;this.cv.height=BASE_H;};
 
 /* ================= 音频分析（频谱/律动） ================= */
 const AU={ctx:null,an:null,data:null,
