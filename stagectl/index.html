@@ -254,6 +254,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #curtain::after{bottom:44px;right:44px;border-left:none;border-top:none;}
 #curtain .cInner{position:relative;text-align:center;padding:0 60px;
   animation:cIn 1.4s cubic-bezier(.16,.84,.24,1) both;}
+/* 幕布文字舞台：1600×1200 坐标系，随 fitStage 缩放（与全站字号一致） */
+#curtStage{position:absolute;left:50%;top:50%;width:1600px;height:1200px;
+  transform:translate(-50%,-50%);transform-origin:center center;
+  display:flex;align-items:center;justify-content:center;}
 @keyframes cIn{from{opacity:0;transform:translateY(26px) scale(.96);filter:blur(10px);}
   to{opacity:1;transform:none;filter:blur(0);}}
 #curtain .cKicker{display:flex;align-items:center;gap:20px;justify-content:center;
@@ -493,11 +497,13 @@ body.noidle #audioArt .disc{animation:none;}
 <div id="curtain">
   <canvas id="curtCv"></canvas>
   <div class="orb o1"></div><div class="orb o2"></div>
-  <div class="cInner">
-    <div class="cKicker" id="cKick">STAGE CTL</div>
-    <div class="cTitle" id="cTitle">欢迎莅临</div>
-    <div class="cLine"></div>
-    <div class="cSub" id="cSub">点击任意处开始</div>
+  <div id="curtStage">
+    <div class="cInner">
+      <div class="cKicker" id="cKick">STAGE CTL</div>
+      <div class="cTitle" id="cTitle">欢迎莅临</div>
+      <div class="cLine"></div>
+      <div class="cSub" id="cSub">点击任意处开始</div>
+    </div>
   </div>
 </div>
 
@@ -516,6 +522,9 @@ function fitStage(){
   st.style.transform=`translate(-50%,-50%) scale(${s})`;
   const ps=document.getElementById("playStage");
   ps.style.transform=`translate(-50%,-50%) scale(${s})`;
+  /* 幕布文字舞台同比例缩放 */
+  const cs=document.getElementById("curtStage");
+  if(cs)cs.style.transform=`translate(-50%,-50%) scale(${s})`;
 }
 addEventListener("resize",fitStage);
 addEventListener("orientationchange",()=>setTimeout(fitStage,100));
