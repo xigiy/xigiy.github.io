@@ -160,10 +160,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #menuMask{position:absolute;inset:0;z-index:39;display:none;}
 #menuMask.on{display:block;}
 
-/* ===== 播放层（全屏层：脱离stage缩放，直接铺满视口） ===== */
-/* 全局4:3画面框：fitStage 写入 --fw/--fh，框外为纯黑 */
-#playFrame{position:fixed;left:calc(50% - var(--fw,100vw)/2);
-  top:calc(50% - var(--fh,100vh)/2);width:var(--fw,100vw);height:var(--fh,100vh);
+/* ===== 播放层（全屏层：脱离stage缩放，背景铺满补屏，内容4:3居中） ===== */
+#playFrame{position:fixed;inset:0;
   background:linear-gradient(160deg,var(--bg1),var(--bg2));z-index:0;}
 #playFrame::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse at 50% 115%,var(--glow),transparent 55%),
@@ -173,7 +171,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   overflow:hidden;background:#000;}
 /* 黑场模式：强制纯黑（不跟随主题浅色背景） */
 #play[data-mode="black"] #playFrame{display:none;}
-#play[data-mode="black"]::before{content:none;}
 #blackTip{position:absolute;bottom:44px;left:0;right:0;text-align:center;
   color:rgba(255,255,255,.28);font-size:22px;letter-spacing:4px;
   z-index:60;display:none;pointer-events:none;}
@@ -234,13 +231,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #eqV{position:absolute;left:0;right:0;bottom:0;width:100%;height:90px;
   display:none;pointer-events:none;}
 
-/* 幕布（开场/中场休息） */
-#curtain{position:fixed;left:calc(50% - var(--fw,100vw)/2);
-  top:calc(50% - var(--fh,100vh)/2);width:var(--fw,100vw);height:var(--fh,100vh);
-  z-index:960;display:none;
+/* 幕布（开场/中场休息）：背景铺满补屏，内容4:3居中 */
+#curtain{position:fixed;inset:0;z-index:960;display:none;
   flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(95% 95% at 50% 18%,var(--bg2),var(--bg1));
-  overflow:hidden;cursor:pointer;box-shadow:0 0 0 200vmax #000;}
+  overflow:hidden;cursor:pointer;}
 #curtCv{position:absolute;inset:0;width:100%;height:100%;}
 .orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.45;
   animation:orbF 10s ease-in-out infinite alternate;pointer-events:none;}
@@ -518,11 +513,6 @@ function fitStage(){
   st.style.transform=`translate(-50%,-50%) scale(${s})`;
   const ps=document.getElementById("playStage");
   ps.style.transform=`translate(-50%,-50%) scale(${s})`;
-  /* 全局4:3画面框（播放层/幕布共用） */
-  const fw=Math.min(innerWidth,innerHeight*4/3),fh=fw*3/4;
-  const r=document.documentElement.style;
-  r.setProperty("--fw",fw+"px");
-  r.setProperty("--fh",fh+"px");
 }
 addEventListener("resize",fitStage);
 addEventListener("orientationchange",()=>setTimeout(fitStage,100));
