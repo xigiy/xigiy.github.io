@@ -232,7 +232,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 /* 播放层背景区：单色频谱 + 粒子（铺满补屏，位于卡片之下） */
 #eqBg,#playPtc{position:absolute;inset:0;width:100%;height:100%;
   pointer-events:none;}
-#eqBg{opacity:.55;}
+#eqBg{opacity:.7;}
 
 /* 幕布（开场/中场休息）：背景铺满补屏，内容4:3居中 */
 #curtain{position:fixed;inset:0;z-index:960;display:none;
@@ -682,10 +682,11 @@ const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
   burst(x,y,n){if(CFG.fx!=="on")return;
     for(let i=0;i<n;i++)this.ps.push(this.spawn(x,y,true));}
 };
-/* 播放层背景粒子：与主舞台同款逻辑，独立画布 */
+/* 播放层背景粒子：与主舞台同款逻辑，独立画布+独立状态（不能共享on/ps/raf） */
 const P2=Object.create(PT);
 P2.init=function(){this.cv=$("playPtc");this.ctx=this.cv.getContext("2d");
-  this.cv.width=BASE_W;this.cv.height=BASE_H;};
+  this.cv.width=BASE_W;this.cv.height=BASE_H;
+  this.on=false;this.ps=[];this.raf=0;};
 
 /* ================= 音频分析（频谱/律动） ================= */
 const AU={ctx:null,an:null,data:null,
@@ -708,8 +709,8 @@ const AU={ctx:null,an:null,data:null,
   }
 };
 el.video.addEventListener("play",()=>{AU.ctx&&AU.ctx.resume();});
-/* 背景频谱：全屏画布置于播放层背景区，单色、渐隐条 */
-const EQ={raf:0,fb:new Array(48).fill(4),
+/* 背景频谱：全屏画布置于播放层背景区，单色圆头条+辉光+倒影，对数频段分布 */
+const EQ={raf:0,fb:new Array(64).fill(4),
   start(){
     cancelAnimationFrame(this.raf);
     const cv=$("eqBg"),ctx=cv.getContext("2d");
@@ -717,28 +718,42 @@ const EQ={raf:0,fb:new Array(48).fill(4),
       if(!el.play.classList.contains("show"))return;
       if(cv.width!==innerWidth)cv.width=innerWidth;
       if(cv.height!==innerHeight)cv.height=innerHeight;
-      ctx.clearRect(0,0,cv.width,cv.height);
-      const n=48,bw=cv.width/n;let vals=null,mx=0;
+      const W=cv.width,H=cv.height;
+      ctx.clearRect(0,0,W,H);
+      const n=64,bw=W/n;let vals=null,mx=0;
       if(AU.an){
         AU.an.getByteFrequencyData(AU.data);
         for(let i=0;i<n;i++){const v=AU.data[i*2];if(v>mx)mx=v;}
-        if(mx>0)vals=Array.from({length:n},(_,i)=>AU.data[i*2]/255);
+        if(mx>0)vals=Array.from({length:n},(_,i)=>{
+          /* 对数映射：低频细密高频稀疏，视觉分布均匀 */
+          const j=Math.floor(Math.pow(i/n,1.35)*AU.data.length*.72);
+          return AU.data[j]/255;});
       }
       if(!vals){ /* 兜底：模拟律动（暂停时自然衰减） */
         for(let i=0;i<n;i++){
-          const t=performance.now()/300+i*.55;
+          const t=performance.now()/300+i*.42;
           const target=(Math.sin(t)*.5+.5)*(.3+.7*Math.random());
-          this.fb[i]=Math.max(3,this.fb[i]*.8+target*cv.height*.28);
+          this.fb[i]=Math.max(3,this.fb[i]*.82+target*H*.3);
         }
-        vals=this.fb.map(v=>v/cv.height);
+        vals=this.fb.map(v=>v/H);
       }
-      ctx.fillStyle=TH.main;   /* 单色：统一主题主色 */
+      const y0=H*.86;   /* 基线 */
+      ctx.lineCap="round";
+      ctx.shadowColor=TH.main;
       for(let i=0;i<n;i++){
-        const h=Math.max(4,vals[i]*cv.height*.42);
-        ctx.globalAlpha=.14+.42*vals[i];
-        ctx.fillRect(i*bw+bw*.18,cv.height-h,bw*.64,h);
+        const x=i*bw+bw*.5;
+        const h=Math.max(6,vals[i]*H*.58);
+        /* 主条：向上生长，辉光圆头 */
+        ctx.globalAlpha=.12+.5*vals[i];
+        ctx.shadowBlur=18*vals[i];
+        ctx.strokeStyle=TH.main;ctx.lineWidth=bw*.5;
+        ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y0-h);ctx.stroke();
+        /* 倒影：向下衰减，无辉光 */
+        ctx.shadowBlur=0;
+        ctx.globalAlpha=.05+.14*vals[i];
+        ctx.beginPath();ctx.moveTo(x,y0+6);ctx.lineTo(x,y0+6+h*.26);ctx.stroke();
       }
-      ctx.globalAlpha=1;
+      ctx.globalAlpha=1;ctx.shadowBlur=0;
       if(!el.card.classList.contains("video")&&AU.an){
         const lv=AU.level();
         el.audioArt.style.transform=`scale(${1+lv*.06})`;
