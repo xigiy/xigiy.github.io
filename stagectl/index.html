@@ -62,6 +62,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   animation:breath 3.2s ease-in-out infinite;pointer-events:none;}
 @keyframes breath{0%,100%{opacity:.08;transform:scale(1);}
   50%{opacity:.2;transform:scale(1.04);}}
+#cover{animation:floaty 5.5s ease-in-out infinite;}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(0);}
+  50%{transform:translateY(-10px) rotate(.6deg);}}
 #cover{width:280px;height:368px;border-radius:14px;position:relative;
   border:4px solid var(--sel);overflow:hidden;
   background:linear-gradient(170deg,var(--sel),var(--bg2));}
@@ -104,7 +107,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 .row .t{flex:1;font-size:25px;min-width:0;color:var(--dim);
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 .row .k{font-size:18px;color:var(--dim);flex-shrink:0;}
-.row.on{background:var(--rowOnBg);border-color:var(--sel);}
+.row.on{background:var(--rowOnBg);border-color:var(--sel);
+  animation:rowGlow 2.8s ease-in-out infinite;}
+@keyframes rowGlow{0%,100%{box-shadow:0 0 0 -8px var(--sel);}
+  50%{box-shadow:0 0 34px -14px var(--sel);}}
 .row.on .n,.row.on .k{color:var(--sel);}
 .row.on .t{color:var(--ink);}
 .row.play .k::after{content:" ▶";}
@@ -124,7 +130,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   touch-action:manipulation;cursor:pointer;}
 .btn.go{border-color:var(--sel);color:var(--sel);
   font-size:28px;letter-spacing:6px;text-indent:6px;padding:0 44px;
-  box-shadow:0 0 26px -10px var(--sel);}
+  box-shadow:0 0 26px -10px var(--sel);
+  animation:goPulse 2.4s ease-in-out infinite;}
+@keyframes goPulse{0%,100%{box-shadow:0 0 26px -10px var(--sel);}
+  50%{box-shadow:0 0 42px -6px var(--sel);}}
 #time{margin-left:auto;font-size:23px;color:var(--dim);
   font-variant-numeric:tabular-nums;}
 #time b{color:var(--ink);font-weight:normal;}
@@ -172,6 +181,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   transform:skewX(-14deg);will-change:transform;}
 .wp.a{background:linear-gradient(110deg,var(--sel),var(--bg2) 85%);}
 .wp.b{background:var(--bg2);}
+.wp.c{background:rgba(255,255,255,.55);top:-40%;bottom:-40%;}
 
 /* 节目卡片（舞台坐标：1060宽，头部+4:3画面≈880高） */
 #card{position:relative;z-index:10;width:1060px;
@@ -264,6 +274,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,.85);color:#fff;padding:14px 32px;border-radius:10px;
   font-size:20px;z-index:990;display:none;pointer-events:none;}
+body.noidle #cover,body.noidle .btn.go,body.noidle .row.on,
+body.noidle #audioArt .disc{animation:none;}
 </style>
 </head>
 <body>
@@ -361,7 +373,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 
 <!-- 全屏层不缩放；内部playStage按4:3舞台缩放 -->
 <div id="play">
-  <div id="wipe"><div class="wp a"></div><div class="wp b"></div></div>
+  <div id="wipe"><div class="wp a"></div><div class="wp c"></div><div class="wp b"></div></div>
   <div id="playStage">
     <div id="card">
       <div id="cardHead">
@@ -449,7 +461,7 @@ const el={rows:$("rows"),now:$("now"),empty:$("empty"),
   card:$("card"),cardNum:$("cardNum"),cardTitle:$("cardTitle"),
   cardType:$("cardType"),audioArt:$("audioArt"),audioName:$("audioName"),
   wipe:$("wipe"),wipeA:document.querySelector("#wipe .a"),
-  wipeB:document.querySelector("#wipe .b"),
+  wipeB:document.querySelector("#wipe .b"),wipeC:document.querySelector("#wipe .c"),
   linkTip:$("linkTip"),playBar:$("playBar"),pPlay:$("pPlay"),
   pPrev:$("pPrev"),pNext:$("pNext"),pBack:$("pBack"),
   pbar:$("pbar"),pfill:$("pfill"),ptime:$("ptime"),
@@ -519,6 +531,7 @@ function applyTheme(){
 function applyFx(){
   const on=CFG.fx==="on";
   [el.grid,el.horizon].forEach(x=>x.style.display=on?"block":"none");
+  document.body.classList.toggle("noidle",!on);
   on?PT.start():PT.stop();
 }
 function applyLayout(){
@@ -801,22 +814,27 @@ function playTransition(mode,media){
     el.card.style.opacity=1;el.playBar.style.opacity=1;
     return;
   }
-  const A=el.wipeA,B=el.wipeB;
+  const A=el.wipeA,B=el.wipeB,C=el.wipeC;
   el.wipe.style.display="block";
   const tl=G.timeline({onComplete:()=>{el.wipe.style.display="none";}});
-  tl.set([A,B],{xPercent:-135,display:"block"})
+  tl.set([A,B,C],{xPercent:-135,display:"block"})
     .to(A,{xPercent:0,duration:.26,ease:"power3.in"})
     .to(B,{xPercent:0,duration:.28,ease:"power3.in"},"-=.1")
     .add(()=>{
       showLayer(mode);media();
       el.card.style.opacity=1;el.playBar.style.opacity=1;
-      G.fromTo(el.card,{opacity:0,scale:.86,y:52},
-        {opacity:1,scale:1,y:0,duration:.55,ease:"back.out(1.7)",overwrite:"auto"});
-      G.fromTo(el.playBar,{opacity:0},
-        {opacity:1,duration:.45,delay:.18,ease:"power2.out",overwrite:"auto"});
+      G.fromTo(el.card,{opacity:0,scale:.86,y:52,rotation:-1.5},
+        {opacity:1,scale:1,y:0,rotation:0,duration:.6,ease:"back.out(1.8)",overwrite:"auto"});
+      G.fromTo([el.cardNum,el.cardTitle,el.cardType],
+        {opacity:0,x:-26},{opacity:1,x:0,duration:.4,stagger:.08,
+          delay:.12,ease:"power2.out",overwrite:"auto"});
+      G.fromTo(el.playBar.children,{opacity:0,scale:.6},
+        {opacity:1,scale:1,duration:.4,stagger:.05,
+          delay:.25,ease:"back.out(2)",overwrite:"auto"});
     })
     .to(B,{xPercent:135,duration:.5,ease:"power3.inOut"},"+=.04")
-    .to(A,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.38");
+    .to(C,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.44")
+    .to(A,{xPercent:135,duration:.5,ease:"power3.inOut"},"-=.44");
 }
 function startCurrent(){
   if(!N())return;
