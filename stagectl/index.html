@@ -161,15 +161,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #menuMask.on{display:block;}
 
 /* ===== 播放层（全屏层：脱离stage缩放，直接铺满视口） ===== */
-#play{position:fixed;inset:0;z-index:900;display:none;
-  align-items:center;justify-content:center;flex-direction:column;gap:30px;
-  overflow:hidden;
-  background:linear-gradient(160deg,var(--bg1),var(--bg2));}
-#play::before{content:"";position:absolute;inset:0;pointer-events:none;
+/* 全局4:3画面框：fitStage 写入 --fw/--fh，框外为纯黑 */
+#playFrame{position:fixed;left:calc(50% - var(--fw,100vw)/2);
+  top:calc(50% - var(--fh,100vh)/2);width:var(--fw,100vw);height:var(--fh,100vh);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));z-index:0;}
+#playFrame::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse at 50% 115%,var(--glow),transparent 55%),
     radial-gradient(ellipse at 50% -10%,var(--glow),transparent 50%);}
+#play{position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:30px;
+  overflow:hidden;background:#000;}
 /* 黑场模式：强制纯黑（不跟随主题浅色背景） */
-#play[data-mode="black"]{background:#000;}
+#play[data-mode="black"] #playFrame{display:none;}
 #play[data-mode="black"]::before{content:none;}
 #blackTip{position:absolute;bottom:44px;left:0;right:0;text-align:center;
   color:rgba(255,255,255,.28);font-size:22px;letter-spacing:4px;
@@ -232,10 +235,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   display:none;pointer-events:none;}
 
 /* 幕布（开场/中场休息） */
-#curtain{position:fixed;inset:0;z-index:960;display:none;
+#curtain{position:fixed;left:calc(50% - var(--fw,100vw)/2);
+  top:calc(50% - var(--fh,100vh)/2);width:var(--fw,100vw);height:var(--fh,100vh);
+  z-index:960;display:none;
   flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(95% 95% at 50% 18%,var(--bg2),var(--bg1));
-  overflow:hidden;cursor:pointer;}
+  overflow:hidden;cursor:pointer;box-shadow:0 0 0 200vmax #000;}
 #curtCv{position:absolute;inset:0;width:100%;height:100%;}
 .orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.45;
   animation:orbF 10s ease-in-out infinite alternate;pointer-events:none;}
@@ -451,6 +456,7 @@ body.noidle #audioArt .disc{animation:none;}
 
 <!-- 全屏层不缩放；内部playStage按4:3舞台缩放 -->
 <div id="play">
+  <div id="playFrame"></div>
   <div id="wipe"><div class="wp a"></div><div class="wp c"></div><div class="wp b"></div></div>
   <div id="playStage">
     <div id="card">
@@ -512,6 +518,11 @@ function fitStage(){
   st.style.transform=`translate(-50%,-50%) scale(${s})`;
   const ps=document.getElementById("playStage");
   ps.style.transform=`translate(-50%,-50%) scale(${s})`;
+  /* 全局4:3画面框（播放层/幕布共用） */
+  const fw=Math.min(innerWidth,innerHeight*4/3),fh=fw*3/4;
+  const r=document.documentElement.style;
+  r.setProperty("--fw",fw+"px");
+  r.setProperty("--fh",fh+"px");
 }
 addEventListener("resize",fitStage);
 addEventListener("orientationchange",()=>setTimeout(fitStage,100));
