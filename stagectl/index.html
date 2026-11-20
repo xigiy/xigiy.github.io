@@ -460,7 +460,7 @@ body.noidle #audioArt .disc{animation:none;}
       <button id="cfgReset">恢复默认</button>
       <button id="cfgGo">进入系统</button>
     </div>
-    <div class="note">进入后自动全屏 · 界面按 4:3 裁剪居中 · 配置自动保存</div>
+    <div class="note">进入后自动全屏 · 界面按 4:3 裁剪居中 · 配置自动保存 · 上次导入的文件自动记忆</div>
   </div>
 </div>
 
@@ -1163,7 +1163,40 @@ function addLinkFile(f){
     rd.readAsText(f);
   });
 }
-async function importFiles(files){
+/* ================= 文件持久化（IndexedDB）：记住上次导入的文件夹 ================= */
+const DB={db:null,
+  open(){return new Promise(res=>{
+    try{
+      const q=indexedDB.open("stageCTLfiles",1);
+      q.onupgradeneeded=()=>q.result.createObjectStore("files",{keyPath:"name"});
+      q.onsuccess=()=>{this.db=q.result;res(true);};
+      q.onerror=()=>res(false);
+    }catch(e){res(false);}
+  });},
+  put(f){try{
+    if(!this.db)return;
+    this.db.transaction("files","readwrite")
+      .objectStore("files").put({name:f.name,blob:f});
+  }catch(e){}},
+  all(){return new Promise(res=>{
+    if(!this.db)return res([]);
+    try{
+      const q=this.db.transaction("files").objectStore("files").getAll();
+      q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);
+    }catch(e){res([]);}
+  });},
+  clear(){try{
+    if(!this.db)return;
+    this.db.transaction("files","readwrite").objectStore("files").clear();
+  }catch(e){}}
+};
+/* 恢复上次导入：文件对象存于 IndexedDB，重启浏览器后仍可读（本地Blob，无需网络） */
+DB.open().then(async()=>{
+  const fs=await DB.all();
+  if(fs.length)importFiles(fs.map(r=>new File([r.blob],r.name)),true);
+});
+
+async function importFiles(files,silent){
   let added=0,skip=0,ignored=0,bgmN=0;
   for(const f of files){
     if(tracks.some(t=>t.name===f.name)||BGM.pool.some(b=>b.name===f.name)){skip++;continue;}
@@ -1178,7 +1211,17 @@ async function importFiles(files){
     tracks.push({name:f.name,url:URL.createObjectURL(f),type});
     added++;
   }
+  /* 持久化：把导入的原始文件存入 IndexedDB（重启后可恢复） */
+  if(added||bgmN||files.some(f=>/\.link$|\.txt$/i.test(f.name))){
+    for(const f of files)DB.put(f);
+    navigator.storage&&navigator.storage.persist&&navigator.storage.persist();
+  }
   buildRows();applyLayout();render();
+  if(silent){
+    if(added||bgmN)
+      toast(`已恢复上次节目：${added} 个节目`+(bgmN?` · 间隔音乐 ${bgmN} 首`:""));
+    return;
+  }
   let msg=added?`已导入 ${added} 个节目`:"";
   if(bgmN){msg+=(msg?" · ":"")+`间隔音乐 ${bgmN} 首`;BGM.start();}
   if(CURTAIN.loaded&&CURTAIN.title){msg+=(msg?" · ":"")+"已读取幕布文案";CURTAIN.loaded=false;}
@@ -1451,10 +1494,11 @@ $("cfgGo").addEventListener("click",()=>{
   if(G&&CFG.animLv>0)G.to(el.cfg,{opacity:0,duration:.25,onComplete:done});
   else done();
 });
-/* 恢复默认配置：清除全部持久化设置并刷新 */
+/* 恢复默认配置：清除全部持久化设置与记忆的文件并刷新 */
 $("cfgReset").addEventListener("click",()=>{
   localStorage.removeItem("stageCTL");
   localStorage.removeItem("stageCTLcfgDone");
+  DB.clear();
   location.reload();
 });
 
