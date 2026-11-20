@@ -1414,10 +1414,20 @@ function stopMedia(){
   el.time.innerHTML="<b>--:--</b>";el.pfill.style.width="0%";
   clearTimeout(startCurrent._img);
 }
+/* 待机时 #time 显示实时时钟（播放中由 timeupdate 覆盖为媒体时间） */
+function clockStr(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function tickClock(){
+  if(!el.play.classList.contains("show")||now<0)
+    el.time.innerHTML=`<b>${clockStr()}</b>`;
+}
+setInterval(tickClock,1000);tickClock();
 /* 关闭播放页：卡片缩回 → 扫屏收尾（与打开时同款音游过场） */
 function hidePlay(){
   if(!el.play.classList.contains("show")||hidePlay._r)return;
-  const doHide=()=>{stopMedia();P2.stop();if(now>=0)sel=now;render();BGM.start();};
+  const doHide=()=>{stopMedia();P2.stop();if(now>=0)sel=now;render();BGM.start();tickClock();};
   if(!(G&&CFG.animLv>0)||el.play.dataset.mode==="black"){doHide();return;}
   hidePlay._r=true;
   const A=el.wipeA,B=el.wipeB,C=el.wipeC;
