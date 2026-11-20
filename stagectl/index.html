@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>STAGE CTL</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<style>
+/* =====================================================
+   舞台设计基准：1600×1200（4:3）
+   所有尺寸用 px（相对基准），整体 JS 缩放适配
+===================================================== */
+:root{
+  /* 极简白（默认主题） */
+  --sel:#2f7df6;
+  --ink:#1c2440; --dim:#8390b8;
+  --bg1:#f4f7fd; --bg2:#e2eaf8;
+  --panel:rgba(255,255,255,.78);
+  --rowbg:rgba(28,36,64,.05);
+  --rowOnBg:rgba(47,125,246,.09);
+  --line:rgba(28,36,64,.18);
+  --ctlbg:rgba(255,255,255,.88);
+  --glow:rgba(47,125,246,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
+  font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+  -webkit-user-select:none;user-select:none;}
+
+/* 舞台：固定1600×1200，JS缩放居中——任何设备都看到同一4:3构图 */
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:1200px;
+  transform:translate(-50%,-50%);transform-origin:center center;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:var(--ink);overflow:hidden;}
+#bgGlow{position:absolute;inset:0;}
+#grid{position:absolute;left:-200px;right:-200px;bottom:-100px;height:520px;
+  pointer-events:none;perspective:420px;opacity:.3;}
+#grid .floor{position:absolute;inset:0;transform:rotateX(62deg);transform-origin:50% 0;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 58px,var(--sel)22 58px 60px),
+    repeating-linear-gradient(0deg,transparent 0 58px,var(--sel)22 58px 60px);}
+#horizon{position:absolute;left:0;right:0;bottom:392px;height:2px;
+  opacity:.4;pointer-events:none;}
+#particles{position:absolute;inset:0;pointer-events:none;}
+
+/* ===== 顶栏 ===== */
+#top{position:absolute;top:0;left:0;right:0;height:76px;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;font-size:24px;}
+#top .logo em{color:var(--sel);font-style:normal;}
+#now{font-size:18px;color:var(--dim);flex:1;text-align:right;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+#now.playing{color:var(--ink);}
+
+/* ===== 左：封面 ===== */
+#left{position:absolute;left:48px;top:100px;bottom:130px;width:600px;z-index:10;
+  display:flex;align-items:center;gap:36px;}
+#coverWrap{position:relative;flex-shrink:0;}
+#coverWrap::before{content:"";position:absolute;inset:-16px;border-radius:22px;
+  background:var(--sel);opacity:.15;filter:blur(28px);
+  animation:breath 3.2s ease-in-out infinite;pointer-events:none;}
+@keyframes breath{0%,100%{opacity:.08;transform:scale(1);}
+  50%{opacity:.2;transform:scale(1.04);}}
+#cover{width:280px;height:368px;border-radius:14px;position:relative;
+  border:4px solid var(--sel);overflow:hidden;
+  background:linear-gradient(170deg,var(--sel),var(--bg2));}
+#cover .thumb{position:absolute;inset:0;background-size:cover;background-position:center;}
+#cover .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:130px;color:rgba(255,255,255,.92);}
+#cover .tag{position:absolute;bottom:16px;left:0;right:0;text-align:center;
+  font-size:17px;letter-spacing:8px;text-indent:8px;color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.4);}
+#info{min-width:0;}
+#info .lb{font-size:15px;letter-spacing:6px;color:var(--dim);}
+#name{font-size:40px;line-height:1.3;margin:10px 0;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  word-break:break-all;}
+#meta{font-size:18px;color:var(--dim);}
+#dots{display:inline-flex;gap:5px;margin-right:12px;vertical-align:middle;}
+#dots i{width:9px;height:18px;background:var(--line);border-radius:3px;}
+#dots i.on{background:var(--sel);}
+
+/* ===== 右：选曲面板 ===== */
+#panel{position:absolute;right:0;top:50px;bottom:150px;width:760px;z-index:10;
+  overflow:hidden;cursor:pointer;
+  transform:skewY(-6deg);
+  background:var(--panel);
+  border-left:3px solid var(--line);
+  border-radius:36px 0 0 36px;
+  backdrop-filter:blur(8px);}
+#panel .fade{position:absolute;left:0;right:0;height:110px;z-index:3;pointer-events:none;}
+#panel .fade.top{top:0;background:linear-gradient(var(--bg1),transparent);}
+#panel .fade.bot{bottom:0;background:linear-gradient(transparent,var(--bg1));}
+#rows{position:absolute;left:60px;right:70px;top:50%;height:0;z-index:2;}
+.row{position:absolute;left:0;right:0;height:92px;margin-top:-46px;
+  transform:skewY(6deg);
+  display:flex;align-items:center;gap:20px;
+  padding:0 22px;border-radius:14px;
+  background:var(--rowbg);
+  border:2px solid transparent;
+  transition:background .15s,border-color .15s;}
+.row .n{width:48px;text-align:center;color:var(--dim);font-size:24px;flex-shrink:0;}
+.row .t{flex:1;font-size:25px;min-width:0;color:var(--dim);
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.row .k{font-size:18px;color:var(--dim);flex-shrink:0;}
+.row.on{background:var(--rowOnBg);border-color:var(--sel);}
+.row.on .n,.row.on .k{color:var(--sel);}
+.row.on .t{color:var(--ink);}
+.row.play .k::after{content:" ▶";}
+#empty{position:absolute;left:0;right:0;top:50%;text-align:center;
+  color:var(--dim);font-size:23px;line-height:34px;z-index:2;
+  transform:translateY(-50%) skewY(6deg);}
+#empty b{color:var(--sel);}
+
+/* ===== 底：播控栏 ===== */
+#ctl{position:absolute;left:0;right:0;bottom:0;height:120px;z-index:20;
+  display:flex;align-items:center;gap:18px;padding:0 44px;
+  background:linear-gradient(to top,var(--ctlbg),transparent);}
+.btn{height:80px;min-width:90px;padding:0 26px;border-radius:16px;
+  border:3px solid var(--line);background:var(--panel);
+  color:var(--dim);font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  touch-action:manipulation;cursor:pointer;}
+.btn.go{border-color:var(--sel);color:var(--sel);
+  font-size:28px;letter-spacing:6px;text-indent:6px;padding:0 44px;
+  box-shadow:0 0 26px -10px var(--sel);}
+#time{margin-left:auto;font-size:23px;color:var(--dim);
+  font-variant-numeric:tabular-nums;}
+#time b{color:var(--ink);font-weight:normal;}
+
+/* 右下角菜单 */
+#menuBtn{position:absolute;right:34px;bottom:140px;z-index:40;
+  width:100px;height:100px;border-radius:26px;
+  border:3px solid var(--line);background:var(--panel);
+  font-size:44px;color:var(--dim);cursor:pointer;touch-action:manipulation;
+  display:flex;align-items:center;justify-content:center;}
+#menuBtn:active{transform:scale(.9);}
+#menu{position:absolute;right:34px;bottom:254px;z-index:41;
+  display:none;flex-direction:column;gap:12px;}
+#menu.open{display:flex;}
+.mbtn{height:80px;min-width:300px;padding:0 28px;border-radius:18px;
+  border:3px solid var(--line);background:var(--panel);
+  color:var(--ink);font-size:23px;font-family:inherit;
+  display:flex;align-items:center;gap:18px;cursor:pointer;
+  touch-action:manipulation;text-align:left;}
+.mbtn em{font-style:normal;font-size:28px;width:40px;text-align:center;}
+.mbtn:active{transform:scale(.96);}
+.mbtn.danger{border-color:rgba(232,60,140,.5);color:#d6367f;}
+.mbtn input{display:none;}
+#menuMask{position:absolute;inset:0;z-index:39;display:none;}
+#menuMask.on{display:block;}
+
+/* ===== 播放层（全屏层：脱离stage缩放，直接铺满视口） ===== */
+#play{position:fixed;inset:0;background:#05070f;z-index:900;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:30px;
+  overflow:hidden;}
+#play::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 115%,var(--glow),transparent 55%),
+    radial-gradient(ellipse at 50% -10%,rgba(255,255,255,.05),transparent 50%);}
+#play.show{display:flex;}
+
+/* 音游式过场：两块斜切面板扫屏 */
+#wipe{position:absolute;inset:0;z-index:60;pointer-events:none;display:none;overflow:hidden;}
+.wp{position:absolute;left:-8%;top:-40%;bottom:-40%;width:116%;
+  transform:skewX(-14deg);will-change:transform;}
+.wp.a{background:linear-gradient(110deg,var(--sel),var(--bg2) 85%);}
+.wp.b{background:#05070f;}
+
+/* 节目卡片 */
+#card{position:relative;z-index:10;width:min(1180px,94vw);
+  background:rgba(16,20,38,.86);border:2px solid rgba(255,255,255,.12);
+  border-radius:22px;overflow:hidden;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.8),0 0 60px -20px var(--sel);
+  backdrop-filter:blur(12px);}
+#cardHead{display:flex;align-items:center;gap:18px;padding:18px 26px;
+  border-bottom:1px solid rgba(255,255,255,.08);}
+#cardNum{font-size:32px;color:var(--sel);font-weight:bold;
+  font-variant-numeric:tabular-nums;flex-shrink:0;}
+#cardTitle{flex:1;min-width:0;font-size:26px;color:#fff;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+#cardType{font-size:14px;letter-spacing:4px;color:rgba(255,255,255,.5);
+  border:1px solid rgba(255,255,255,.22);padding:6px 12px;border-radius:8px;flex-shrink:0;}
+#cardBody{position:relative;width:100%;aspect-ratio:16/9;
+  max-height:calc(100vh - 260px);background:#000;overflow:hidden;}
+#cardBody video,#cardBody img{width:100%;height:100%;object-fit:contain;display:none;}
+#cardBody iframe{width:100%;height:100%;border:none;display:none;}
+#cardBody video.solo{display:block;}
+#cardBody img.solo{display:block;}
+#cardBody iframe.solo{display:block;}
+
+/* 音频封面态 */
+#audioArt{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:30px;
+  background:linear-gradient(160deg,#10142c,#1c1036 60%,#251041);}
+#audioArt .disc{width:150px;height:150px;border-radius:50%;flex-shrink:0;
+  border:6px solid rgba(255,255,255,.14);
+  background:radial-gradient(circle at 50% 50%,var(--bg2) 0 18%,var(--sel) 19% 60%,var(--bg1) 61%);
+  animation:spin 6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#audioArt .nm{font-size:28px;color:#fff;max-width:80%;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
+#card.audio #audioArt{display:flex;}
+#card.audio #video{display:none !important;}
+#play.paused .disc,#play.paused .eq i{animation-play-state:paused;}
+
+/* 播控栏：玻璃胶囊 */
+#playBar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:55;
+  display:flex;align-items:center;gap:16px;padding:14px 26px;
+  background:rgba(10,14,30,.72);border:1px solid rgba(255,255,255,.14);
+  border-radius:60px;backdrop-filter:blur(10px);
+  min-width:min(760px,94vw);box-sizing:border-box;
+  box-shadow:0 16px 50px -12px rgba(0,0,0,.7);}
+.pbtn{width:62px;height:62px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+  color:#fff;font-size:23px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;touch-action:manipulation;}
+.pbtn.main{width:72px;height:72px;background:var(--sel);
+  border-color:transparent;color:#fff;font-size:27px;
+  box-shadow:0 0 26px -6px var(--sel);}
+.pbtn.exit{border-color:rgba(232,60,140,.5);color:#ff7ab8;}
+.pbtn:active{transform:scale(.9);}
+#pbar{flex:1;height:10px;background:rgba(255,255,255,.18);
+  border-radius:5px;cursor:pointer;position:relative;}
+#pfill{height:100%;background:var(--sel);border-radius:5px;width:0%;
+  box-shadow:0 0 12px var(--sel);position:relative;}
+#pfill::after{content:"";position:absolute;right:-9px;top:50%;
+  width:18px;height:18px;border-radius:50%;background:#fff;
+  transform:translateY(-50%);box-shadow:0 0 10px var(--sel);}
+#ptime{font-size:20px;color:#bbb;font-variant-numeric:tabular-nums;flex-shrink:0;}
+#linkTip{position:absolute;bottom:130px;left:0;right:0;text-align:center;
+  color:#888;font-size:20px;z-index:56;display:none;}
+
+#dropHint{position:fixed;inset:0;z-index:950;display:none;
+  align-items:center;justify-content:center;background:rgba(8,12,34,.9);
+  border:10px dashed var(--sel);font-size:44px;color:var(--sel);pointer-events:none;}
+
+/* ===== 配置面板（在stage内） ===== */
+#cfg{position:absolute;inset:0;z-index:100;background:rgba(255,255,255,.97);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:24px;padding:40px;}
+#cfg.show{display:flex;}
+#cfg h1{font-size:38px;letter-spacing:4px;color:var(--ink);}
+#cfg h1 em{color:var(--sel);font-style:normal;}
+#cfg .grid{display:grid;grid-template-columns:auto auto;gap:18px 40px;align-items:center;}
+#cfg .cl{font-size:20px;color:var(--dim);text-align:right;}
+.seg{display:flex;gap:8px;flex-wrap:wrap;}
+.seg button{height:52px;padding:0 20px;border-radius:10px;
+  border:2px solid var(--line);background:#fff;color:var(--dim);
+  font-size:18px;font-family:inherit;cursor:pointer;touch-action:manipulation;}
+.seg button.on{border-color:var(--sel);color:var(--sel);
+  box-shadow:0 0 12px -4px var(--sel);}
+#cfgGo{height:80px;padding:0 70px;border-radius:18px;
+  border:3px solid var(--sel);color:var(--sel);background:#fff;
+  font-size:28px;letter-spacing:8px;text-indent:8px;font-family:inherit;
+  cursor:pointer;touch-action:manipulation;box-shadow:0 0 26px -10px var(--sel);}
+#cfg .note{font-size:15px;color:var(--dim);}
+
+#toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.85);color:#fff;padding:14px 32px;border-radius:10px;
+  font-size:20px;z-index:990;display:none;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- 舞台：所有UI都在这里面，整体缩放 -->
+<div id="stage">
+  <div id="bgGlow"></div>
+  <div id="horizon"></div>
+  <div id="grid"><div class="floor"></div></div>
+  <canvas id="particles"></canvas>
+
+  <div id="top">
+    <div class="logo"><em>▶</em> STAGE CTL</div>
+    <div id="now">待机</div>
+  </div>
+
+  <div id="left">
+    <div id="coverWrap">
+      <div id="cover">
+        <div class="thumb" id="coverThumb"></div>
+        <div class="num" id="cvNum">--</div>
+        <div class="tag" id="cvTag">EMPTY</div>
+      </div>
+    </div>
+    <div id="info">
+      <div class="lb">TRACK SELECT</div>
+      <div id="name">未导入节目</div>
+      <div id="meta"><span id="dots"></span><span id="metaTxt"></span></div>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div class="fade top"></div><div class="fade bot"></div>
+    <div id="empty">
+      节目单为空<br>
+      点右下角 <b>☰</b> 菜单导入节目<br>
+      支持视频 / 音频 / 图片 / .link 外链（可拖拽整个文件夹）
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div id="ctl">
+    <div class="btn" id="btnPrev">◀</div>
+    <div class="btn go" id="btnGo">START</div>
+    <div class="btn" id="btnNext">▶</div>
+    <div id="time"><b>--:--</b></div>
+  </div>
+
+  <div id="menuMask"></div>
+  <div id="menuBtn">☰</div>
+  <div id="menu">
+    <label class="mbtn"><em>📄</em>导入文件
+      <input type="file" id="fileInput" accept="video/*,audio/*,image/*,.link" multiple></label>
+    <label class="mbtn"><em>🗂</em>导入文件夹
+      <input type="file" id="dirInput" webkitdirectory directory multiple></label>
+    <button class="mbtn danger" id="mBlack"><em>⬛</em>黑场</button>
+    <button class="mbtn" id="mStandby"><em>⏹</em>待机</button>
+    <button class="mbtn" id="mFull"><em>⛶</em>全屏</button>
+    <button class="mbtn" id="mCfg"><em>⚙</em>设置</button>
+  </div>
+
+  <div id="cfg">
+    <h1><em>▶</em> STAGE CTL · 系统配置</h1>
+    <div class="grid">
+      <div class="cl">选曲面板</div>
+      <div class="seg" data-key="panelSide">
+        <button data-v="right">右侧</button><button data-v="left">左侧</button>
+      </div>
+      <div class="cl">START 键</div>
+      <div class="seg" data-key="startPos">
+        <button data-v="left">左端</button><button data-v="mid">中间</button><button data-v="right">右端</button>
+      </div>
+      <div class="cl">主题</div>
+      <div class="seg" data-key="theme">
+        <button data-v="white">极简白</button><button data-v="starfield">星空黑</button>
+        <button data-v="neon">霓虹粉</button><button data-v="emerald">翡翠绿</button>
+      </div>
+      <div class="cl">双击灵敏度</div>
+      <div class="seg" data-key="dblMs">
+        <button data-v="220">快</button><button data-v="320">标准</button><button data-v="450">慢</button>
+      </div>
+      <div class="cl">动画强度</div>
+      <div class="seg" data-key="animLv">
+        <button data-v="0">关闭</button><button data-v="1">标准</button><button data-v="2">增强</button>
+      </div>
+      <div class="cl">背景特效</div>
+      <div class="seg" data-key="fx">
+        <button data-v="off">关闭</button><button data-v="on">开启</button>
+      </div>
+    </div>
+    <button id="cfgGo">进入系统</button>
+    <div class="note">进入后自动全屏 · 界面按 4:3 裁剪居中 · 配置自动保存</div>
+  </div>
+</div>
+
+<!-- 全屏层不缩放，直接铺满真实视口 -->
+<div id="play">
+  <div id="wipe"><div class="wp a"></div><div class="wp b"></div></div>
+  <div id="card">
+    <div id="cardHead">
+      <span id="cardNum">--</span>
+      <div id="cardTitle">—</div>
+      <span id="cardType">VIDEO</span>
+    </div>
+    <div id="cardBody">
+      <video id="video" playsinline></video>
+      <div id="audioArt"><div class="disc"></div><div class="nm" id="audioName">—</div></div>
+      <img id="image" style="display:none" alt="">
+      <iframe id="frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    </div>
+  </div>
+  <div id="linkTip">外链播放中 · 点 ✕ 返回</div>
+  <div id="playBar">
+    <div class="pbtn" id="pPrev">⏮</div>
+    <div class="pbtn main" id="pPlay">⏸</div>
+    <div class="pbtn" id="pNext">⏭</div>
+    <div id="pbar"><div id="pfill"></div></div>
+    <span id="ptime">0:00</span>
+    <div class="pbtn exit" id="pBack">✕</div>
+  </div>
+</div>
+
+<div id="dropHint">松手导入整个文件夹</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const G=window.gsap||null;
+
+/* ================= 舞台缩放（4:3裁剪核心） ================= */
+const BASE_W=1600,BASE_H=1200;
+function fitStage(){
+  const s=Math.min(innerWidth/BASE_W,innerHeight/BASE_H);
+  const st=document.getElementById("stage");
+  st.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+addEventListener("resize",fitStage);
+addEventListener("orientationchange",()=>setTimeout(fitStage,100));
+fitStage();
+
+/* ================= 配置 ================= */
+const DEF={panelSide:"right",startPos:"mid",theme:"white",dblMs:320,animLv:1,fx:"on"};
+let CFG;
+try{CFG=Object.assign({},DEF,JSON.parse(localStorage.getItem("stageCTL")||"{}"));}
+catch(e){CFG=Object.assign({},DEF);}
+const saveCfg=()=>{try{localStorage.setItem("stageCTL",JSON.stringify(CFG));}catch(e){}};
+
+/* 白色主题为默认；深色主题切换时整组变量翻转 */
+const THEMES={
+  white:   {main:"#2f7df6",sub:"#8b5cf6",bg1:"#f4f7fd",bg2:"#e2eaf8",
+            ink:"#1c2440",dim:"#8390b8",panel:"rgba(255,255,255,.78)",
+            rowbg:"rgba(28,36,64,.05)",rowOn:"rgba(47,125,246,.09)",
+            line:"rgba(28,36,64,.18)",ctlbg:"rgba(255,255,255,.88)",
+            glow:"rgba(47,125,246,.12)",dark:false},
+  starfield:{main:"#39c5ff",sub:"#9d7bff",bg1:"#0a0e2a",bg2:"#101741",
+            ink:"#e8ecff",dim:"#5a6aa8",panel:"rgba(16,23,65,.72)",
+            rowbg:"rgba(255,255,255,.05)",rowOn:"rgba(57,197,255,.14)",
+            line:"rgba(255,255,255,.25)",ctlbg:"rgba(5,7,22,.9)",
+            glow:"rgba(57,197,255,.16)",dark:true},
+  neon:    {main:"#ff7ab8",sub:"#7b5cff",bg1:"#1a0a1e",bg2:"#2d1b69",
+            ink:"#ffe8f4",dim:"#a87bb8",panel:"rgba(45,27,105,.72)",
+            rowbg:"rgba(255,255,255,.06)",rowOn:"rgba(255,122,184,.15)",
+            line:"rgba(255,255,255,.25)",ctlbg:"rgba(15,5,20,.9)",
+            glow:"rgba(255,122,184,.16)",dark:true},
+  emerald: {main:"#0ab88a",sub:"#3c9ce8",bg1:"#0a1a14",bg2:"#122a21",
+            ink:"#e0fff2",dim:"#6aa890",panel:"rgba(18,42,33,.72)",
+            rowbg:"rgba(255,255,255,.05)",rowOn:"rgba(10,184,138,.14)",
+            line:"rgba(255,255,255,.22)",ctlbg:"rgba(4,14,10,.9)",
+            glow:"rgba(10,184,138,.16)",dark:true},
+};
+let TH=THEMES[CFG.theme]||THEMES.white;
+
+const $=id=>document.getElementById(id);
+const el={rows:$("rows"),now:$("now"),empty:$("empty"),
+  cvNum:$("cvNum"),cvTag:$("cvTag"),coverThumb:$("coverThumb"),
+  name:$("name"),dots:$("dots"),metaTxt:$("metaTxt"),
+  panel:$("panel"),left:$("left"),ctl:$("ctl"),cfg:$("cfg"),
+  play:$("play"),video:$("video"),image:$("image"),frame:$("frame"),
+  card:$("card"),cardNum:$("cardNum"),cardTitle:$("cardTitle"),
+  cardType:$("cardType"),audioArt:$("audioArt"),audioName:$("audioName"),
+  wipe:$("wipe"),wipeA:document.querySelector("#wipe .a"),
+  wipeB:document.querySelector("#wipe .b"),
+  linkTip:$("linkTip"),playBar:$("playBar"),pPlay:$("pPlay"),
+  pPrev:$("pPrev"),pNext:$("pNext"),pBack:$("pBack"),
+  pbar:$("pbar"),pfill:$("pfill"),ptime:$("ptime"),
+  time:$("time"),toast:$("toast"),dropHint:$("dropHint"),
+  fileInput:$("fileInput"),dirInput:$("dirInput"),
+  menu:$("menu"),menuBtn:$("menuBtn"),menuMask:$("menuMask"),
+  grid:$("grid"),horizon:$("horizon"),
+  btnPrev:$("btnPrev"),btnGo:$("btnGo"),btnNext:$("btnNext")};
+
+let tracks=[],sel=0,now=-1;
+const N=()=>tracks.length,GAP=112;
+const TNAME={video:"VIDEO",audio:"AUDIO",image:"IMAGE",link:"LINK"};
+function toast(m){el.toast.textContent=m;el.toast.style.display="block";
+  clearTimeout(toast._t);toast._t=setTimeout(()=>el.toast.style.display="none",2600);}
+
+function at(t,v){
+  if(!G||CFG.animLv===0){if(v.top!==undefined)t.style.top=v.top;return;}
+  const c=Object.assign({},v);
+  if(CFG.animLv===2&&c.ease)c.ease="back.out(1.5)";
+  G.to(t,c);
+}
+
+/* ================= 粒子 ================= */
+const PT={cv:null,ctx:null,raf:0,on:false,ps:[],
+  init(){this.cv=$("particles");this.ctx=this.cv.getContext("2d");
+    this.cv.width=BASE_W;this.cv.height=BASE_H;},
+  spawn(x,y,burst){
+    const a=Math.random()*Math.PI*2,s=burst?(2+Math.random()*4):(0.4+Math.random()*1.2);
+    return{x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+      life:1,dec:.004+Math.random()*.008,r:2+Math.random()*3.5,
+      c:Math.random()<.7?TH.main:TH.sub};},
+  start(){if(this.on||CFG.fx!=="on")return;this.on=true;
+    for(let i=0;i<45;i++)this.ps.push(this.spawn(
+      Math.random()*BASE_W,Math.random()*BASE_H,false));
+    this.loop();},
+  loop(){if(!this.on)return;
+    const c=this.ctx;c.clearRect(0,0,BASE_W,BASE_H);
+    for(let i=this.ps.length-1;i>=0;i--){
+      const p=this.ps[i];
+      p.x+=p.vx;p.y+=p.vy;p.life-=p.dec;
+      if(p.life<=0){this.ps.splice(i,1);continue;}
+      c.globalAlpha=p.life*.8;c.fillStyle=p.c;
+      c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();
+    }
+    if(this.ps.length<70&&Math.random()<.25)
+      this.ps.push(this.spawn(Math.random()*BASE_W,Math.random()*BASE_H,false));
+    this.raf=requestAnimationFrame(()=>this.loop());},
+  stop(){this.on=false;cancelAnimationFrame(this.raf);this.ps=[];},
+  burst(x,y,n){if(CFG.fx!=="on")return;
+    for(let i=0;i<n;i++)this.ps.push(this.spawn(x,y,true));}
+};
+
+/* ================= 主题/布局 ================= */
+function applyTheme(){
+  const r=document.documentElement.style;
+  r.setProperty("--sel",TH.main);r.setProperty("--ink",TH.ink);
+  r.setProperty("--dim",TH.dim);r.setProperty("--bg1",TH.bg1);
+  r.setProperty("--bg2",TH.bg2);r.setProperty("--panel",TH.panel);
+  r.setProperty("--rowbg",TH.rowbg);r.setProperty("--rowOnBg",TH.rowOn);
+  r.setProperty("--line",TH.line);r.setProperty("--ctlbg",TH.ctlbg);
+  $("bgGlow").style.background=
+    `radial-gradient(ellipse at 75% 110%,${TH.glow},transparent 55%),`+
+    `linear-gradient(160deg,${TH.bg1} 0%,${TH.bg2} 52%,${TH.bg1} 100%)`;
+  el.horizon.style.background=
+    `linear-gradient(90deg,transparent,${TH.main}88 30%,${TH.dark?"#fff":TH.main} 50%,${TH.main}88 70%,transparent)`;
+}
+function applyFx(){
+  const on=CFG.fx==="on";
+  [el.grid,el.horizon].forEach(x=>x.style.display=on?"block":"none");
+  on?PT.start():PT.stop();
+}
+function applyLayout(){
+  const L=CFG.panelSide==="left";
+  el.panel.style[L?"left":"right"]="0";
+  el.panel.style[L?"right":"left"]="auto";
+  el.panel.style.transform=`skewY(${L?6:-6}deg)`;
+  el.panel.style.borderLeft=L?"none":`3px solid ${TH.line}`;
+  el.panel.style.borderRight=L?`3px solid ${TH.line}`:"none";
+  el.panel.style.borderRadius=L?"0 36px 36px 0":"36px 0 0 36px";
+  el.left.style[L?"right":"left"]="48px";
+  el.left.style[L?"left":"right"]="auto";
+  el.empty.style.transform=`translateY(-50%) skewY(${L?-6:6}deg)`;
+  el.rows.querySelectorAll(".row").forEach(r=>
+    r.style.transform=`skewY(${L?-6:6}deg)`);
+  const order=CFG.startPos==="left"
+    ?[el.btnGo,el.btnPrev,el.btnNext]
+    :CFG.startPos==="right"
+    ?[el.btnPrev,el.btnNext,el.btnGo]
+    :[el.btnPrev,el.btnGo,el.btnNext];
+  order.forEach(b=>el.ctl.insertBefore(b,el.time));
+}
+
+/* ================= 列表 ================= */
+function buildRows(){
+  el.rows.innerHTML="";
+  tracks.forEach((t,i)=>{
+    const d=document.createElement("div");
+    d.className="row";
+    d.style.transform=`skewY(${CFG.panelSide==="left"?-6:6}deg)`;
+    d.innerHTML=`<span class="n">${String(i+1).padStart(2,"0")}</span>`
+      +`<span class="t">${t.name}</span>`
+      +`<span class="k">${TNAME[t.type]}</span>`;
+    el.rows.appendChild(d);
+  });
+}
+function render(){
+  el.empty.style.display=N()?"none":"block";
+  if(!N()){
+    el.cvNum.textContent="--";el.cvTag.textContent="EMPTY";
+    el.name.textContent="未导入节目";el.dots.innerHTML="";el.metaTxt.textContent="";
+    el.now.textContent="待机";el.now.className="";
+    el.coverThumb.style.backgroundImage="";return;
+  }
+  const t=tracks[sel];
+  document.documentElement.style.setProperty("--sel",
+    (t.type==="audio"||t.type==="link")?TH.sub:TH.main);
+  const rows=el.rows.children;
+  for(let i=0;i<N();i++){
+    const c=rows[i];
+    at(c,{top:((i-sel)*GAP)+"px",duration:.35,ease:"power2.out",overwrite:"auto"});
+    c.className="row"+(i===sel?" on":"")+(i===now?" play":"");
+  }
+  el.cvNum.textContent=String(sel+1).padStart(2,"0");
+  el.cvTag.textContent=TNAME[t.type];
+  el.name.textContent=t.name;
+  el.dots.innerHTML=[0,1,2,3,4].map(k=>`<i${k<2?' class="on"':''}></i>`).join("");
+  el.metaTxt.textContent=` ${TNAME[t.type]}`;
+  el.coverThumb.style.backgroundImage=t.type==="image"?`url(${t.url})`:"";
+  if(now>=0){el.now.textContent="▶ 正在播放："+tracks[now].name;el.now.className="playing";}
+  else{el.now.textContent="待机";el.now.className="";}
+}
+function move(d){if(!N())return;sel=(sel+d+N())%N();render();
+  const r=el.panel.getBoundingClientRect();
+  /* 舞台有缩放：换算到舞台坐标 */
+  const st=$("stage").getBoundingClientRect();
+  const k=BASE_W/st.width;
+  PT.burst((r.left+r.width/2-st.left)*k,(r.top+r.height/2-st.top)*k,6);
+}
+
+/* ================= 选曲点按（坐标换算到舞台空间） ================= */
+let tapTimer=null,tapY=0;
+function handleTap(clientY){
+  if(!N())return;
+  const st=$("stage").getBoundingClientRect();
+  const k=BASE_H/st.height;
+  const y=(clientY-st.top)*k;   /* 视口坐标 → 舞台坐标 */
+  tapY=y;
+  if(tapTimer){clearTimeout(tapTimer);tapTimer=null;move(-1);return;}
+  tapTimer=setTimeout(()=>{
+    tapTimer=null;
+    const off=Math.round((tapY-600)/GAP);   /* 舞台中心=600 */
+    if(off===0){move(1);return;}
+    sel=Math.min(N()-1,Math.max(0,sel+off));render();
+  },+CFG.dblMs);
+}
+el.panel.addEventListener("touchstart",e=>{
+  e.preventDefault();handleTap(e.changedTouches[0].clientY);
+},{passive:false});
+el.panel.addEventListener("mousedown",e=>handleTap(e.clientY));
+el.panel.addEventListener("click",e=>e.stopPropagation(),true);
+
+/* ================= 按钮 ================= */
+function press(id,fn){
+  $(id).addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    const b=e.currentTarget,r=b.getBoundingClientRect();
+    const st=$("stage").getBoundingClientRect(),k=BASE_W/st.width;
+    PT.burst((r.left+r.width/2-st.left)*k,(r.top+r.height/2-st.top)*k,4);
+    if(G&&CFG.animLv>0)G.fromTo(b,{scale:.92},
+      {scale:1,duration:.35,ease:"elastic.out(1,.5)",overwrite:"auto"});
+    fn();
+  });
+}
+press("btnPrev",()=>move(-1));
+press("btnNext",()=>move(1));
+press("btnGo",startCurrent);
+press("pPlay",()=>{el.video.paused?el.video.play():el.video.pause();});
+press("pPrev",()=>{if(now>0){sel=now-1;startCurrent();}});
+press("pNext",()=>{if(now<N()-1){sel=now+1;startCurrent();}});
+el.pbar.addEventListener("pointerdown",e=>{
+  e.stopPropagation();
+  if(!el.video.duration)return;
+  const r=el.pbar.getBoundingClientRect();
+  el.video.currentTime=(e.clientX-r.left)/r.width*el.video.duration;
+});
+
+/* ================= 菜单 ================= */
+function openMenu(){el.menu.classList.add("open");el.menuMask.classList.add("on");
+  if(G&&CFG.animLv>0)G.fromTo(el.menu.children,
+    {opacity:0,x:30},{opacity:1,x:0,duration:.22,stagger:.04,overwrite:"auto"});}
+function closeMenu(){el.menu.classList.remove("open");el.menuMask.classList.remove("on");}
+el.menuBtn.addEventListener("click",e=>{
+  e.stopPropagation();
+  el.menu.classList.contains("open")?closeMenu():openMenu();
+});
+el.menuMask.addEventListener("click",closeMenu);
+$("mBlack").addEventListener("click",()=>{
+  closeMenu();
+  if(el.play.classList.contains("show")&&el.play.dataset.mode==="black"){hidePlay();}
+  else{
+    el.video.pause();
+    el.play.dataset.mode="black";
+    ["video","image","frame"].forEach(k=>
+      el[k].classList.remove("solo"));
+    el.card.classList.remove("audio");
+    el.linkTip.style.display="none";
+    el.playBar.style.display="none";
+    el.card.style.opacity=0;
+    el.play.classList.add("show");
+  }
+});
+$("mStandby").addEventListener("click",()=>{closeMenu();now=-1;stopMedia();render();});
+$("mCfg").addEventListener("click",()=>{
+  closeMenu();syncCfgUI();
+  el.cfg.classList.add("show");
+  if(G&&CFG.animLv>0)G.fromTo(el.cfg,{opacity:0},{opacity:1,duration:.2});
+});
+
+/* ================= 全屏（click+同步调用+重试） ================= */
+function isFs(){return document.fullscreenElement||document.webkitFullscreenElement;}
+function requestFs(){
+  const root=document.documentElement;
+  const req=root.requestFullscreen||root.webkitRequestFullscreen;
+  if(!req){toast("此浏览器不支持全屏API");return;}
+  try{
+    const p=req.call(root);
+    if(p&&p.catch)p.catch(()=>retryFs());
+  }catch(e){retryFs();}
+}
+function retryFs(){
+  toast("全屏被拒 · 再点一下屏幕任意处重试");
+  const h=()=>{requestFs();removeEventListener("pointerdown",h,true);};
+  addEventListener("pointerdown",h,true);
+}
+$("mFull").addEventListener("click",()=>{
+  closeMenu();
+  if(isFs()){document.exitFullscreen&&document.exitFullscreen();return;}
+  requestFs();
+});
+
+/* ================= 文件导入 ================= */
+const EXT={
+  video:["mp4","webm","ogv","mov","mkv","m4v"],
+  audio:["mp3","wav","ogg","flac","m4a","aac"],
+  image:["jpg","jpeg","png","gif","webp","bmp","svg"],
+};
+function classify(f){
+  if(f.type.startsWith("video/"))return"video";
+  if(f.type.startsWith("audio/"))return"audio";
+  if(f.type.startsWith("image/"))return"image";
+  const ext=f.name.split(".").pop().toLowerCase();
+  if(ext==="link")return"link";
+  for(const k in EXT)if(EXT[k].includes(ext))return k;
+  return null;
+}
+function addLinkFile(f){
+  return new Promise(res=>{
+    const rd=new FileReader();
+    rd.onload=()=>{
+      const m=(rd.result||"").match(/https?:\/\/\S+/i);
+      const url=m?m[0]:(rd.result||"").trim().split(/\s+/)[0];
+      if(url&&url.length>4)
+        tracks.push({name:f.name.replace(/\.link$/i,""),url,type:"link"});
+      res();
+    };
+    rd.onerror=()=>res();
+    rd.readAsText(f);
+  });
+}
+async function importFiles(files){
+  let added=0,skip=0,ignored=0;
+  for(const f of files){
+    if(tracks.some(t=>t.name===f.name)){skip++;continue;}
+    const type=classify(f);
+    if(type==="link"){await addLinkFile(f);added++;continue;}
+    if(!type){ignored++;continue;}
+    tracks.push({name:f.name,url:URL.createObjectURL(f),type});
+    added++;
+  }
+  buildRows();applyLayout();render();
+  let msg=added?`已导入 ${added} 个节目`:"";
+  if(skip)msg+=(msg?" · ":"")+`跳过重复 ${skip}`;
+  if(ignored)msg+=(msg?" · ":"")+`忽略无关文件 ${ignored}`;
+  if(msg)toast(msg);
+}
+el.dirInput.addEventListener("change",e=>{
+  importFiles(Array.from(e.target.files||[]));el.dirInput.value="";
+});
+el.fileInput.addEventListener("change",e=>{
+  importFiles(Array.from(e.target.files||[]));el.fileInput.value="";
+});
+
+/* 拖拽导入 */
+let dragDepth=0;
+addEventListener("dragenter",e=>{e.preventDefault();dragDepth++;
+  el.dropHint.style.display="flex";});
+addEventListener("dragover",e=>e.preventDefault());
+addEventListener("dragleave",e=>{e.preventDefault();
+  if(--dragDepth<=0){dragDepth=0;el.dropHint.style.display="none";}});
+addEventListener("drop",async e=>{
+  e.preventDefault();dragDepth=0;el.dropHint.style.display="none";
+  const items=e.dataTransfer.items,files=[];
+  const walk=entry=>new Promise(res=>{
+    if(entry.isFile)entry.file(f=>{files.push(f);res();},()=>res());
+    else if(entry.isDirectory){
+      const rd=entry.createReader();
+      const readAll=()=>rd.readEntries(async ents=>{
+        if(!ents.length){res();return;}
+        for(const en of ents)await walk(en);
+        readAll();
+      },()=>res());
+      readAll();
+    }else res();
+  });
+  if(items&&items[0]&&items[0].webkitGetAsEntry){
+    const ents=Array.from(items).map(i=>i.webkitGetAsEntry()).filter(Boolean);
+    for(const en of ents)await walk(en);
+  }else files.push(...Array.from(e.dataTransfer.files||[]));
+  if(files.length)importFiles(files);
+  else toast("未识别到可导入的文件");
+});
+
+/* ================= 播放 ================= */
+function showLayer(w){
+  el.video.classList.toggle("solo",w==="video");
+  el.image.classList.toggle("solo",w==="image");
+  el.frame.classList.toggle("solo",w==="frame");
+  el.card.classList.toggle("audio",w==="audio");
+  el.linkTip.style.display=w==="frame"?"block":"none";
+  el.playBar.style.display=(w==="video"||w==="audio")?"flex":"none";
+  if(w!=="video"&&w!=="audio")el.video.pause();
+}
+function fillCard(){
+  const t=tracks[sel];
+  el.cardNum.textContent=String(sel+1).padStart(2,"0");
+  el.cardTitle.textContent=t.name;
+  el.audioName.textContent=t.name;
+  el.cardType.textContent=TNAME[t.type];
+}
+/* 音游式过场：斜切色板扫屏清屏 → 暗幕下换内容 → 卡片弹入 */
+function playTransition(mode,media){
+  const fx=G&&CFG.animLv>0;
+  fillCard();
+  el.play.dataset.mode="media";
+  el.play.classList.add("show");
+  el.card.style.opacity=0;el.playBar.style.opacity=0;
+  if(!fx){
+    showLayer(mode);media();
+    el.card.style.opacity=1;el.playBar.style.opacity=1;
+    return;
+  }
+  const A=el.wipeA,B=el.wipeB;
+  el.wipe.style.display="block";
+  const tl=G.timeline({onComplete:()=>{el.wipe.style.display="none";}});
+  tl.set([A,B],{xPercent:-135,display:"block"})
+    .to(A,{xPercent:0,duration:.3,ease:"power3.in"})
+    .to(B,{xPercent:0,duration:.3,ease:"power3.in"},"-=.14")
+    .add(()=>{
+      showLayer(mode);media();
+      el.card.style.opacity=1;el.playBar.style.opacity=1;
+      G.fromTo(el.card,{opacity:0,scale:.88,y:46},
+        {opacity:1,scale:1,y:0,duration:.5,ease:"back.out(1.4)",overwrite:"auto"});
+      G.fromTo(el.playBar,{opacity:0,y:34},
+        {opacity:1,y:0,duration:.4,delay:.12,ease:"power2.out",overwrite:"auto"});
+    })
+    .to(B,{xPercent:135,duration:.45,ease:"power3.out"},"+=.06")
+    .to(A,{xPercent:135,duration:.45,ease:"power3.out"},"-=.3");
+}
+function startCurrent(){
+  if(!N())return;
+  sel=Math.max(0,Math.min(sel,N()-1));now=sel;
+  const t=tracks[sel];
+  const mode=t.type==="link"?"frame":t.type;
+  playTransition(mode,()=>{
+    if(mode==="image"){
+      el.image.src=t.url;
+      el.time.innerHTML="<b>IMG</b>";el.ptime.textContent="图片";
+      clearTimeout(startCurrent._img);
+      startCurrent._img=setTimeout(()=>{
+        if(now===sel&&el.play.dataset.mode==="media")autoNext();
+      },4000);
+    }else if(mode==="frame"){
+      el.frame.src=t.url;
+      el.time.innerHTML="<b>LINK</b>";
+    }else{
+      el.video.src=t.url;
+      el.video.play().catch(()=>{
+        el.video.muted=true;
+        el.video.play().catch(()=>toast("点击画面开始播放"));
+      });
+    }
+  });
+  render();
+}
+function autoNext(){
+  if(now<N()-1){sel=now+1;startCurrent();}
+  else{hidePlay();now=-1;render();}
+}
+el.video.addEventListener("loadedmetadata",()=>{
+  const f=s=>`${s/60|0}:${String(s%60|0).padStart(2,"0")}`;
+  el.ptime.textContent="0:00 / "+f(el.video.duration||0);
+});
+el.video.addEventListener("timeupdate",()=>{
+  if(!el.video.duration)return;
+  el.pfill.style.width=(el.video.currentTime/el.video.duration*100)+"%";
+  const f=s=>`${s/60|0}:${String(s%60|0).padStart(2,"0")}`;
+  el.ptime.textContent=f(el.video.currentTime)+" / "+f(el.video.duration);
+  el.time.innerHTML=`<b>${f(el.video.currentTime)}</b> / ${f(el.video.duration)}`;
+});
+el.video.addEventListener("ended",autoNext);
+el.video.addEventListener("play",()=>{el.pPlay.textContent="⏸";
+  el.play.classList.remove("paused");});
+el.video.addEventListener("pause",()=>{el.pPlay.textContent="▶";
+  el.play.classList.add("paused");});
+el.video.addEventListener("error",()=>{
+  if(el.video.src)toast("视频无法解码：浏览器可能不支持该编码格式");
+});
+el.play.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".pbtn")||e.target.closest("#pbar"))return;
+  if(el.play.dataset.mode==="black"){hidePlay();return;}
+  if(e.target.closest("#cardBody")&&el.video.src)
+    el.video.paused?el.video.play():el.video.pause();
+});
+function stopMedia(){
+  el.video.pause();el.video.removeAttribute("src");el.video.load();
+  el.frame.src="about:blank";el.image.removeAttribute("src");
+  el.play.classList.remove("show","paused");
+  el.card.style.opacity=0;el.playBar.style.opacity=0;
+  el.time.innerHTML="<b>--:--</b>";el.pfill.style.width="0%";
+  clearTimeout(startCurrent._img);
+}
+function hidePlay(){stopMedia();if(now>=0)sel=now;render();}
+
+/* ================= 配置面板 ================= */
+function syncCfgUI(){
+  document.querySelectorAll(".seg").forEach(seg=>{
+    const k=seg.dataset.key;
+    seg.querySelectorAll("button").forEach(b=>
+      b.classList.toggle("on",String(CFG[k])===b.dataset.v));
+  });
+}
+function pick(b){
+  const k=b.closest(".seg").dataset.key;
+  let v=b.dataset.v;
+  if(k==="dblMs"||k==="animLv")v=+v;
+  CFG[k]=v;saveCfg();
+  TH=THEMES[CFG.theme]||TH;
+  applyTheme();applyLayout();applyFx();render();syncCfgUI();
+  if(G&&CFG.animLv>0&&k==="theme"){
+    const r=b.getBoundingClientRect();
+    const rip=document.createElement("div");
+    rip.style.cssText=`position:fixed;border-radius:50%;pointer-events:none;
+      background:${TH.main};opacity:.25;z-index:960;
+      left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;
+      width:0;height:0;transform:translate(-50%,-50%);`;
+    document.body.appendChild(rip);
+    G.to(rip,{width:"250vmax",height:"250vmax",duration:.9,ease:"power2.out",
+      onComplete:()=>rip.remove()});
+  }
+}
+el.cfg.addEventListener("pointerdown",e=>{
+  const b=e.target.closest("button");
+  if(!b||!b.dataset.v)return;
+  e.preventDefault();pick(b);
+});
+$("cfgGo").addEventListener("click",()=>{
+  saveCfg();
+  requestFs();
+  const done=()=>{
+    el.cfg.classList.remove("show");G&&G.set(el.cfg,{opacity:1});
+    if(G&&CFG.animLv>0)
+      G.from("#top,#left,#panel,#ctl",
+        {opacity:0,y:20,duration:.45,stagger:.07,ease:"power2.out"});
+    PT.start();
+  };
+  if(G&&CFG.animLv>0)G.to(el.cfg,{opacity:0,duration:.25,onComplete:done});
+  else done();
+});
+
+/* 键盘调试 */
+addEventListener("keydown",e=>{
+  if(el.cfg.classList.contains("show"))return;
+  if(e.key==="ArrowRight"||e.key==="ArrowUp")move(1);
+  if(e.key==="ArrowLeft"||e.key==="ArrowDown")move(-1);
+  if(e.key==="Enter")startCurrent();
+  if(e.key==="Escape"&&el.play.classList.contains("show"))hidePlay();
+  if(e.key===" "&&el.video.src){e.preventDefault();
+    el.video.paused?el.video.play():el.video.pause();}
+});
+
+/* ================= 启动 ================= */
+PT.init();
+applyTheme();
+applyLayout();
+applyFx();
+buildRows();
+render();
+syncCfgUI();
+el.cfg.classList.add("show");
+if(G&&CFG.animLv>0)G.fromTo(el.cfg,{opacity:0},{opacity:1,duration:.3});
+</script>
+</body>
+</html>
