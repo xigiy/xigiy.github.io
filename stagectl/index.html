@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>STAGE CTL</title>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <style>
@@ -26,7 +26,10 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
   font-family:"Microsoft YaHei","PingFang SC",sans-serif;
   -webkit-user-select:none;user-select:none;
-  -webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  -webkit-text-size-adjust:none;text-size-adjust:none;}
+/* 屏蔽系统字体缩放对页面字号的影响（所有元素） */
+*,*::before,*::after{-webkit-text-size-adjust:none !important;
+  text-size-adjust:none !important;}
 
 /* 舞台：固定1600×1200，JS缩放居中——任何设备都看到同一4:3构图 */
 #stage{position:absolute;left:50%;top:50%;width:1600px;height:1200px;
