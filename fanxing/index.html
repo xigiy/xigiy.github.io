@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>STAGE CTL</title>
+<title>梵星剧场 播控器</title>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <style>
+@import url("https://fontsapi.zeoseven.com/296/main/result.css");
 /* =====================================================
    舞台设计基准：1600×1200（4:3）
    所有尺寸用 px（相对基准），整体 JS 缩放适配
@@ -24,7 +25,8 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
-  font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+  font-family:"NanoPyongHanHei","Microsoft YaHei","PingFang SC",sans-serif;
+  font-weight:normal;
   -webkit-user-select:none;user-select:none;
   -webkit-text-size-adjust:none;text-size-adjust:none;}
 /* 屏蔽系统字体缩放对页面字号的影响（所有元素） */
@@ -359,7 +361,7 @@ body.noidle #audioArt .disc{animation:none;}
   <canvas id="particles"></canvas>
 
   <div id="top">
-    <div class="logo"><em>▶</em> STAGE CTL</div>
+    <div class="logo"><em>▶</em> 梵星剧场</div>
     <div id="now">待机</div>
   </div>
 
@@ -410,7 +412,7 @@ body.noidle #audioArt .disc{animation:none;}
   </div>
 
   <div id="cfg">
-    <h1><em>▶</em> STAGE CTL · 系统配置</h1>
+    <h1><em>▶</em> 梵星剧场 · 系统配置</h1>
     <div class="grid">
       <div class="cl">选曲面板</div>
       <div class="seg" data-key="panelSide">
@@ -514,7 +516,7 @@ body.noidle #audioArt .disc{animation:none;}
   <div class="orb o1"></div><div class="orb o2"></div>
   <div id="curtStage">
     <div class="cInner">
-      <div class="cKicker" id="cKick">STAGE CTL</div>
+      <div class="cKicker" id="cKick">梵星剧场</div>
       <div class="cTitle" id="cTitle">欢迎莅临</div>
       <div class="cLine"></div>
       <div class="cSub" id="cSub">点击任意处开始</div>
@@ -1080,7 +1082,7 @@ const CURT={raf:0,ps:[],kind:"open",
   open(kind){
     this.kind=kind;this.ps=[];
     el.curtain.style.display="flex";
-    el.cKick.textContent=kind==="break"?"INTERMISSION":"STAGE CTL";
+    el.cKick.textContent=kind==="break"?"INTERMISSION":"梵星剧场";
     el.cTitle.textContent=kind==="break"?"中场休息"
       :(CURTAIN.title||"欢迎莅临");
     el.cSub.textContent=kind==="break"?"稍作休息 · 精彩即将继续"
