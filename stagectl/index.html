@@ -221,12 +221,41 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 #card.audio #video{display:none !important;}
 #play.paused .disc,#play.paused .eq i{animation-play-state:paused;}
 
+/* 环境光：镜像视频铺满全屏模糊 */
+#amb{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;
+  filter:blur(70px) saturate(1.6) brightness(.5);transform:scale(1.08);
+  display:none;z-index:0;}
+
+/* 视频模式频谱条（画面底部） */
+#eqV{position:absolute;left:0;right:0;bottom:0;width:100%;height:90px;
+  display:none;pointer-events:none;}
+
+/* 幕布（开场/中场） */
+#curtain{position:absolute;inset:0;z-index:200;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--bg1) 30%,var(--bg2));
+  overflow:hidden;cursor:pointer;}
+#curtCv{position:absolute;inset:0;width:100%;height:100%;}
+#curtain .cInner{position:relative;text-align:center;
+  animation:cIn 1.2s cubic-bezier(.2,.8,.2,1) both;}
+@keyframes cIn{from{opacity:0;letter-spacing:60px;filter:blur(14px);}
+  to{opacity:1;filter:blur(0);}}
+#curtain .cKicker{font-size:24px;letter-spacing:14px;color:var(--sel);
+  margin-bottom:34px;text-indent:14px;}
+#curtain .cTitle{font-size:104px;font-weight:bold;color:var(--ink);
+  letter-spacing:20px;text-indent:20px;line-height:1.25;
+  text-shadow:0 0 60px var(--glow),0 0 18px var(--glow);}
+#curtain .cLine{width:260px;height:3px;margin:44px auto;
+  background:linear-gradient(90deg,transparent,var(--sel),transparent);
+  box-shadow:0 0 20px var(--sel);}
+#curtain .cSub{font-size:30px;color:var(--dim);letter-spacing:8px;text-indent:8px;}
+
 /* 播控栏：玻璃胶囊（舞台坐标） */
 #playBar{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);z-index:55;
   display:flex;align-items:center;gap:16px;padding:16px 30px;
   background:var(--ctlbg);border:2px solid var(--line);
   border-radius:70px;backdrop-filter:blur(10px);
-  width:900px;box-sizing:border-box;
+  width:1060px;box-sizing:border-box;
   box-shadow:0 16px 50px -12px rgba(0,0,0,.3);}
 .pbtn{width:78px;height:78px;border-radius:50%;flex-shrink:0;
   border:2px solid var(--line);background:var(--panel);
@@ -238,13 +267,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1024;
 .pbtn.exit{border-color:rgba(232,60,140,.5);color:#d6367f;}
 .pbtn:active{transform:scale(.9);}
 #pbar{flex:1;height:14px;background:var(--rowbg);
-  border-radius:7px;cursor:pointer;position:relative;}
+  border-radius:7px;cursor:pointer;position:relative;touch-action:none;}
+#pbar::after{content:"";position:absolute;inset:-16px 0;}  /* 扩大触摸热区 */
 #pfill{height:100%;background:var(--sel);border-radius:7px;width:0%;
   box-shadow:0 0 12px var(--sel);position:relative;}
 #pfill::after{content:"";position:absolute;right:-11px;top:50%;
   width:22px;height:22px;border-radius:50%;background:#fff;
   transform:translateY(-50%);box-shadow:0 0 10px var(--sel);}
 #ptime{font-size:25px;color:var(--dim);font-variant-numeric:tabular-nums;flex-shrink:0;}
+#pVol{width:150px;height:14px;accent-color:var(--sel);cursor:pointer;flex-shrink:0;}
+.pbtn.spd{width:auto;min-width:86px;border-radius:40px;padding:0 18px;
+  font-size:24px;font-weight:bold;color:var(--sel);border-color:var(--sel);}
 #linkTip{position:absolute;bottom:180px;left:0;right:0;text-align:center;
   color:var(--dim);font-size:24px;z-index:56;display:none;}
 
@@ -332,14 +365,15 @@ body.noidle #audioArt .disc{animation:none;}
   <div id="menuMask"></div>
   <div id="menuBtn">☰</div>
   <div id="menu">
-    <label class="mbtn"><em>📄</em>导入文件
-      <input type="file" id="fileInput" accept="video/*,audio/*,image/*,.link" multiple></label>
-    <label class="mbtn"><em>🗂</em>导入文件夹
+    <label class="mbtn">导入文件
+      <input type="file" id="fileInput" accept="video/*,audio/*,image/*,.link,.txt" multiple></label>
+    <label class="mbtn">导入文件夹
       <input type="file" id="dirInput" webkitdirectory directory multiple></label>
-    <button class="mbtn danger" id="mBlack"><em>⬛</em>黑场</button>
-    <button class="mbtn" id="mStandby"><em>⏹</em>待机</button>
-    <button class="mbtn" id="mFull"><em>⛶</em>全屏</button>
-    <button class="mbtn" id="mCfg"><em>⚙</em>设置</button>
+    <button class="mbtn danger" id="mBlack">黑场</button>
+    <button class="mbtn" id="mStandby">待机</button>
+    <button class="mbtn" id="mBreak">中场休息</button>
+    <button class="mbtn" id="mFull">全屏</button>
+    <button class="mbtn" id="mCfg">设置</button>
   </div>
 
   <div id="cfg">
@@ -371,6 +405,11 @@ body.noidle #audioArt .disc{animation:none;}
         <button data-v="0">关</button><button data-v="5">5秒</button>
         <button data-v="10">10秒</button><button data-v="15">15秒</button>
       </div>
+      <div class="cl">间隔音乐音量</div>
+      <div class="seg" data-key="bgmVol">
+        <button data-v="0">关</button><button data-v="0.15">小</button>
+        <button data-v="0.3">中</button><button data-v="0.5">大</button>
+      </div>
       <div class="cl">双击灵敏度</div>
       <div class="seg" data-key="dblMs">
         <button data-v="220">快</button><button data-v="320">标准</button><button data-v="450">慢</button>
@@ -391,7 +430,17 @@ body.noidle #audioArt .disc{animation:none;}
 
 <!-- 全屏层不缩放；内部playStage按4:3舞台缩放 -->
 <div id="play">
+  <video id="amb" muted playsinline></video>
   <div id="wipe"><div class="wp a"></div><div class="wp c"></div><div class="wp b"></div></div>
+  <div id="curtain">
+    <canvas id="curtCv"></canvas>
+    <div class="cInner">
+      <div class="cKicker" id="cKick">STAGE CTL</div>
+      <div class="cTitle" id="cTitle">欢迎</div>
+      <div class="cLine"></div>
+      <div class="cSub" id="cSub">点击任意处开始</div>
+    </div>
+  </div>
   <div id="playStage">
     <div id="card">
       <div id="cardHead">
@@ -401,6 +450,7 @@ body.noidle #audioArt .disc{animation:none;}
       </div>
       <div id="cardBody">
         <video id="video" playsinline></video>
+        <canvas id="eqV"></canvas>
         <div id="audioArt"><div class="disc"></div><canvas id="eqCv"></canvas><div class="nm" id="audioName">—</div></div>
         <img id="image" style="display:none" alt="">
         <iframe id="frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -413,6 +463,11 @@ body.noidle #audioArt .disc{animation:none;}
       <div class="pbtn" id="pNext">⏭</div>
       <div id="pbar"><div id="pfill"></div></div>
       <span id="ptime">0:00</span>
+      <div class="pbtn" id="pMute">
+        <svg viewBox="0 0 24 24" width="26" height="26"><path id="spk" fill="currentColor" d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+      </div>
+      <input type="range" id="pVol" min="0" max="1" step="0.01" value="1">
+      <div class="pbtn spd" id="pSpd">1×</div>
       <div class="pbtn exit" id="pBack">✕</div>
     </div>
   </div>
@@ -440,7 +495,7 @@ fitStage();
 
 /* ================= 配置 ================= */
 const DEF={panelSide:"right",startPos:"mid",theme:"white",dblMs:320,animLv:1,fx:"on",
-  imgSec:0,customMain:"#ff7043",modes:{}};
+  imgSec:0,customMain:"#ff7043",modes:{},bgmVol:.3,vol:1};
 let CFG;
 try{CFG=Object.assign({},DEF,JSON.parse(localStorage.getItem("stageCTL")||"{}"));}
 catch(e){CFG=Object.assign({},DEF);}
@@ -523,6 +578,8 @@ const el={rows:$("rows"),now:$("now"),empty:$("empty"),
   fileInput:$("fileInput"),dirInput:$("dirInput"),
   menu:$("menu"),menuBtn:$("menuBtn"),menuMask:$("menuMask"),
   grid:$("grid"),horizon:$("horizon"),eqCv:$("eqCv"),cMain:$("cMain"),
+  amb:$("amb"),eqV:$("eqV"),curtain:$("curtain"),curtCv:$("curtCv"),
+  cTitle:$("cTitle"),cSub:$("cSub"),cKick:$("cKick"),pVol:$("pVol"),pSpd:$("pSpd"),
   btnPrev:$("btnPrev"),btnGo:$("btnGo"),btnNext:$("btnNext")};
 
 let tracks=[],sel=0,now=-1;
@@ -594,44 +651,53 @@ const AU={ctx:null,an:null,data:null,
   }
 };
 el.video.addEventListener("play",()=>{AU.ctx&&AU.ctx.resume();});
-/* 音频卡片频谱绘制 */
-const EQ={raf:0,fb:0,
-  start(){
+/* 音频/视频频谱绘制（分析器不可用或静默时自动模拟律动） */
+const EQ={raf:0,fb:new Array(40).fill(4),
+  start(videoMode){
     cancelAnimationFrame(this.raf);
-    const cv=el.eqCv,ctx=cv.getContext("2d");
-    cv.width=560;cv.height=130;
-    this.fb=new Array(40).fill(4);
+    const cv=videoMode?el.eqV:el.eqCv,ctx=cv.getContext("2d");
+    cv.width=560;cv.height=videoMode?90:130;
+    this.vm=!!videoMode;
     const tick=()=>{
-      if(!el.play.classList.contains("show")||
-         !el.card.classList.contains("audio"))return;
+      const active=el.play.classList.contains("show")&&
+        (this.vm?el.card.classList.contains("video")&&!el.video.paused
+                :el.card.classList.contains("audio"));
+      if(!active)return;
       ctx.clearRect(0,0,cv.width,cv.height);
-      const n=40,bw=cv.width/n;
+      const n=40,bw=cv.width/n;let vals=null,mx=0;
       if(AU.an){
         AU.an.getByteFrequencyData(AU.data);
-        for(let i=0;i<n;i++){
-          const h=Math.max(3,AU.data[i*2]/255*cv.height);
-          ctx.globalAlpha=.35+.65*(h/cv.height);
-          ctx.fillStyle=i<n/3?TH.main:TH.sub;
-          ctx.fillRect(i*bw+2,cv.height-h,bw-4,h);
-        }
-        const lv=AU.level();
-        el.audioArt.style.transform=`scale(${1+lv*.06})`;
-      }else{
-        /* 无分析器兜底：模拟律动条 */
+        for(let i=0;i<40;i++){const v=AU.data[i*2];if(v>mx)mx=v;}
+        if(mx>0)vals=Array.from({length:40},(_,i)=>AU.data[i*2]/255);
+      }
+      if(!vals){ /* 兜底：模拟律动 */
         for(let i=0;i<n;i++){
           const t=performance.now()/300+i*.6;
           const target=(Math.sin(t)*.5+.5)*(.3+.7*Math.random());
           this.fb[i]=Math.max(4,this.fb[i]*.8+target*cv.height*.6);
-          ctx.globalAlpha=.5;
-          ctx.fillStyle=i<n/3?TH.main:TH.sub;
-          ctx.fillRect(i*bw+2,cv.height-this.fb[i],bw-4,this.fb[i]);
         }
+        vals=this.fb.map(v=>v/cv.height);
+      }
+      for(let i=0;i<n;i++){
+        const h=Math.max(3,vals[i]*cv.height);
+        ctx.globalAlpha=this.vm?.55:.35+.65*(h/cv.height);
+        ctx.fillStyle=i<n/3?TH.main:TH.sub;
+        ctx.fillRect(i*bw+2,cv.height-h,bw-4,h);
+      }
+      ctx.globalAlpha=1;
+      if(!this.vm&&AU.an){
+        const lv=AU.level();
+        el.audioArt.style.transform=`scale(${1+lv*.06})`;
       }
       this.raf=requestAnimationFrame(tick);
     };
     tick();
   }
 };
+/* 任何手势都尝试唤醒音频上下文（自动播放策略根因） */
+addEventListener("pointerdown",()=>{
+  if(AU.ctx&&AU.ctx.state==="suspended")AU.ctx.resume();
+},true);
 /* ID3 APIC 封面解析 */
 async function audioCover(url){
   try{
@@ -690,7 +756,6 @@ function applyLayout(){
   const L=CFG.panelSide==="left";
   el.panel.style[L?"left":"right"]="0";
   el.panel.style[L?"right":"left"]="auto";
-  el.panel.style.transform=`skewY(${L?6:-6}deg)`;
   el.panel.style.borderLeft=L?"none":`3px solid ${TH.line}`;
   el.panel.style.borderRight=L?`3px solid ${TH.line}`:"none";
   el.panel.style.borderRadius=L?"0 36px 36px 0":"36px 0 0 36px";
@@ -699,13 +764,30 @@ function applyLayout(){
   el.empty.style.transform=`translateY(-50%) skewY(${L?-6:6}deg)`;
   el.rows.querySelectorAll(".row").forEach(r=>
     r.style.transform=`skewY(${L?-6:6}deg)`);
-  const order=CFG.startPos==="left"
-    ?[el.btnGo,el.btnPrev,el.btnNext]
-    :CFG.startPos==="right"
-    ?[el.btnPrev,el.btnNext,el.btnGo]
-    :[el.btnPrev,el.btnGo,el.btnNext];
-  order.forEach(b=>el.ctl.insertBefore(b,el.time));
+  /* START 键水平对齐：左 / 中 / 右（换节目 ◀▶ 跟随 START 同组移动） */
+  const p=CFG.startPos;
+  el.ctl.style.left=p==="left"?"48px":p==="right"?"auto":"50%";
+  el.ctl.style.right=p==="right"?"48px":"auto";
+  el.ctl.style.transform=p==="mid"?"translateX(-50%)":"none";
 }
+
+/* ================= 伪3D倾斜（封面 + 面板跟随指针） ================= */
+let tlX=0,tlY=0,tcX=0,tcY=0;
+addEventListener("pointermove",e=>{
+  tlX=(e.clientX/innerWidth-.5)*2;
+  tlY=(e.clientY/innerHeight-.5)*2;
+});
+(function tiltLoop(){
+  tcX+=(tlX-tcX)*.06;tcY+=(tlY-tcY)*.06;
+  const L=CFG&&CFG.panelSide==="left";
+  if(el.coverWrap)
+    el.coverWrap.style.transform=
+      `perspective(900px) rotateY(${tcX*7}deg) rotateX(${-tcY*6}deg)`;
+  if(el.panel)
+    el.panel.style.transform=
+      `perspective(1400px) rotateY(${tcX*4}deg) rotateX(${-tcY*3}deg) skewY(${L?6:-6}deg)`;
+  requestAnimationFrame(tiltLoop);
+})();
 
 /* ================= 列表 ================= */
 function buildRows(){
@@ -815,11 +897,27 @@ press("btnGo",startCurrent);
 press("pPlay",()=>{el.video.paused?el.video.play():el.video.pause();});
 press("pPrev",()=>{if(now>0){sel=now-1;startCurrent();}});
 press("pNext",()=>{if(now<N()-1){sel=now+1;startCurrent();}});
+/* 进度条：按下即拖动，支持滑动刮擦 */
 el.pbar.addEventListener("pointerdown",e=>{
   e.stopPropagation();
   if(!el.video.duration)return;
-  const r=el.pbar.getBoundingClientRect();
-  el.video.currentTime=(e.clientX-r.left)/r.width*el.video.duration;
+  el.pbar.setPointerCapture(e.pointerId);
+  const seek=ev=>{
+    const r=el.pbar.getBoundingClientRect();
+    const p=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));
+    el.video.currentTime=p*el.video.duration;
+    el.pfill.style.width=p*100+"%";
+  };
+  seek(e);
+  const mv=ev=>seek(ev);
+  const up=()=>{
+    el.pbar.removeEventListener("pointermove",mv);
+    el.pbar.removeEventListener("pointerup",up);
+    el.pbar.removeEventListener("pointercancel",up);
+  };
+  el.pbar.addEventListener("pointermove",mv);
+  el.pbar.addEventListener("pointerup",up);
+  el.pbar.addEventListener("pointercancel",up);
 });
 
 /* ================= 菜单 ================= */
@@ -848,6 +946,7 @@ $("mBlack").addEventListener("click",()=>{
   }
 });
 $("mStandby").addEventListener("click",()=>{closeMenu();now=-1;stopMedia();render();});
+$("mBreak").addEventListener("click",()=>{closeMenu();CURT.open("break");});
 $("mCfg").addEventListener("click",()=>{
   closeMenu();syncCfgUI();
   el.cfg.classList.add("show");
@@ -876,7 +975,74 @@ $("mFull").addEventListener("click",()=>{
   requestFs();
 });
 
-/* ================= 文件导入 ================= */
+/* ================= 间隔音乐（暖场/中场/背景） ================= */
+const BGM={pool:[],i:0,audio:new Audio(),on:false,
+  setVol(v){this.audio.volume=v;},
+  start(){
+    if(!this.pool.length||this.on)return;
+    this.audio.loop=false;
+    this.audio.volume=CFG.bgmVol;
+    this.playIdx(Math.min(this.i,this.pool.length-1));
+  },
+  playIdx(i){
+    this.i=i;this.on=true;
+    this.audio.src=this.pool[i].url;
+    this.audio.play().catch(()=>{this.on=false;});
+  },
+  next(){this.playIdx((this.i+1)%this.pool.length);},
+  stop(){this.on=false;this.audio.pause();}
+};
+BGM.audio.addEventListener("ended",()=>{
+  if(BGM.on&&BGM.pool.length)BGM.next();
+});
+
+/* ================= 幕布（开场/中场休息） ================= */
+const CURTAIN={title:"",sub:"",loaded:false};
+const CURT={raf:0,ps:[],kind:"open",
+  spawn(w,h,init){
+    return{x:Math.random()*w,y:init?Math.random()*h:h+10,
+      r:.8+Math.random()*2.4,v:.3+Math.random()*1.1,
+      dx:(Math.random()-.5)*.4,tw:Math.random()*6.28};
+  },
+  open(kind){
+    this.kind=kind;this.ps=[];
+    el.curtain.style.display="flex";
+    el.cKick.textContent=kind==="break"?"INTERMISSION":"STAGE CTL";
+    el.cTitle.textContent=kind==="break"?"中场休息"
+      :(CURTAIN.title||"欢迎莅临");
+    el.cSub.textContent=kind==="break"?"稍作休息 · 精彩即将继续"
+      :(CURTAIN.sub||"点击任意处开始");
+    /* 重触发入场动画 */
+    const inner=el.curtain.querySelector(".cInner");
+    inner.style.animation="none";void inner.offsetWidth;
+    inner.style.animation="";
+    const cv=el.curtCv;cv.width=innerWidth;cv.height=innerHeight;
+    for(let i=0;i<60;i++)this.ps.push(this.spawn(cv.width,cv.height,true));
+    cancelAnimationFrame(this.raf);
+    const ctx=cv.getContext("2d");
+    const tick=()=>{
+      if(el.curtain.style.display==="none")return;
+      ctx.clearRect(0,0,cv.width,cv.height);
+      for(const p of this.ps){
+        p.y-=p.v;p.x+=p.dx;p.tw+=.03;
+        if(p.y<-12){Object.assign(p,this.spawn(cv.width,cv.height,false));}
+        ctx.globalAlpha=.25+.45*(Math.sin(p.tw)*.5+.5);
+        ctx.fillStyle=TH.sel2||TH.main;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      this.raf=requestAnimationFrame(tick);
+    };
+    tick();
+  },
+  close(){
+    cancelAnimationFrame(this.raf);
+    el.curtain.style.display="none";
+    if(!el.play.classList.contains("show")&&this.kind!=="break")BGM.start();
+  }
+};
+el.curtain.addEventListener("pointerdown",()=>CURT.close());
+
 const EXT={
   video:["mp4","webm","ogv","mov","mkv","m4v"],
   audio:["mp3","wav","ogg","flac","m4a","aac"],
@@ -888,8 +1054,25 @@ function classify(f){
   if(f.type.startsWith("image/"))return"image";
   const ext=f.name.split(".").pop().toLowerCase();
   if(ext==="link")return"link";
+  if(ext==="txt")return"txt";
   for(const k in EXT)if(EXT[k].includes(ext))return k;
   return null;
+}
+/* 间隔音乐标记匹配（灵活）：暖场/中场/休息/背景/bgm 等 */
+const BGM_RE=/(暖场|中场|休息|背景|间隔|bgm|bGM|intermission|interval|break|warm\s?up|waiting)/i;
+function addTxtFile(f){
+  return new Promise(res=>{
+    const rd=new FileReader();
+    rd.onload=()=>{
+      const lines=(rd.result||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      if(lines[0])CURTAIN.title=lines[0];
+      if(lines[1])CURTAIN.sub=lines.slice(1).join(" ");
+      if(lines.length)CURTAIN.loaded=true;
+      res();
+    };
+    rd.onerror=()=>res();
+    rd.readAsText(f,"utf-8");
+  });
 }
 function addLinkFile(f){
   return new Promise(res=>{
@@ -906,17 +1089,24 @@ function addLinkFile(f){
   });
 }
 async function importFiles(files){
-  let added=0,skip=0,ignored=0;
+  let added=0,skip=0,ignored=0,bgmN=0;
   for(const f of files){
-    if(tracks.some(t=>t.name===f.name)){skip++;continue;}
+    if(tracks.some(t=>t.name===f.name)||BGM.pool.some(b=>b.name===f.name)){skip++;continue;}
     const type=classify(f);
     if(type==="link"){await addLinkFile(f);added++;continue;}
+    if(type==="txt"){await addTxtFile(f);added++;continue;}
     if(!type){ignored++;continue;}
+    if(type==="audio"&&BGM_RE.test(f.name)){
+      BGM.pool.push({name:f.name,url:URL.createObjectURL(f)});
+      bgmN++;continue;
+    }
     tracks.push({name:f.name,url:URL.createObjectURL(f),type});
     added++;
   }
   buildRows();applyLayout();render();
   let msg=added?`已导入 ${added} 个节目`:"";
+  if(bgmN){msg+=(msg?" · ":"")+`间隔音乐 ${bgmN} 首`;BGM.start();}
+  if(CURTAIN.loaded&&CURTAIN.title){msg+=(msg?" · ":"")+"已读取幕布文案";CURTAIN.loaded=false;}
   if(skip)msg+=(msg?" · ":"")+`跳过重复 ${skip}`;
   if(ignored)msg+=(msg?" · ":"")+`忽略无关文件 ${ignored}`;
   if(msg)toast(msg);
@@ -964,6 +1154,9 @@ function showLayer(w){
   el.image.classList.toggle("solo",w==="image");
   el.frame.classList.toggle("solo",w==="frame");
   el.card.classList.toggle("audio",w==="audio");
+  el.card.classList.toggle("video",w==="video");
+  el.amb.style.display=w==="video"?"block":"none";
+  el.eqV.style.display=w==="video"?"block":"none";
   el.linkTip.style.display=w==="frame"?"block":"none";
   el.playBar.style.display=(w==="video"||w==="audio")?"flex":"none";
   if(w!=="video"&&w!=="audio")el.video.pause();
@@ -1012,6 +1205,7 @@ function playTransition(mode,media){
 }
 function startCurrent(){
   if(!N())return;
+  BGM.stop();
   sel=Math.max(0,Math.min(sel,N()-1));now=sel;
   const t=tracks[sel];
   const mode=t.type==="link"?"frame":t.type;
@@ -1032,8 +1226,15 @@ function startCurrent(){
     }else{
       AU.init();
       el.video.src=t.url;
+      el.video.volume=+CFG.vol||1;
+      el.video.playbackRate=SPDS[spdIdx];
+      if(mode==="video"){
+        EQ.start(true);
+        el.amb.src=t.url;
+        el.amb.play().catch(()=>{});
+      }
       if(mode==="audio"){
-        EQ.start();
+        EQ.start(false);
         if(!t.cover)audioCover(t.url).then(u=>{
           if(u&&tracks[sel]===t){t.cover=u;applyCover();}
         });
@@ -1046,6 +1247,34 @@ function startCurrent(){
   });
   render();
 }
+/* 倍速循环 */
+const SPDS=[1,1.25,1.5,2,0.75];
+let spdIdx=0;
+press("pSpd",()=>{
+  spdIdx=(spdIdx+1)%SPDS.length;
+  el.video.playbackRate=SPDS[spdIdx];
+  el.pSpd.textContent=SPDS[spdIdx]+"×";
+});
+/* 音量 */
+el.pVol.value=+CFG.vol||1;
+el.pVol.addEventListener("input",()=>{
+  CFG.vol=+el.pVol.value;saveCfg();
+  el.video.volume=CFG.vol;el.video.muted=false;
+  $("spk").style.opacity=CFG.vol==0?.3:1;
+});
+press("pMute",()=>{
+  el.video.muted=!el.video.muted;
+  $("spk").style.opacity=el.video.muted||CFG.vol==0?.3:1;
+});
+/* 视频环境光同步 */
+el.video.addEventListener("timeupdate",()=>{
+  if(el.amb.src&&Math.abs(el.amb.currentTime-el.video.currentTime)>.4)
+    el.amb.currentTime=el.video.currentTime;
+});
+["seeked","ratechange"].forEach(ev=>el.video.addEventListener(ev,()=>{
+  if(el.amb.src)el.amb.currentTime=el.video.currentTime;
+  el.amb.playbackRate=el.video.playbackRate;
+}));
 el.video.addEventListener("loadedmetadata",()=>{
   const f=s=>`${s/60|0}:${String(s%60|0).padStart(2,"0")}`;
   el.ptime.textContent="0:00 / "+f(el.video.duration||0);
@@ -1076,6 +1305,7 @@ el.play.addEventListener("pointerdown",e=>{
 press("pBack",hidePlay);
 function stopMedia(){
   el.video.pause();el.video.removeAttribute("src");el.video.load();
+  el.amb.pause();el.amb.removeAttribute("src");el.amb.load();
   el.frame.src="about:blank";el.image.removeAttribute("src");
   el.play.classList.remove("show","paused");
   el.card.style.opacity=0;el.playBar.style.opacity=0;
@@ -1085,7 +1315,7 @@ function stopMedia(){
 /* 关闭播放页：卡片缩回 → 扫屏收尾（与打开时同款音游过场） */
 function hidePlay(){
   if(!el.play.classList.contains("show")||hidePlay._r)return;
-  const doHide=()=>{stopMedia();if(now>=0)sel=now;render();};
+  const doHide=()=>{stopMedia();if(now>=0)sel=now;render();BGM.start();};
   if(!(G&&CFG.animLv>0)||el.play.dataset.mode==="black"){doHide();return;}
   hidePlay._r=true;
   const A=el.wipeA,B=el.wipeB,C=el.wipeC;
@@ -1128,8 +1358,9 @@ function pick(b){
     TH=getTH();applyTheme();applyLayout();applyFx();render();syncCfgUI();
     return;
   }
-  if(k==="dblMs"||k==="animLv"||k==="imgSec")v=+v;
+  if(k==="dblMs"||k==="animLv"||k==="imgSec"||k==="bgmVol")v=+v;
   CFG[k]=v;saveCfg();
+  if(k==="bgmVol")BGM.setVol(v);
   TH=getTH();
   applyTheme();applyLayout();applyFx();render();syncCfgUI();
   if(G&&CFG.animLv>0&&k==="theme"){
@@ -1165,6 +1396,10 @@ $("cfgGo").addEventListener("click",()=>{
 
 /* 键盘调试 */
 addEventListener("keydown",e=>{
+  if(el.curtain.style.display==="flex"){
+    if(e.key==="Escape"||e.key==="Enter")CURT.close();
+    return;
+  }
   if(el.cfg.classList.contains("show"))return;
   if(e.key==="ArrowRight"||e.key==="ArrowUp")move(1);
   if(e.key==="ArrowLeft"||e.key==="ArrowDown")move(-1);
@@ -1182,6 +1417,7 @@ applyFx();
 buildRows();
 render();
 syncCfgUI();
+CURT.open("open");   /* 开场幕布（文案来自文件夹中的TXT） */
 el.cfg.classList.add("show");
 if(G&&CFG.animLv>0)G.fromTo(el.cfg,{opacity:0},{opacity:1,duration:.3});
 </script>
